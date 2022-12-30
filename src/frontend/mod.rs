@@ -4,6 +4,7 @@ pub mod app;
 pub mod card_modal;
 pub mod choices;
 pub mod deck;
+pub mod dice;
 pub mod game;
 pub mod messages;
 pub mod player;

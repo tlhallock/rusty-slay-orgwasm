@@ -1,0 +1,13 @@
+
+max_width = 100
+tab_spaces = 2
+fn_args_density = "Tall"
+fn_args_layout = "Compressed"
+struct_trailing_comma = "Always"
+struct_lit_trailing_comma = "Always"
+enum_trailing_comma = "Always"
+reorder_imports = true
+reorder_imported_names = true
+hard_tabs = true
+# wrap_match_arms =
+

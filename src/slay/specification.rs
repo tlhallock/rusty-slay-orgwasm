@@ -11,133 +11,133 @@ pub const MAX_TURNS: u32 = 50;
 
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub enum Visibility {
-    Visible,
-    Summary,
-    //   Hidden,
-    Invisible,
+	Visible,
+	Summary,
+	//   Hidden,
+	Invisible,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Perspective {
-    Owner,
-    Spectator,
-    Jesus,
+	Owner,
+	Spectator,
+	Jesus,
 }
 
 #[derive(Debug, Clone)]
 pub struct VisibilitySpec {
-    pub owner: Visibility,
-    pub others: Visibility,
+	pub owner: Visibility,
+	pub others: Visibility,
 }
 
 impl VisibilitySpec {
-    pub fn summary() -> Self {
-        Self {
-            owner: Visibility::Visible,
-            others: Visibility::Summary,
-        }
-    }
-    pub fn invisible() -> Self {
-        Self {
-            owner: Visibility::Invisible,
-            others: Visibility::Invisible,
-        }
-    }
-    pub fn visible() -> Self {
-        Self {
-            owner: Visibility::Visible,
-            others: Visibility::Visible,
-        }
-    }
-    pub fn get(&self, perspective: &Perspective) -> &Visibility {
-        match perspective {
-            Perspective::Jesus => &self.owner,
-            Perspective::Owner => &self.owner,
-            Perspective::Spectator => &self.others,
-        }
-    }
-    pub fn is_visible(&self, perspective: &Perspective) -> bool {
-        self.get(perspective) != &Visibility::Invisible
-    }
+	pub fn summary() -> Self {
+		Self {
+			owner: Visibility::Visible,
+			others: Visibility::Summary,
+		}
+	}
+	pub fn invisible() -> Self {
+		Self {
+			owner: Visibility::Invisible,
+			others: Visibility::Invisible,
+		}
+	}
+	pub fn visible() -> Self {
+		Self {
+			owner: Visibility::Visible,
+			others: Visibility::Visible,
+		}
+	}
+	pub fn get(&self, perspective: &Perspective) -> &Visibility {
+		match perspective {
+			Perspective::Jesus => &self.owner,
+			Perspective::Owner => &self.owner,
+			Perspective::Spectator => &self.others,
+		}
+	}
+	pub fn is_visible(&self, perspective: &Perspective) -> bool {
+		self.get(perspective) != &Visibility::Invisible
+	}
 }
 
 #[derive(Debug, Clone)]
 pub struct DeckSpec {
-    pub visibility: VisibilitySpec,
-    pub label: String,
+	pub visibility: VisibilitySpec,
+	pub label: String,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct HeroAbility {
-    pub success_condition: Condition,
+	pub success_condition: Condition,
 }
 
 impl HeroAbility {
-    pub fn new(success_condition: Condition) -> Self {
-        Self { success_condition }
-    }
+	pub fn new(success_condition: Condition) -> Self {
+		Self { success_condition }
+	}
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct CardSpec {
-    pub card_type: CardType,
-    pub repeat: u32,
-    pub label: String,
-    pub description: String,
-    pub image_path: String,
-    pub monster: Option<MonsterSpec>,
-    pub modifiers: Vec<i32>,
-    pub hero_ability: Option<HeroAbility>,
+	pub card_type: CardType,
+	pub repeat: u32,
+	pub label: String,
+	pub description: String,
+	pub image_path: String,
+	pub monster: Option<MonsterSpec>,
+	pub modifiers: Vec<i32>,
+	pub hero_ability: Option<HeroAbility>,
 }
 
 impl Default for CardSpec {
-    fn default() -> Self {
-        Self {
-            card_type: CardType::Blank,
-            repeat: 1,
-            label: "Please set the name.".to_string(),
-            description: "Please set the description.".to_string(),
-            image_path: "Please set the image_path.".to_string(),
-            monster: None,
-            modifiers: Vec::new(),
-            hero_ability: None,
-        }
-    }
+	fn default() -> Self {
+		Self {
+			card_type: CardType::Blank,
+			repeat: 1,
+			label: "Please set the name.".to_string(),
+			description: "Please set the description.".to_string(),
+			image_path: "Please set the image_path.".to_string(),
+			monster: None,
+			modifiers: Vec::new(),
+			hero_ability: None,
+		}
+	}
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum CardType {
-    Blank,
+	Blank,
 
-    Hero(HeroType),
-    PartyLeader(HeroType),
-    Monster,
-    Challenge,
-    Modifier,
-    Item(ItemType),
-    Magic,
+	Hero(HeroType),
+	PartyLeader(HeroType),
+	Monster,
+	Challenge,
+	Modifier,
+	Item(ItemType),
+	Magic,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
 pub enum HeroType {
-    Bard,
-    Wizard,
-    Fighter,
-    Gaurdian,
-    Ranger,
-    Thief,
+	Bard,
+	Wizard,
+	Fighter,
+	Gaurdian,
+	Ranger,
+	Thief,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ItemType {
-    Cursed,
-    Blessed,
+	Cursed,
+	Blessed,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum MonsterRequirements {
-    Hero,
-    HeroType(HeroType),
+	Hero,
+	HeroType(HeroType),
 }
 
 // #[derive(Debug, Clone)]
@@ -148,21 +148,21 @@ pub enum MonsterRequirements {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct MonsterSpec {
-    pub victory: RollConsequenceSpec,
-    pub loss: RollConsequenceSpec,
-    pub requirements: Vec<MonsterRequirements>,
+	pub victory: RollConsequenceSpec,
+	pub loss: RollConsequenceSpec,
+	pub requirements: Vec<MonsterRequirements>,
 }
 
 impl MonsterSpec {
-    pub fn create_consequences(&self, player_index: usize) -> RollConsequences {
-        RollConsequences::new(
-            player_index,
-            vec![
-                self.victory.to_smh(player_index),
-                self.loss.to_smh(player_index),
-            ],
-        )
-    }
+	pub fn create_consequences(&self, player_index: usize) -> RollConsequences {
+		RollConsequences::new(
+			player_index,
+			vec![
+				self.victory.to_smh(player_index),
+				self.loss.to_smh(player_index),
+			],
+		)
+	}
 }
 
 // const spec: MonsterSpec = MonsterSpec {
@@ -173,7 +173,7 @@ impl MonsterSpec {
 // }
 
 pub fn get_card_specs() -> [CardSpec; 33] {
-    [
+	[
     ////////////////////////////////////////////////////////////////////////////
     // Challenge
     ////////////////////////////////////////////////////////////////////////////

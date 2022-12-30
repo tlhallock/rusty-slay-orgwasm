@@ -4,5 +4,5 @@ pub mod frontend;
 pub mod slay;
 
 pub fn main() {
-    frontend::view::render();
+	frontend::view::render();
 }
