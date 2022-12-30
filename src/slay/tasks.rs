@@ -14,11 +14,6 @@ use std::collections::VecDeque;
 
 use super::choices::ChoiceDisplay;
 
-
-
-
-
-
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum TaskSpec {
 	Sacrifice(u32),
@@ -271,23 +266,25 @@ impl PlayerTask for Draw {
 	}
 }
 
-pub(crate) fn finish_tasks(
-	context: &mut game_context::GameBookKeeping, game: &mut state::Game,
-) -> SlayResult<bool> {
-	let task_option: Option<(usize, Box<dyn PlayerTask>)> = game.take_current_task();
-	if task_option.is_none() {
-		return Ok(false);
+pub(crate) fn continue_tasks(
+	context: &mut game_context::GameBookKeeping, game: &mut state::Game, player_index: usize,
+) -> SlayResult<TaskProgressResult> {
+	loop {
+		if game.players[player_index].choices.is_some() {
+			return Ok(TaskProgressResult::ChoicesAssigned);
+		}
+		if let Some(mut task) = game.take_current_task(player_index) {
+			match task.make_progress(context, game)? {
+				TaskProgressResult::TaskComplete => {}
+				TaskProgressResult::ChoicesAssigned => {
+					game.players[player_index].put_current_task_back(task)?;
+					return Ok(TaskProgressResult::ChoicesAssigned);
+				}
+			};
+		} else {
+			return Ok(TaskProgressResult::TaskComplete);
+		}
 	}
-	if let Some((player_index, mut task)) = task_option {
-		match task.make_progress(context, game)? {
-			TaskProgressResult::TaskComplete => {}
-			TaskProgressResult::ChoicesAssigned => {
-				game.players[player_index].put_current_task_back(task)?;
-				return Ok(true);
-			}
-		};
-	}
-	Ok(true)
 }
 
 #[derive(Debug, Clone)]

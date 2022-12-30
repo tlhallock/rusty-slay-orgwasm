@@ -45,11 +45,9 @@ impl CompletionTracker {
 		self
 			.player_completions
 			.iter()
-			.map(|(player_index, completion)| {
-				PlayerCompletionPerspective {
-					player_name: game.players[*player_index].name.to_owned(),
-					completion: *completion,
-				}
+			.map(|(player_index, completion)| PlayerCompletionPerspective {
+				player_name: game.players[*player_index].name.to_owned(),
+				completion: *completion,
 			})
 			.collect()
 	}
@@ -93,7 +91,9 @@ pub struct RollPerspective {
 }
 
 impl RollState {
-	pub fn to_perspective(&self, game: &Game) -> RollPerspective {
+	pub fn to_perspective(
+		&self, game: &Game, choices: &Option<ChoicesPerspective>,
+	) -> RollPerspective {
 		RollPerspective {
 			id: 0, // Need to fill this in again?
 			roller_name: game.players[self.roller_index].name.to_owned(),
@@ -108,7 +108,18 @@ impl RollState {
 			success: false,
 			deadline: self.completion_tracker.deadline,
 			reason: self.reason.to_owned(),
-			choices: todo!(),
+			choices: choices
+				.iter()
+				.map(|choices| {
+					choices
+						.actions
+						.iter()
+						.map(|o| o.roll_modification_choice.to_owned())
+						.flatten()
+						.collect::<Vec<RollModificationChoice>>()
+				})
+				.flatten()
+				.collect(),
 		}
 	}
 }
@@ -338,6 +349,7 @@ pub struct ChoicePerspective {
 	pub highlight: Option<ids::ElementId>,
 	// This will probably need an arrow id...
 	pub arrows: Vec<(Option<ids::ElementId>, Option<ids::ElementId>)>,
+	pub roll_modification_choice: Option<RollModificationChoice>,
 }
 
 #[derive(Debug, PartialEq, Clone)]
@@ -363,6 +375,7 @@ impl Choices {
 						label: info.display.label.to_owned(),
 						highlight: None,
 						arrows: vec![],
+						roll_modification_choice: info.display.roll_modification_choice.to_owned(),
 					}
 				})
 				.collect(),
@@ -401,7 +414,7 @@ pub fn get_perspective(owner_id: ids::PlayerId, player_id: ids::PlayerId) -> &'s
 impl state::Game {
 	pub fn to_player_perspective(&self, player_id: ids::PlayerId) -> GamePerspective {
 		let perspective = &Perspective::Spectator;
-		let choices = self
+		let choices = &self
 			.players
 			.iter()
 			.find(|p| p.id == player_id)
@@ -414,7 +427,7 @@ impl state::Game {
 			.map(|p| {
 				p.to_perspective(
 					get_perspective(p.id, player_id),
-					&choices,
+					choices,
 					p.player_index == self.active_player_index(),
 				)
 			})
@@ -423,14 +436,17 @@ impl state::Game {
 			.decks()
 			.iter()
 			.filter(|d| d.is_visible(perspective))
-			.map(|d| d.to_perspective(perspective, &choices))
+			.map(|d| d.to_perspective(perspective, choices))
 			.collect();
 		GamePerspective {
 			players,
 			decks,
 			turn: self.get_turn(),
-			choices,
-			roll: self.showdown.get_roll().map(|r| r.to_perspective(self)),
+			choices: choices.to_owned(), // TODO
+			roll: self
+				.showdown
+				.get_roll()
+				.map(|r| r.to_perspective(self, choices)),
 		}
 	}
 }

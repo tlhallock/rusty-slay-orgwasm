@@ -37,7 +37,6 @@ pub fn game_is_over(game: &state::Game) -> bool {
 fn use_action_points(context: &mut game_context::GameBookKeeping, game: &mut state::Game) {
 	if game.current_player().remaining_action_points > 0 {
 		actions::assign_action_choices(context, game);
-		return;
 	}
 	reset_cards_played_this_turn(game);
 	game.increment();
@@ -107,7 +106,7 @@ pub fn initialize_game(context: &mut game_context::GameBookKeeping, game: &mut s
 pub enum AdvanceGameResult {
 	Complete,
 	WaitingForPlayers,
-	ContinueAdvancing,
+	// ContinueAdvancing,
 }
 
 fn waiting_for_players(game: &state::Game) -> bool {
@@ -116,24 +115,35 @@ fn waiting_for_players(game: &state::Game) -> bool {
 
 pub fn advance_game(
 	context: &mut game_context::GameBookKeeping, game: &mut state::Game,
-) -> SlayResult<AdvanceGameResult> {
-	if game_is_over(game) {
-		return Ok(AdvanceGameResult::Complete);
-	}
-	if waiting_for_players(game) {
+) -> SlayResult<(AdvanceGameResult)> {
+	for _ in 0..10000 {
+		if game_is_over(game) {
+			return Ok(AdvanceGameResult::Complete);
+		}
+
+		if let Some(mut showdown) = game.showdown.take_complete() {
+			showdown.finish(context, game);
+			continue;
+		}
+
+		let mut waiting_for_somebody = false;
+		let number_of_players = game.number_of_players();
+		for player_index in 0..number_of_players {
+			match tasks::continue_tasks(context, game, player_index)? {
+				tasks::TaskProgressResult::TaskComplete => {}
+				tasks::TaskProgressResult::ChoicesAssigned => {
+					waiting_for_somebody = true;
+				}
+			}
+		}
+		if waiting_for_somebody {
+			return Ok(AdvanceGameResult::WaitingForPlayers);
+		}
+
+		use_action_points(context, game);
 		return Ok(AdvanceGameResult::WaitingForPlayers);
 	}
-	if let Some(mut showdown) = game.showdown.take_complete() {
-		showdown.finish(context, game);
-		return Ok(AdvanceGameResult::ContinueAdvancing);
-	}
-	if tasks::finish_tasks(context, game)? {
-		return Ok(AdvanceGameResult::ContinueAdvancing);
-	}
-
-	// This should be ran for all players...
-	use_action_points(context, game);
-	Ok(AdvanceGameResult::ContinueAdvancing)
+	unreachable!("Infinite loop?");
 }
 
 pub fn make_selection(
@@ -203,7 +213,7 @@ pub fn game_loop() -> SlayResult<()> {
 			match advance_game(context, game)? {
 				AdvanceGameResult::Complete => return Ok(()),
 				AdvanceGameResult::WaitingForPlayers => continue 'turns,
-				AdvanceGameResult::ContinueAdvancing => continue 'advancing,
+				// AdvanceGameResult::ContinueAdvancing => continue 'advancing,
 			}
 		}
 	}

@@ -522,15 +522,9 @@ impl Game {
 		&mut self.players[self.turn.active_player_index()]
 	}
 
-	pub fn take_current_task(&mut self) -> Option<(usize, Box<dyn tasks::PlayerTask>)> {
-		// one liner?
-		for player in self.players.iter_mut() {
-			let task_option = player.take_current_task();
-			if let Some(task) = task_option {
-				return Some((player.player_index, task));
-			}
-		}
-		None
+	pub fn take_current_task(&mut self, player_index: usize) -> Option<Box<dyn tasks::PlayerTask>> {
+		self.players[player_index].take_current_task()
+		// None
 	}
 
 	// pub(crate) fn get_completion_tracker(

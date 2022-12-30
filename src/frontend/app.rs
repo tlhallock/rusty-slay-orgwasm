@@ -1,6 +1,4 @@
-
-
-
+use yew::Callback;
 
 use crate::common::perspective::GamePerspective;
 use crate::slay::driver::AdvanceGameResult;
@@ -8,6 +6,8 @@ use crate::slay::game_context::GameBookKeeping;
 use crate::slay::ids;
 use crate::slay::state::Game;
 use crate::slay::{driver, strategy};
+
+use super::card_modal::CardModalInfo;
 
 #[derive(Clone)]
 pub struct AppState {
@@ -37,16 +37,13 @@ impl AppState {
 		self.game.to_player_perspective(player_id)
 	}
 
-	fn make_selection(&mut self, choice_id: ids::ChoiceId) {
+	fn make_selection(&mut self, choice_id: ids::ChoiceId) -> bool {
 		let player_id = self.game.players[self.my_player_index].id;
 		driver::make_selection(&mut self.context, &mut self.game, player_id, choice_id).expect("oops");
 
-		loop {
-			match driver::advance_game(&mut self.context, &mut self.game).expect("uh oh") {
-				AdvanceGameResult::Complete => return, // Need to return that the game is complete...
-				AdvanceGameResult::WaitingForPlayers => return,
-				AdvanceGameResult::ContinueAdvancing => continue,
-			}
+		match driver::advance_game(&mut self.context, &mut self.game).expect("uh oh") {
+			AdvanceGameResult::Complete => true, // Need to return that the game is complete...
+			AdvanceGameResult::WaitingForPlayers => false,
 		}
 	}
 
@@ -72,4 +69,10 @@ impl AppState {
 #[derive(Debug, Clone, PartialEq, Default)]
 pub struct ChoiceState {
 	pub highlighted_choice: Option<ids::ChoiceId>,
+}
+
+#[derive(Clone, PartialEq)]
+pub struct GameCallbacks {
+	pub choose: Option<Callback<ids::ChoiceId, ()>>,
+	pub view_card: Callback<Option<CardModalInfo>, ()>,
 }

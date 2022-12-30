@@ -3,7 +3,6 @@ use crate::slay::state;
 use crate::slay::tasks;
 use crate::slay::tasks::PlayerTask;
 
-
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Comparison {
 	LE,

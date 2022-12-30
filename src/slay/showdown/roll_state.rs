@@ -6,7 +6,6 @@ use crate::slay::ids;
 use crate::slay::specification::CardSpec;
 use crate::slay::state::Game;
 
-
 use super::base::ShowDown;
 
 use super::common::ModificationPath;

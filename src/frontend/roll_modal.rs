@@ -3,13 +3,32 @@ use yew::prelude::*;
 
 use log;
 
+use crate::common::perspective::CardSpecPerspective;
+use crate::common::perspective::RollModificationChoiceType;
 use crate::common::perspective::RollPerspective;
 use crate::frontend::dice::Dice;
+use crate::frontend::stack::CardSpecView;
+use crate::slay::ids;
 use crate::slay::showdown::completion::RollCompletion;
 use crate::slay::showdown::consequences::Comparison;
 use crate::slay::showdown::consequences::Condition;
 use crate::slay::showdown::roll_state::RollReason;
 use crate::slay::tasks::TaskSpec;
+
+use super::app::ChoiceState;
+use super::app::GameCallbacks;
+use super::stack::ExtraSpecProps;
+
+#[derive(Properties, PartialEq)]
+pub struct SimplerRollModalProps {
+	pub roll: RollPerspective,
+}
+
+#[derive(Properties, PartialEq)]
+pub struct RollModalProps {
+	pub roll: RollPerspective,
+	pub callbacks: GameCallbacks,
+}
 
 fn format_condition(condition: &Condition) -> String {
 	match condition.cmp {
@@ -32,7 +51,7 @@ fn format_consequences(consequences: &Vec<TaskSpec>) -> String {
 }
 
 #[function_component(RollDescription)]
-pub fn view_roll_context(props: &RollModalProps) -> Html {
+pub fn view_roll_context(props: &SimplerRollModalProps) -> Html {
 	let text = match &props.roll.reason {
 		RollReason::UseHeroAbility(spec) => html! {
 			<>
@@ -98,13 +117,13 @@ pub fn view_roll_context(props: &RollModalProps) -> Html {
 }
 
 #[function_component(RollInitial)]
-pub fn view_initial_roll(props: &RollModalProps) -> Html {
+pub fn view_initial_roll(props: &SimplerRollModalProps) -> Html {
 	html! {
 			<Dice roll={props.roll.initial.to_owned()}/>
 	}
 }
 #[function_component(RollTotal)]
-pub fn view_roll_result(props: &RollModalProps) -> Html {
+pub fn view_roll_result(props: &SimplerRollModalProps) -> Html {
 	html! {
 		<label>{format!("The current roll total is {}, which is a {}.",
 			props.roll.roll_total,
@@ -118,22 +137,61 @@ pub fn view_roll_result(props: &RollModalProps) -> Html {
 }
 
 #[function_component(RollTimer)]
-fn view_roll_timer(props: &RollModalProps) -> Html {
+fn view_roll_timer(props: &SimplerRollModalProps) -> Html {
 	html! {
 		<label>{format!("This roll times out at {:?}", props.roll.deadline)}</label>
 	}
 }
 
 #[function_component(RollChoices)]
-fn view_roll_choices(_props: &RollModalProps) -> Html {
+fn view_roll_choices(props: &RollModalProps) -> Html {
 	let _open = use_state(|| false);
+	let choices = props
+		.roll
+		.choices
+		.iter()
+		.map(|choice| match &choice.choice_type {
+			RollModificationChoiceType::AddToRoll(spec, amount) => html! {
+				<div>
+					{"Use"}
+					<CardSpecView
+						spec={CardSpecPerspective::new(&spec)}
+						view_card={props.callbacks.view_card.to_owned()}
+						choice_state={ChoiceState::default()}
+						extra_specs={ExtraSpecProps::default()}
+					/>
+					{"to modify by"}
+					{ amount }
+				</div>
+			},
+			RollModificationChoiceType::RemoveFromRoll(spec, amount) => html! {
+				<div>
+					{"Use"}
+					<CardSpecView
+						spec={CardSpecPerspective::new(&spec)}
+						view_card={props.callbacks.view_card.to_owned()}
+						choice_state={ChoiceState::default()}
+						extra_specs={ExtraSpecProps::default()}
+					/>
+					{"to modify by"}
+					{ amount }
+				</div>
+			},
+			RollModificationChoiceType::Nothing(persist) => html! {
+				if *persist {
+					<button>{"Do not modify this roll"}</button>
+				} else {
+					<button>{"Do not modify this roll, unless someone else does."}</button>
+				}
+			},
+		});
 	html! {
 		<label>{"Implement the roll choices."}</label>
 	}
 }
 
 #[function_component(RollHistory)]
-fn view_roll_history(props: &RollModalProps) -> Html {
+fn view_roll_history(props: &SimplerRollModalProps) -> Html {
 	let completions = props.roll.history.iter().map(|m| {
 		html! {
 			 <label>
@@ -147,8 +205,9 @@ fn view_roll_history(props: &RollModalProps) -> Html {
 	});
 	html! { <> { for completions } </> }
 }
+
 #[function_component(RollCompletions)]
-fn view_roll_completions(props: &RollModalProps) -> Html {
+fn view_roll_completions(props: &SimplerRollModalProps) -> Html {
 	let completions = props.roll.completions.iter().map(|c| {
 		html! {
 			<label>
@@ -161,11 +220,6 @@ fn view_roll_completions(props: &RollModalProps) -> Html {
 		}
 	});
 	html! { <> { for completions } </> }
-}
-
-#[derive(Properties, PartialEq)]
-pub struct RollModalProps {
-	pub roll: RollPerspective,
 }
 
 #[function_component(RollModalView)]
@@ -189,15 +243,11 @@ pub fn view_roll_modal(props: &RollModalProps) -> Html {
 				<br/>
 				<RollHistory roll={props.roll.to_owned()}/>
 				<br/>
-				<RollChoices roll={props.roll.to_owned()}/>
+				<RollChoices roll={props.roll.to_owned()} callbacks={props.callbacks.to_owned()}/>
 				<br/>
 				<RollTotal roll={props.roll.to_owned()}/>
 				<br/>
 				<RollCompletions roll={props.roll.to_owned()}/>
-				<br/>
-				<button>{"Do not modify this roll, unless someone else does."}</button>
-				<br/>
-				<button>{"Do not modify this roll"}</button>
 				<br/>
 				<button>{"Back"}</button>
 			</div>

@@ -1,7 +1,5 @@
 use yew::prelude::*;
 
-
-
 #[derive(Properties, PartialEq)]
 pub struct MessagesProps {
 	pub messages: Vec<String>,

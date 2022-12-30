@@ -1,23 +1,22 @@
-
 use yew::prelude::*;
-
-
 
 use crate::common::perspective::ChoicePerspective;
 use crate::common::perspective::ChoicesPerspective;
 use crate::slay::ids;
 
+use super::app::GameCallbacks;
+
 #[derive(Properties, PartialEq)]
 pub struct ChoiceProps {
 	choice: ChoicePerspective,
-	choose: Callback<ids::ChoiceId, ()>,
+	callbacks: GameCallbacks,
 	set_selected_choice: Callback<Option<ids::ChoiceId>, ()>,
 }
 
 #[function_component(ChoiceView)]
 pub fn view_choices(props: &ChoiceProps) -> Html {
 	let choose_this_choice = {
-		let choose = props.choose.clone();
+		let choose = props.callbacks.choose.clone().unwrap();
 		let choice_id = props.choice.choice_id;
 		move |_| choose.emit(choice_id)
 	};
@@ -46,7 +45,7 @@ pub fn view_choices(props: &ChoiceProps) -> Html {
 #[derive(Properties, PartialEq)]
 pub struct ChoicesInstructionsProps {
 	pub choices: ChoicesPerspective,
-	pub choose: Callback<ids::ChoiceId, ()>,
+	pub callbacks: GameCallbacks,
 	pub set_selected_choice: Callback<Option<ids::ChoiceId>, ()>,
 }
 
@@ -60,7 +59,7 @@ pub fn view_choices(props: &ChoicesInstructionsProps) -> Html {
 									|c| html! {
 											<ChoiceView
 													choice={c.to_owned()}
-													choose={props.choose.to_owned()}
+													callbacks={props.callbacks.to_owned()}
 													set_selected_choice={props.set_selected_choice.to_owned()}
 											/>
 									}

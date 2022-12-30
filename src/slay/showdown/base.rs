@@ -6,7 +6,6 @@ use crate::slay::game_context::GameBookKeeping;
 use crate::slay::state;
 use crate::slay::state::Game;
 
-
 use std::collections::HashMap;
 use std::fmt::Debug;
 

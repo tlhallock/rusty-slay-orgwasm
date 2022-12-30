@@ -1,7 +1,5 @@
 use yew::prelude::*;
 
-
-
 use crate::frontend::app::AppState;
 use crate::frontend::game::GamePerspectiveView;
 

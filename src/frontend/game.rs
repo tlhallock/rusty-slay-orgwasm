@@ -5,6 +5,7 @@ use log;
 
 use crate::common::perspective::GamePerspective;
 use crate::frontend::app::ChoiceState;
+use crate::frontend::app::GameCallbacks;
 use crate::frontend::card_modal::CardModalInfo;
 use crate::frontend::card_modal::CardModalView;
 use crate::frontend::choices::ChoicesView;
@@ -16,7 +17,7 @@ use crate::slay::ids;
 #[derive(Properties, PartialEq)]
 pub struct GamePerspectiveProps {
 	pub game: GamePerspective,
-	pub choose: Callback<ids::ChoiceId, ()>,
+	pub choose: Option<Callback<ids::ChoiceId, ()>>,
 }
 
 #[function_component(GamePerspectiveView)]
@@ -63,14 +64,22 @@ pub fn view_game(props: &GamePerspectiveProps) -> Html {
 		html! {
 				<ChoicesView
 						choices={c.to_owned()}
-						choose={props.choose.to_owned()}
+						callbacks={GameCallbacks {
+							choose: props.choose.to_owned(),
+							view_card: view_card.to_owned(),
+						}}
 						set_selected_choice={set_selected_choice.to_owned()}
 				/>
 		}
 	});
 	let roll = props.game.roll.as_ref().map(|r| {
 		html! {
-				<RollModalView roll={r.to_owned()}/>
+				<RollModalView roll={r.to_owned()} callbacks={
+					GameCallbacks {
+						choose: props.choose.to_owned(),
+						view_card: view_card.to_owned(),
+					}
+				}/>
 		}
 	});
 	html! {

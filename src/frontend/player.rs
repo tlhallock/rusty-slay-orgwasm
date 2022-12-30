@@ -1,8 +1,6 @@
 use yew::classes;
 use yew::prelude::*;
 
-
-
 use crate::common::perspective::PlayerPerspective;
 use crate::frontend::deck::DeckView;
 
