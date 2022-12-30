@@ -8,7 +8,7 @@ use crate::common::perspective::RollModificationChoiceType;
 use crate::common::perspective::RollPerspective;
 use crate::frontend::dice::Dice;
 use crate::frontend::stack::CardSpecView;
-use crate::slay::ids;
+
 use crate::slay::showdown::completion::RollCompletion;
 use crate::slay::showdown::consequences::Comparison;
 use crate::slay::showdown::consequences::Condition;
@@ -145,7 +145,6 @@ fn view_roll_timer(props: &SimplerRollModalProps) -> Html {
 
 #[function_component(RollChoices)]
 fn view_roll_choices(props: &RollModalProps) -> Html {
-	let _open = use_state(|| false);
 	let choices = props
 		.roll
 		.choices
@@ -186,7 +185,7 @@ fn view_roll_choices(props: &RollModalProps) -> Html {
 			},
 		});
 	html! {
-		<label>{"Implement the roll choices."}</label>
+		<span>{for choices}</span>
 	}
 }
 
