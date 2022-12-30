@@ -125,8 +125,8 @@ fn view_roll_timer(props: &RollModalProps) -> Html {
 }
 
 #[function_component(RollChoices)]
-fn view_roll_choices(props: &RollModalProps) -> Html {
-	let open = use_state(|| false);
+fn view_roll_choices(_props: &RollModalProps) -> Html {
+	let _open = use_state(|| false);
 	html! {
 		<label>{"Implement the roll choices."}</label>
 	}
@@ -170,7 +170,7 @@ pub struct RollModalProps {
 
 #[function_component(RollModalView)]
 pub fn view_roll_modal(props: &RollModalProps) -> Html {
-	let open = use_state(|| false);
+	let _open = use_state(|| false);
 
 	log::info!("We are creating the modal");
 

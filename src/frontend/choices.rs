@@ -1,7 +1,7 @@
-use yew::classes;
+
 use yew::prelude::*;
 
-use log;
+
 
 use crate::common::perspective::ChoicePerspective;
 use crate::common::perspective::ChoicesPerspective;
@@ -28,7 +28,7 @@ pub fn view_choices(props: &ChoiceProps) -> Html {
 	};
 	let remove_any_selected_choice = {
 		let set_selected_choice = props.set_selected_choice.clone();
-		let choice_id = props.choice.choice_id;
+		let _choice_id = props.choice.choice_id;
 		move |_| set_selected_choice.emit(None)
 	};
 

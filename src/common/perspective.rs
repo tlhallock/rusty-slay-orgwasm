@@ -8,8 +8,8 @@ use crate::slay::ids;
 use crate::slay::showdown::common::{Roll, RollModification};
 use crate::slay::showdown::completion::{CompletionTracker, RollCompletion};
 use crate::slay::showdown::roll_state::{RollReason, RollState};
-use crate::slay::specification::{CardSpec, CardType, HeroAbility, MonsterSpec, Visibility};
-use crate::slay::state::{self, Game, Player, Stack};
+use crate::slay::specification::{CardSpec, CardType, MonsterSpec, Visibility};
+use crate::slay::state::{self, Game, Stack};
 
 use std::fmt::Debug;
 
@@ -46,10 +46,10 @@ impl CompletionTracker {
 			.player_completions
 			.iter()
 			.map(|(player_index, completion)| {
-				(PlayerCompletionPerspective {
+				PlayerCompletionPerspective {
 					player_name: game.players[*player_index].name.to_owned(),
 					completion: *completion,
-				})
+				}
 			})
 			.collect()
 	}
@@ -348,7 +348,7 @@ pub struct ChoicesPerspective {
 }
 
 impl Choices {
-	pub fn to_perspective(&self, game: &Game) -> ChoicesPerspective {
+	pub fn to_perspective(&self, _game: &Game) -> ChoicesPerspective {
 		ChoicesPerspective {
 			deadline: self.deadline,
 			instructions: self.instructions.to_owned(),

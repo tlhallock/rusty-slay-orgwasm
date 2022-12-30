@@ -1,6 +1,6 @@
 use yew::prelude::*;
 
-use log;
+
 
 #[derive(Properties, PartialEq)]
 pub struct MessagesProps {

@@ -1,9 +1,9 @@
 use crate::slay::deadlines::get_offer_challenges_deadline;
 use crate::slay::game_context::GameBookKeeping;
-use crate::slay::state::{Game, Player};
+use crate::slay::state::{Game};
 
 use crate::slay::choices::{Choice, ChoiceLocator, Choices};
-use crate::slay::errors::{SlayError, SlayResult};
+use crate::slay::errors::{SlayResult};
 use crate::slay::specification::CardType;
 
 use crate::slay::showdown::base::ShowDown;
@@ -11,7 +11,7 @@ use crate::slay::showdown::challenge::ChallengeState;
 use crate::slay::showdown::completion::CompletionTracker;
 use crate::slay::showdown::consequences::RollConsequences;
 
-use super::common::{ChallengeReason, ModificationPath, RollModification};
+use super::common::{ChallengeReason};
 use super::roll_choices::{self, create_challenge_choice};
 
 #[derive(Debug, Clone)]

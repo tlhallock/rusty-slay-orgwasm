@@ -1,6 +1,6 @@
-use yew::prelude::*;
 
-use log;
+
+
 
 use crate::common::perspective::GamePerspective;
 use crate::slay::driver::AdvanceGameResult;
@@ -54,7 +54,7 @@ impl AppState {
 		let mut new_state = self.clone();
 		new_state.make_selection(choice_id);
 
-		let (player_id, choice_id) =
+		let (player_id, _choice_id) =
 			strategy::pick_a_random_choice(&mut new_state.context, &mut new_state.game)
 				.expect("I knew it.");
 

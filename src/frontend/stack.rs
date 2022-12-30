@@ -1,7 +1,7 @@
 use yew::classes;
 use yew::prelude::*;
 
-use log;
+
 
 use crate::common::perspective::CardSpecPerspective;
 use crate::common::perspective::ChoiceAssociationType;

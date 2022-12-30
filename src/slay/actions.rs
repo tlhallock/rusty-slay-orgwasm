@@ -352,7 +352,7 @@ impl choices::Choice for ReplaceHandChoice {
 // }
 
 fn create_forfeit_choice(
-	context: &mut GameBookKeeping, game: &mut Game, locator: choices::ChoiceLocator,
+	_context: &mut GameBookKeeping, game: &mut Game, locator: choices::ChoiceLocator,
 ) -> TasksChoice {
 	let player_index = locator.player_index;
 	let current_amount_remaining = game.players[player_index].remaining_action_points;
@@ -372,7 +372,7 @@ fn create_forfeit_choice(
 }
 
 fn create_use_ability_task(
-	context: &mut GameBookKeeping, game: &Game, player_index: usize, card: &Card,
+	_context: &mut GameBookKeeping, _game: &Game, _player_index: usize, _card: &Card,
 ) -> UseAbility {
 	UseAbility::new()
 }
@@ -381,7 +381,7 @@ fn create_use_ability_choice(
 	context: &mut GameBookKeeping, game: &Game, locator: choices::ChoiceLocator, card: &Card,
 ) -> TasksChoice {
 	let player_index = locator.player_index;
-	let use_ability = Box::new(create_roll_for_ability_task(
+	let _use_ability = Box::new(create_roll_for_ability_task(
 		context,
 		game,
 		player_index,
@@ -568,7 +568,7 @@ impl UseAbility {
 }
 impl PlayerTask for UseAbility {
 	fn make_progress(
-		&mut self, context: &mut GameBookKeeping, game: &mut Game,
+		&mut self, _context: &mut GameBookKeeping, _game: &mut Game,
 	) -> SlayResult<TaskProgressResult> {
 		todo!();
 	}
@@ -590,7 +590,7 @@ impl RemoveActionPointsTask {
 }
 impl PlayerTask for RemoveActionPointsTask {
 	fn make_progress(
-		&mut self, context: &mut GameBookKeeping, game: &mut Game,
+		&mut self, _context: &mut GameBookKeeping, game: &mut Game,
 	) -> SlayResult<TaskProgressResult> {
 		game.players[self.player_index].remaining_action_points -= self.amount;
 		Ok(TaskProgressResult::TaskComplete)
@@ -611,7 +611,7 @@ impl PlayerTask for OfferChallengesTask {
 	fn make_progress(
 		&mut self, context: &mut game_context::GameBookKeeping, game: &mut state::Game,
 	) -> SlayResult<tasks::TaskProgressResult> {
-		if let Some(mut offer) = self.offer.take() {
+		if let Some(offer) = self.offer.take() {
 			offer.assign_all_choices(context, game);
 			game.showdown.offer(offer);
 			Ok(tasks::TaskProgressResult::TaskComplete)
@@ -635,7 +635,7 @@ impl PlayerTask for DoRollTask {
 	fn make_progress(
 		&mut self, context: &mut game_context::GameBookKeeping, game: &mut state::Game,
 	) -> SlayResult<tasks::TaskProgressResult> {
-		if let Some(mut roll) = self.roll.take() {
+		if let Some(roll) = self.roll.take() {
 			roll.assign_all_choices(context, game);
 			game.showdown.roll(roll);
 			Ok(tasks::TaskProgressResult::TaskComplete)
@@ -661,7 +661,7 @@ impl CardUsedTask {
 }
 impl PlayerTask for CardUsedTask {
 	fn make_progress(
-		&mut self, context: &mut game_context::GameBookKeeping, game: &mut state::Game,
+		&mut self, _context: &mut game_context::GameBookKeeping, game: &mut state::Game,
 	) -> SlayResult<tasks::TaskProgressResult> {
 		game.players[self.player_index]
 			.party

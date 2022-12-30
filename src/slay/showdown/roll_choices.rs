@@ -1,6 +1,6 @@
 use crate::common::perspective::{RollModificationChoice, RollModificationChoiceType};
 use crate::slay::choices::{
-	self, Choice, ChoiceDisplay, ChoiceInformation, ChoiceLocator, DisplayArrow, DisplayPath,
+	self, ChoiceDisplay, ChoiceInformation, ChoiceLocator, DisplayArrow, DisplayPath,
 };
 use crate::slay::choices_rewrite::TasksChoice;
 use crate::slay::errors::{SlayError, SlayResult};
@@ -8,7 +8,7 @@ use crate::slay::game_context::GameBookKeeping;
 use crate::slay::ids;
 use crate::slay::state::{self, Card, DeckPath, Game};
 use crate::slay::tasks::{MoveCardTask, PlayerTask, TaskProgressResult};
-use crate::slay::{game_context, state_modifiers};
+use crate::slay::{game_context};
 
 use super::base::ShowDown;
 use super::common::{ModificationPath, RollModification};
@@ -197,7 +197,7 @@ impl SetCompleteTask {
 
 impl PlayerTask for SetCompleteTask {
 	fn make_progress(
-		&mut self, context: &mut game_context::GameBookKeeping, game: &mut state::Game,
+		&mut self, _context: &mut game_context::GameBookKeeping, game: &mut state::Game,
 	) -> SlayResult<TaskProgressResult> {
 		let player_index = self.player_index;
 		game

@@ -1,6 +1,6 @@
 use yew::prelude::*;
 
-use log;
+
 
 use crate::frontend::app::AppState;
 use crate::frontend::game::GamePerspectiveView;

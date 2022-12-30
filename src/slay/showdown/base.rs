@@ -5,7 +5,7 @@ use crate::slay::game_context;
 use crate::slay::game_context::GameBookKeeping;
 use crate::slay::state;
 use crate::slay::state::Game;
-use crate::slay::state::Player;
+
 
 use std::collections::HashMap;
 use std::fmt::Debug;
@@ -52,7 +52,7 @@ pub struct ModificationTask {
 }
 
 impl ModificationTask {
-	pub fn apply(&self, context: &mut GameBookKeeping, game: &mut Game) {
+	pub fn apply(&self, _context: &mut GameBookKeeping, game: &mut Game) {
 		for (player_index, choices) in self.choices_to_assign.iter() {
 			game.players[*player_index].choices = Some(choices.to_owned());
 		}

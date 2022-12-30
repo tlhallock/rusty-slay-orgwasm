@@ -8,16 +8,16 @@ use crate::slay::modifiers;
 use crate::slay::state;
 
 use core::fmt::Debug;
-use dyn_clone::DynClone;
+
 use std::collections::HashMap;
 use std::collections::VecDeque;
 
 use super::choices::ChoiceDisplay;
-use super::showdown::base::ShowDown;
-use super::showdown::common::Roll;
-use super::showdown::consequences::RollConsequenceRenameMe;
-use super::showdown::consequences::RollConsequences;
-use super::showdown::roll_state::RollState;
+
+
+
+
+
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum TaskSpec {
@@ -227,7 +227,7 @@ impl ReceiveModifier {
 
 impl PlayerTask for ReceiveModifier {
 	fn make_progress(
-		&mut self, context: &mut game_context::GameBookKeeping, game: &mut state::Game,
+		&mut self, _context: &mut game_context::GameBookKeeping, _game: &mut state::Game,
 	) -> SlayResult<TaskProgressResult> {
 		todo!()
 	}
@@ -246,7 +246,7 @@ impl Discard {
 
 impl PlayerTask for Discard {
 	fn make_progress(
-		&mut self, context: &mut game_context::GameBookKeeping, game: &mut state::Game,
+		&mut self, _context: &mut game_context::GameBookKeeping, _game: &mut state::Game,
 	) -> SlayResult<TaskProgressResult> {
 		todo!()
 	}
@@ -265,7 +265,7 @@ impl Draw {
 
 impl PlayerTask for Draw {
 	fn make_progress(
-		&mut self, context: &mut game_context::GameBookKeeping, game: &mut state::Game,
+		&mut self, _context: &mut game_context::GameBookKeeping, _game: &mut state::Game,
 	) -> SlayResult<TaskProgressResult> {
 		todo!()
 	}
@@ -299,7 +299,7 @@ pub struct MoveCardTask {
 
 impl PlayerTask for MoveCardTask {
 	fn make_progress(
-		&mut self, context: &mut game_context::GameBookKeeping, game: &mut state::Game,
+		&mut self, _context: &mut game_context::GameBookKeeping, game: &mut state::Game,
 	) -> SlayResult<TaskProgressResult> {
 		game.move_card(self.source, self.destination, self.card_id)?;
 		Ok(TaskProgressResult::TaskComplete)
@@ -329,7 +329,7 @@ pub struct UseAbilityTask {
 
 impl PlayerTask for UseAbilityTask {
 	fn make_progress(
-		&mut self, context: &mut game_context::GameBookKeeping, game: &mut state::Game,
+		&mut self, _context: &mut game_context::GameBookKeeping, _game: &mut state::Game,
 	) -> SlayResult<TaskProgressResult> {
 		// do the ability!!
 		// Implement it!

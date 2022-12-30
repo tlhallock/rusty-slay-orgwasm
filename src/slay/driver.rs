@@ -47,7 +47,7 @@ fn use_action_points(context: &mut game_context::GameBookKeeping, game: &mut sta
 }
 
 fn check_for_expired_modifiers(game: &mut state::Game) {
-	for player in game.players.iter_mut() {}
+	for _player in game.players.iter_mut() {}
 	todo!()
 }
 
@@ -177,7 +177,7 @@ pub fn game_loop() -> SlayResult<()> {
 
 	initialize_game(context, game);
 
-	let mut iteration = 0;
+	let iteration = 0;
 	'turns: loop {
 		if game.get_turn().over_the_limit() {
 			return Err(SlayError::new("Hit maximum iterations"));

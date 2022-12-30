@@ -12,7 +12,7 @@ use crate::slay::choices;
 use crate::slay::errors;
 use crate::slay::game_context;
 use crate::slay::modifiers;
-use crate::slay::showdown;
+
 use crate::slay::specification::HeroType;
 use crate::slay::tasks;
 use errors::SlayResult;

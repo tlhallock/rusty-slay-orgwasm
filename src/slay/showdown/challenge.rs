@@ -1,7 +1,7 @@
 use crate::slay::choices::Choices;
-use crate::slay::errors::{SlayError, SlayResult};
+
 use crate::slay::game_context::GameBookKeeping;
-use crate::slay::state::{Game, Player};
+use crate::slay::state::{Game};
 use crate::slay::{deadlines, game_context};
 
 use crate::slay::showdown::common::Roll;

@@ -1,4 +1,4 @@
-use crate::common::perspective::RollModificationChoice;
+
 use crate::slay::choices::{Choice, ChoiceInformation};
 use crate::slay::game_context::GameBookKeeping;
 use crate::slay::state::Game;
@@ -22,7 +22,7 @@ impl TasksChoice {
 
 impl Choice for TasksChoice {
 	fn select(
-		&mut self, context: &mut GameBookKeeping, game: &mut Game,
+		&mut self, _context: &mut GameBookKeeping, game: &mut Game,
 	) -> super::errors::SlayResult<()> {
 		let player_index = self.choice_information.player_index();
 		game.players[player_index].tasks.take_from(&mut self.tasks);
