@@ -19,8 +19,8 @@ pub enum ChallengeReason {
 impl Roll {
 	pub fn create_from(rng: &mut rand::rngs::ThreadRng) -> Self {
 		Roll {
-			die1: rng.gen_range(0..=6),
-			die2: rng.gen_range(0..=6),
+			die1: rng.gen_range(1..=6),
+			die2: rng.gen_range(1..=6),
 		}
 	}
 }

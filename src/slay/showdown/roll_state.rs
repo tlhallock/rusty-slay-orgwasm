@@ -49,7 +49,7 @@ impl RollState {
 	}
 
 	pub fn add_modification(&mut self, modification: RollModification) {
-		self.tracker_mut().deadline = deadlines::get_roll_deadline();
+		self.tracker_mut().timeline = deadlines::get_roll_deadline();
 		self.history.push(modification);
 	}
 
@@ -87,7 +87,7 @@ impl ShowDown for RollState {
 		Choices {
 			instructions: "Choose whether to modify the current roll.".to_string(),
 			default_choice,
-			deadline: self.tracker().deadline,
+			timeline: self.tracker().timeline.to_owned(),
 			options: list_modification_choices(
 				context,
 				game,

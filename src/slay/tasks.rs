@@ -201,7 +201,7 @@ impl PlayerTask for Sacrifice {
 			instructions: "Choose a card to sacrifice.".to_string(),
 			options,
 			default_choice,
-			deadline: deadlines::get_sacrifice_deadline(),
+			timeline: deadlines::get_sacrifice_deadline(),
 		});
 
 		self.num -= 1;

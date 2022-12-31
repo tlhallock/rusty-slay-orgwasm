@@ -6,6 +6,7 @@ pub mod choices;
 pub mod deck;
 pub mod dice;
 pub mod game;
+pub mod icons;
 pub mod messages;
 pub mod player;
 pub mod roll_modal;

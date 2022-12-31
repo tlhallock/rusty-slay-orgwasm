@@ -72,16 +72,21 @@ pub fn view_game(props: &GamePerspectiveProps) -> Html {
 				/>
 		}
 	});
-	let roll = props.game.roll.as_ref().map(|r| {
-		html! {
-				<RollModalView roll={r.to_owned()} callbacks={
-					GameCallbacks {
-						choose: props.choose.to_owned(),
-						view_card: view_card.to_owned(),
-					}
-				}/>
-		}
-	});
+	let roll = props
+		.game
+		.roll
+		.as_ref()
+		// vec![].iter()
+		.map(|r| {
+			html! {
+					<RollModalView roll={r.to_owned()} callbacks={
+						GameCallbacks {
+							choose: props.choose.to_owned(),
+							view_card: view_card.to_owned(),
+						}
+					}/>
+			}
+		});
 	html! {
 			<div>
 					{for choices_instructions}

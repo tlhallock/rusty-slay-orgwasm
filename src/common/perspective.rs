@@ -4,6 +4,7 @@ use chrono::{DateTime, Utc};
 use log;
 
 use crate::slay::choices::Choices;
+use crate::slay::deadlines::Timeline;
 use crate::slay::ids;
 use crate::slay::showdown::common::{Roll, RollModification};
 use crate::slay::showdown::completion::{CompletionTracker, RollCompletion};
@@ -57,7 +58,7 @@ impl CompletionTracker {
 pub enum RollModificationChoiceType {
 	AddToRoll(CardSpec, i32),
 	RemoveFromRoll(CardSpec, i32),
-	Nothing(bool),
+	Nothing(RollCompletion),
 }
 
 impl RollModificationChoiceType {
@@ -85,7 +86,7 @@ pub struct RollPerspective {
 	pub completions: Vec<PlayerCompletionPerspective>,
 	pub roll_total: i32,
 	pub success: bool,
-	pub deadline: Option<DateTime<Utc>>,
+	pub timeline: Timeline,
 	pub reason: RollReason,
 	pub choices: Vec<RollModificationChoice>,
 }
@@ -106,7 +107,7 @@ impl RollState {
 			completions: self.completion_tracker.to_perspective(game),
 			roll_total: self.calculate_roll_total(),
 			success: false,
-			deadline: self.completion_tracker.deadline,
+			timeline: self.completion_tracker.timeline.to_owned(),
 			reason: self.reason.to_owned(),
 			choices: choices
 				.iter()
@@ -355,14 +356,14 @@ pub struct ChoicePerspective {
 #[derive(Debug, PartialEq, Clone)]
 pub struct ChoicesPerspective {
 	pub instructions: String,
-	pub deadline: Option<DateTime<Utc>>,
+	pub timeline: Timeline,
 	pub actions: Vec<ChoicePerspective>,
 }
 
 impl Choices {
 	pub fn to_perspective(&self, _game: &Game) -> ChoicesPerspective {
 		ChoicesPerspective {
-			deadline: self.deadline,
+			timeline: self.timeline.to_owned(),
 			instructions: self.instructions.to_owned(),
 			actions: self
 				.options

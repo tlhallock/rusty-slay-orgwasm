@@ -73,7 +73,7 @@ impl ChallengeState {
 	pub fn add_modification(
 		&mut self, modification_path: ModificationPath, modification: RollModification,
 	) {
-		self.tracker_mut().deadline = deadlines::get_challenge_deadline();
+		self.tracker_mut().timeline = deadlines::get_challenge_deadline();
 		match modification_path {
 			ModificationPath::Roll => panic!(),
 			// Err(SlayError::new(
@@ -104,7 +104,7 @@ impl ShowDown for ChallengeState {
 		Choices {
 			instructions: "Choose whether to modify the current challenge.".to_string(),
 			default_choice,
-			deadline: self.tracker().deadline,
+			timeline: self.tracker().timeline.to_owned(),
 			options: list_modification_choices(
 				context,
 				game,

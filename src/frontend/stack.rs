@@ -14,6 +14,7 @@ pub struct ExtraSpecProps {
 	pub is_highlighted_choice: bool,
 	pub is_default_choice: bool,
 	pub has_been_played_this_turn: bool,
+	pub disable_view: bool,
 }
 
 impl ExtraSpecProps {
@@ -42,14 +43,23 @@ pub fn view_spec(props: &SpecProps) -> Html {
 	};
 
 	let c = props.extra_specs.get_css_class();
-
-	html! {
+	if props.extra_specs.disable_view {
+		html! {
 			<div
 					class={classes!("card", c)}
-					onclick={view_this_card}
 			>
 					{ props.spec.label.to_owned() }
 			</div>
+		}
+	} else {
+		html! {
+			<div
+				class={classes!("card", c)}
+				onclick={view_this_card}
+			>
+				{ props.spec.label.to_owned() }
+			</div>
+		}
 	}
 }
 
@@ -84,6 +94,7 @@ impl StackProps {
 				.iter()
 				.any(|a| a.is_default),
 			has_been_played_this_turn: self.stack.top.played_this_turn,
+			disable_view: false,
 		}
 	}
 }

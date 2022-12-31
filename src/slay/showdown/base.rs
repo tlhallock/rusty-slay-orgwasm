@@ -70,6 +70,10 @@ impl CurrentShowdown {
 	//     self.showdown = showdown.take();
 	// }
 
+	pub fn reset_timer(&mut self) {
+		self.current_mut().map(|r| r.tracker_mut().reset_timeline());
+	}
+
 	pub fn get_roll(&self) -> Option<&RollState> {
 		self.roll.as_ref()
 	}

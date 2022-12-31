@@ -102,7 +102,7 @@ impl ShowDown for OfferChallengesState {
 		Choices {
 			instructions: "Choose whether to modify the current challenge.".to_string(),
 			default_choice,
-			deadline: self.tracker().deadline,
+			timeline: self.tracker().timeline.to_owned(),
 			options: self.list_challenge_choices(context, game, player_index, default_choice),
 		}
 	}

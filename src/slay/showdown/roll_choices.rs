@@ -216,12 +216,17 @@ fn create_set_complete_choice(
 	locator: ChoiceLocator, persist: RollCompletion, label: String,
 ) -> TasksChoice {
 	let player_index = locator.player_index;
+	let choice_id = locator.id;
 	TasksChoice::new(
 		choices::ChoiceInformation {
 			locator,
 			display: choices::ChoiceDisplay {
 				highlight: None,
 				label,
+				roll_modification_choice: Some(RollModificationChoice {
+					choice_id,
+					choice_type: RollModificationChoiceType::Nothing(persist),
+				}),
 				..Default::default()
 			},
 		},

@@ -116,6 +116,7 @@ fn waiting_for_players(game: &state::Game) -> bool {
 pub fn advance_game(
 	context: &mut game_context::GameBookKeeping, game: &mut state::Game,
 ) -> SlayResult<AdvanceGameResult> {
+	// TODO: We never check if the choices have expired!
 	for _ in 0..10000 {
 		if game_is_over(game) {
 			return Ok(AdvanceGameResult::Complete);

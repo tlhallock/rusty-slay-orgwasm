@@ -8,6 +8,7 @@ use chrono::DateTime;
 use chrono::Utc;
 use std::fmt::Debug;
 
+use super::deadlines::Timeline;
 use super::showdown::common::ModificationPath;
 
 #[derive(Clone, Debug)]
@@ -15,18 +16,18 @@ pub struct Choices {
 	pub instructions: String,
 	pub options: Vec<Box<dyn Choice>>,
 	pub default_choice: ids::ChoiceId,
-	pub deadline: Option<DateTime<Utc>>,
+	pub timeline: Timeline,
 }
 
 impl Choices {
 	pub fn new(
-		options: Vec<Box<dyn Choice>>, default_choice: ids::ChoiceId, deadline: Option<DateTime<Utc>>,
+		options: Vec<Box<dyn Choice>>, default_choice: ids::ChoiceId, timeline: Timeline,
 		instructions: String,
 	) -> Self {
 		Self {
 			options,
 			default_choice,
-			deadline,
+			timeline,
 			instructions,
 		}
 	}

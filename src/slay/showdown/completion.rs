@@ -1,6 +1,8 @@
 use chrono::{DateTime, Utc};
 use std::collections::HashMap;
 
+use crate::slay::deadlines::{self, Timeline};
+
 // #[derive(Debug, Clone, PartialEq, Eq, Copy)]
 // pub enum CompletionPath {
 //     Roll,
@@ -28,19 +30,23 @@ impl RollCompletion {
 #[derive(Debug, Clone)]
 pub struct CompletionTracker {
 	pub player_completions: HashMap<usize, RollCompletion>,
-	// #[serde(with = "ts_milliseconds_option")]
-	pub deadline: Option<DateTime<Utc>>,
+	pub timeline: Timeline,
 }
 
 impl CompletionTracker {
-	pub fn new(num_players: usize, deadline: Option<DateTime<Utc>>) -> Self {
+	pub fn new(num_players: usize, timeline: Timeline) -> Self {
 		Self {
-			deadline,
+			timeline,
 			player_completions: (0..num_players)
 				.map(|index| (index, RollCompletion::Thinking))
 				.collect(),
 		}
 	}
+
+	pub fn update_deadline(&mut self, new_timeline: Timeline) {
+		self.timeline = new_timeline;
+	}
+
 	pub fn is_complete(&self) -> bool {
 		// Check the deadline!?
 		self.player_completions.values().all(|rc| rc.done())
@@ -54,5 +60,9 @@ impl CompletionTracker {
 		let result = self.player_completions.get(&player_index).unwrap();
 		*result == RollCompletion::DoneUntilModification
 		// self.player_completions.get(&player_index).as_deref().contains(&RollCompletion::DoneUntilModification)
+	}
+
+	pub(crate) fn reset_timeline(&mut self) {
+		self.timeline.reset();
 	}
 }

@@ -8,6 +8,7 @@ edition = "2021"
 chrono = { version = "0.4.23" }
 dyn-clone = "1.0.10"
 getrandom = { version = "0.2", features = ["js"] }
+gloo-timers = "0.2.5"
 log = "0.4.17"
 rand = { version = "0.8.5" }
 # # erased-serde = "0.3.24"

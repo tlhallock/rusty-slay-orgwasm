@@ -547,7 +547,7 @@ pub fn assign_action_choices(context: &mut game_context::GameBookKeeping, game: 
 		instructions: "Please choose an action".to_string(),
 		options,
 		default_choice,
-		deadline: deadlines::get_action_point_choice_deadline(),
+		timeline: deadlines::get_action_point_choice_deadline(),
 	});
 }
 
@@ -635,7 +635,8 @@ impl PlayerTask for DoRollTask {
 	fn make_progress(
 		&mut self, context: &mut game_context::GameBookKeeping, game: &mut state::Game,
 	) -> SlayResult<tasks::TaskProgressResult> {
-		if let Some(roll) = self.roll.take() {
+		if let Some(mut roll) = self.roll.take() {
+			roll.completion_tracker.reset_timeline();
 			roll.assign_all_choices(context, game);
 			game.showdown.roll(roll);
 			Ok(tasks::TaskProgressResult::TaskComplete)

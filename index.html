@@ -172,6 +172,84 @@
             justify-content: center;
             margin: 5px;
         }
+        .roll-choices {
+            display: flex;
+            flex-direction: row;
+            flex-wrap: wrap;
+            max-width: 100%;
+            justify-content: center;
+        }
+        .roll-choices>div {
+            display: flex;
+            border: 2px solid yellow;
+            margin: 0.5em;
+        }
+        .roll-choice-plus {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            font-size:  3em;
+            color: green;
+            height: 100%;
+        }
+        .roll-choice-minus {
+            font-size:  3em;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            color: red;
+            height: 100%;
+        }
+        .roll-total-success {
+            font-size: 4em;
+            color: green;
+        }
+        .roll-total-failure {
+            font-size: 4em;
+            color: red;
+        }
+        .completions {
+            font-size:  2em;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .completion {
+            display: grid;
+            grid-template-columns: repeat(2, 50%);
+        }
+
+
+
+
+        @keyframes thinking1 {
+          0% { opacity: 0.25; }
+          33% { opacity: 1; }
+          66% { opacity: 1; }
+          100% { opacity: 0.25; }
+        } 
+        .thinking-1 {
+            animation: thinking1 3s ease infinite;
+        }
+        @keyframes thinking2 {
+          0% { opacity: 1; }
+          33% { opacity: 0.25; }
+          66% { opacity: 1; }
+          100% { opacity: 1; }
+        } 
+        .thinking-2 {
+            animation: thinking2 3s ease infinite;
+        }
+        @keyframes thinking3 {
+          0% { opacity: 1; }
+          33% { opacity: 1; }
+          66% { opacity: 0.25; }
+          100% { opacity: 1; }
+        } 
+        .thinking-3 {
+            animation: thinking3 3s ease infinite;
+        }
     </style>
 </head>
 
