@@ -403,7 +403,7 @@ fn create_use_ability_choice(
 }
 
 fn create_attack_monster_choice(
-	context: &mut GameBookKeeping, game: &Game, locator: choices::ChoiceLocator,
+	context: &mut GameBookKeeping, _game: &Game, locator: choices::ChoiceLocator,
 	monster_card: &state::Card,
 ) -> TasksChoice {
 	let player_index = locator.player_index;
