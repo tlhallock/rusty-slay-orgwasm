@@ -1,8 +1,7 @@
 use crate::slay::deadlines::Timeline;
-use chrono::DateTime;
-use chrono::Utc;
+
 use gloo_timers::callback::Interval;
-use log;
+
 use yew::classes;
 use yew::prelude::*;
 

@@ -4,15 +4,15 @@ use crate::slay::choices::{
 };
 use crate::slay::choices_rewrite::TasksChoice;
 use crate::slay::errors::{SlayError, SlayResult};
-use crate::slay::game_context;
 use crate::slay::game_context::GameBookKeeping;
 use crate::slay::ids;
 use crate::slay::state::{self, Card, DeckPath, Game};
 use crate::slay::tasks::{MoveCardTask, PlayerTask, TaskProgressResult};
+use crate::slay::{deadlines, game_context};
 
-use super::base::ShowDown;
 use super::common::{ModificationPath, RollModification};
-use super::completion::RollCompletion;
+use super::completion::{CompletionTracker, RollCompletion};
+use crate::slay::showdown::current_showdown::ShowDown;
 
 #[derive(Debug, Clone)]
 pub struct ModifyRollTask {
@@ -221,7 +221,6 @@ fn create_set_complete_choice(
 		choices::ChoiceInformation {
 			locator,
 			display: choices::ChoiceDisplay {
-				highlight: None,
 				label,
 				roll_modification_choice: Some(RollModificationChoice {
 					choice_id,
@@ -235,11 +234,7 @@ fn create_set_complete_choice(
 }
 
 pub fn create_set_completion_done(locator: ChoiceLocator) -> TasksChoice {
-	create_set_complete_choice(
-		locator,
-		RollCompletion::AllDone,
-		"Do not modify this roll.".to_string(),
-	)
+	create_set_complete_choice(locator, RollCompletion::AllDone, "Do nothing.".to_string())
 }
 
 pub fn create_set_completion_until_modification(locator: ChoiceLocator) -> TasksChoice {
@@ -297,7 +292,11 @@ impl PlayerTask for ChallengeTask {
 		&mut self, context: &mut game_context::GameBookKeeping, game: &mut state::Game,
 	) -> SlayResult<TaskProgressResult> {
 		let offer = game.showdown.take_current_offer()?;
-		let challenge = offer.to_challenge(&mut context.rng, self.challenging_player_index)?;
+		let mut challenge = offer.to_challenge(&mut context.rng, self.challenging_player_index)?;
+		challenge.completion_tracker = Some(CompletionTracker::new(
+			game.number_of_players(),
+			deadlines::get_challenge_deadline(),
+		));
 		challenge.assign_all_choices(context, game);
 		game.showdown.challenge(challenge);
 		Ok(TaskProgressResult::ChoicesAssigned)

@@ -32,13 +32,14 @@ pub fn view_choices(props: &ChoiceProps) -> Html {
 	};
 
 	html! {
-			<button
-					onclick={choose_this_choice}
-					onmouseenter={select_this_choice}
-					onmouseleave={remove_any_selected_choice}
-			>
-					{props.choice.label.to_owned()}
-			</button>
+		<button
+			class={classes!("choice-button")}
+			onclick={choose_this_choice}
+			onmouseenter={select_this_choice}
+			onmouseleave={remove_any_selected_choice}
+		>
+			{props.choice.label.to_owned()}
+		</button>
 	}
 }
 

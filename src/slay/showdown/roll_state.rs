@@ -6,7 +6,7 @@ use crate::slay::ids;
 use crate::slay::specification::CardSpec;
 use crate::slay::state::Game;
 
-use super::base::ShowDown;
+use super::current_showdown::ShowDown;
 
 use super::common::ModificationPath;
 use super::common::Roll;
@@ -30,20 +30,19 @@ pub struct RollState {
 	consequences: RollConsequences,
 	pub initial: Roll,
 	pub history: Vec<RollModification>,
-	pub completion_tracker: CompletionTracker,
+	pub completion_tracker: Option<CompletionTracker>,
 }
 
 impl RollState {
 	pub fn new(
-		roller_index: usize, consequences: RollConsequences, initial: Roll, num_players: usize,
-		reason: RollReason,
+		roller_index: usize, consequences: RollConsequences, initial: Roll, reason: RollReason,
 	) -> Self {
 		Self {
 			roller_index,
 			initial,
 			history: Default::default(),
 			consequences,
-			completion_tracker: CompletionTracker::new(num_players, deadlines::get_roll_deadline()),
+			completion_tracker: None,
 			reason,
 		}
 	}
@@ -73,11 +72,11 @@ impl RollState {
 
 impl ShowDown for RollState {
 	fn tracker(&self) -> &CompletionTracker {
-		&self.completion_tracker
+		&self.completion_tracker.as_ref().unwrap()
 	}
 
 	fn tracker_mut(&mut self) -> &mut CompletionTracker {
-		&mut self.completion_tracker
+		self.completion_tracker.as_mut().unwrap()
 	}
 
 	fn create_choice_for(

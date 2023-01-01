@@ -11,7 +11,8 @@ use crate::frontend::card_modal::CardModalView;
 use crate::frontend::choices::ChoicesView;
 use crate::frontend::deck::DeckView;
 use crate::frontend::player::PlayerView;
-use crate::frontend::roll_modal::RollModalView;
+use crate::frontend::showdown::offer_modal::OfferChallengesView;
+use crate::frontend::showdown::roll_modal::RollModalView;
 use crate::slay::ids;
 
 #[derive(Properties, PartialEq)]
@@ -57,7 +58,10 @@ pub fn view_game(props: &GamePerspectiveProps) -> Html {
 	});
 	let card_view = viewed_card.as_ref().map(|m| {
 		html! {
-				<CardModalView info={m.to_owned()} view_card={view_card.to_owned()} />
+				<CardModalView info={m.to_owned()} callbacks={GameCallbacks {
+					choose: props.choose.to_owned(),
+					view_card: view_card.to_owned(),
+				}} />
 		}
 	});
 	let choices_instructions = props.game.choices.as_ref().map(|c| {
@@ -87,11 +91,30 @@ pub fn view_game(props: &GamePerspectiveProps) -> Html {
 					}/>
 			}
 		});
+	let offer = props
+		.game
+		.offer
+		.as_ref()
+		// vec![].iter()
+		.map(|o| {
+			html! {
+				<OfferChallengesView
+					offer={o.to_owned()}
+					callbacks={
+						GameCallbacks {
+							choose: props.choose.to_owned(),
+							view_card: view_card.to_owned(),
+						}
+					}
+				/>
+			}
+		});
 	html! {
 			<div>
 					{for choices_instructions}
 					{for card_view}
 					{for roll}
+					{for offer}
 					<div class={classes!("global-decks")}>
 							{for decks}
 					</div>

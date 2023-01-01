@@ -12,11 +12,12 @@ use super::choices::ChoiceDisplay;
 use super::choices_rewrite::TasksChoice;
 use super::errors::SlayError;
 use super::game_context::GameBookKeeping;
-use super::showdown::base::ShowDown;
 use super::showdown::common::ChallengeReason;
 use super::showdown::common::Roll;
+use super::showdown::completion::CompletionTracker;
 use super::showdown::consequences::RollConsequenceRenameMe;
 use super::showdown::consequences::RollConsequences;
+use super::showdown::current_showdown::ShowDown;
 use super::showdown::offer::OfferChallengesState;
 use super::showdown::roll_state::RollReason;
 use super::showdown::roll_state::RollState;
@@ -49,7 +50,6 @@ fn create_roll_for_ability_task(
 			}],
 		),
 		Roll::create_from(&mut context.rng),
-		game.number_of_players(),
 		RollReason::UseHeroAbility(card.spec.to_owned()),
 	))
 }
@@ -81,7 +81,6 @@ fn create_place_hero_task(
 			},
 		),
 		vec![Box::new(OfferChallengesTask::new(OfferChallengesState::new(
-			game.number_of_players(),
 			player_index,
 			consequences::RollConsequences::new(
 				player_index,
@@ -433,7 +432,6 @@ fn create_attack_monster_choice(
 					.unwrap()
 					.create_consequences(player_index),
 				Roll::create_from(&mut context.rng),
-				game.number_of_players(),
 				RollReason::AttackMonster(monster_card.spec.to_owned()),
 			))) as Box<dyn PlayerTask>,
 			Box::new(RemoveActionPointsTask::new(player_index, 2)) as Box<dyn PlayerTask>,
@@ -611,7 +609,11 @@ impl PlayerTask for OfferChallengesTask {
 	fn make_progress(
 		&mut self, context: &mut game_context::GameBookKeeping, game: &mut state::Game,
 	) -> SlayResult<tasks::TaskProgressResult> {
-		if let Some(offer) = self.offer.take() {
+		if let Some(mut offer) = self.offer.take() {
+			offer.completion_tracker = Some(CompletionTracker::new(
+				game.number_of_players(),
+				deadlines::get_offer_challenges_deadline(),
+			));
 			offer.assign_all_choices(context, game);
 			game.showdown.offer(offer);
 			Ok(tasks::TaskProgressResult::TaskComplete)
@@ -636,7 +638,10 @@ impl PlayerTask for DoRollTask {
 		&mut self, context: &mut game_context::GameBookKeeping, game: &mut state::Game,
 	) -> SlayResult<tasks::TaskProgressResult> {
 		if let Some(mut roll) = self.roll.take() {
-			roll.completion_tracker.reset_timeline();
+			roll.completion_tracker = Some(CompletionTracker::new(
+				game.number_of_players(),
+				deadlines::get_roll_deadline(),
+			));
 			roll.assign_all_choices(context, game);
 			game.showdown.roll(roll);
 			Ok(tasks::TaskProgressResult::TaskComplete)

@@ -3,10 +3,10 @@
 use super::choices::DisplayPath;
 // use super::ids::{CardId, ChallengeId, ChoiceId, DeckId, ElementId, IdGenerator, PlayerId, RollId};
 use super::ids;
-use super::showdown::base::CurrentShowdown;
 use super::specification;
 use super::specification::CardType;
 use super::tasks::PlayerTasks;
+use crate::slay::showdown::current_showdown::CurrentShowdown;
 
 use crate::slay::choices;
 use crate::slay::errors;
@@ -387,12 +387,13 @@ pub struct Game {
 }
 
 impl Game {
-	pub fn get_element_id(&self, display_path: Option<DisplayPath>) -> Option<ids::ElementId> {
+	pub fn get_element_id(&self, display_path: &Option<DisplayPath>) -> Option<ids::ElementId> {
 		display_path
+			.as_ref()
 			.map(|p| match p {
-				DisplayPath::DeckAt(d) => Some(self.deck(d).id),
-				DisplayPath::CardIn(_, id) => Some(id),
-				DisplayPath::Player(player_index) => Some(self.players[player_index].id),
+				DisplayPath::DeckAt(d) => Some(self.deck(*d).id),
+				DisplayPath::CardIn(_, id) => Some(*id),
+				DisplayPath::Player(player_index) => Some(self.players[*player_index].id),
 				DisplayPath::Roll(_) => None,
 			})
 			.flatten()

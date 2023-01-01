@@ -6,11 +6,11 @@ use crate::slay::{deadlines, game_context};
 
 use crate::slay::showdown::common::Roll;
 
-use super::base::ShowDown;
 use super::common::{ChallengeReason, ModificationPath, RollModification};
 use super::completion::CompletionTracker;
 use super::consequences::RollConsequences;
 use super::roll_state::list_modification_choices;
+use crate::slay::showdown::current_showdown::ShowDown;
 
 #[derive(Debug, Clone)]
 pub struct ChallengeRoll {
@@ -43,7 +43,7 @@ impl ChallengeRoll {
 pub struct ChallengeState {
 	pub initiator: ChallengeRoll,
 	pub challenger: ChallengeRoll,
-	pub completion_tracker: CompletionTracker,
+	pub completion_tracker: Option<CompletionTracker>,
 	pub reason: ChallengeReason,
 
 	consequences: RollConsequences,
@@ -55,16 +55,13 @@ impl ChallengeState {
 	}
 
 	pub fn new(
-		rng: &mut rand::rngs::ThreadRng, number_of_players: usize, player_index: usize,
-		challenger_index: usize, consequences: RollConsequences, reason: ChallengeReason,
+		rng: &mut rand::rngs::ThreadRng, player_index: usize, challenger_index: usize,
+		consequences: RollConsequences, reason: ChallengeReason,
 	) -> Self {
 		Self {
 			initiator: ChallengeRoll::new(rng, player_index),
 			challenger: ChallengeRoll::new(rng, challenger_index),
-			completion_tracker: CompletionTracker::new(
-				number_of_players,
-				deadlines::get_challenge_deadline(),
-			),
+			completion_tracker: None,
 			consequences,
 			reason,
 		}
@@ -91,12 +88,13 @@ impl ChallengeState {
 
 impl ShowDown for ChallengeState {
 	fn tracker(&self) -> &CompletionTracker {
-		&self.completion_tracker
+		self.completion_tracker.as_ref().unwrap()
 	}
 
 	fn tracker_mut(&mut self) -> &mut CompletionTracker {
-		&mut self.completion_tracker
+		self.completion_tracker.as_mut().unwrap()
 	}
+
 	fn create_choice_for(
 		&self, context: &mut GameBookKeeping, game: &Game, player_index: usize,
 	) -> Choices {

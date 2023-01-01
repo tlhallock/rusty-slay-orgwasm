@@ -9,5 +9,5 @@ pub mod game;
 pub mod icons;
 pub mod messages;
 pub mod player;
-pub mod roll_modal;
+pub mod showdown;
 pub mod stack;

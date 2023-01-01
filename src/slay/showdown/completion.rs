@@ -1,7 +1,6 @@
-use chrono::{DateTime, Utc};
 use std::collections::HashMap;
 
-use crate::slay::deadlines::{self, Timeline};
+use crate::slay::deadlines::Timeline;
 
 // #[derive(Debug, Clone, PartialEq, Eq, Copy)]
 // pub enum CompletionPath {

@@ -1,13 +1,10 @@
-// lol, I can't say `use crate::ids;`
-
-use chrono::{DateTime, Utc};
-use log;
-
 use crate::slay::choices::Choices;
 use crate::slay::deadlines::Timeline;
 use crate::slay::ids;
-use crate::slay::showdown::common::{Roll, RollModification};
+use crate::slay::showdown::common::{ChallengeReason, Roll, RollModification};
 use crate::slay::showdown::completion::{CompletionTracker, RollCompletion};
+use crate::slay::showdown::current_showdown::ShowDown;
+use crate::slay::showdown::offer::OfferChallengesState;
 use crate::slay::showdown::roll_state::{RollReason, RollState};
 use crate::slay::specification::{CardSpec, CardType, MonsterSpec, Visibility};
 use crate::slay::state::{self, Game, Stack};
@@ -71,6 +68,7 @@ impl RollModificationChoiceType {
 	}
 }
 
+// It is a little awkward to have both this and the choice perspective...
 #[derive(Debug, PartialEq, Clone)]
 pub struct RollModificationChoice {
 	pub choice_id: ids::ChoiceId,
@@ -104,10 +102,10 @@ impl RollState {
 				.iter()
 				.map(|m| m.to_perspective(game))
 				.collect(),
-			completions: self.completion_tracker.to_perspective(game),
+			completions: self.tracker().to_perspective(game),
 			roll_total: self.calculate_roll_total(),
 			success: false,
-			timeline: self.completion_tracker.timeline.to_owned(),
+			timeline: self.tracker().timeline.to_owned(),
 			reason: self.reason.to_owned(),
 			choices: choices
 				.iter()
@@ -121,6 +119,33 @@ impl RollState {
 				})
 				.flatten()
 				.collect(),
+		}
+	}
+}
+
+#[derive(Debug, PartialEq, Clone)]
+pub struct OfferChallengesPerspective {
+	pub initiator: String,
+	pub completions: Vec<PlayerCompletionPerspective>,
+	pub reason: ChallengeReason,
+	pub choices: Vec<ChoicePerspective>,
+	pub timeline: Timeline,
+}
+
+impl OfferChallengesState {
+	pub fn to_perspective(
+		&self, game: &Game, choices: &Option<ChoicesPerspective>,
+	) -> OfferChallengesPerspective {
+		OfferChallengesPerspective {
+			initiator: game.players[self.player_index].name.to_owned(),
+			completions: self.tracker().to_perspective(game),
+			reason: self.reason.to_owned(),
+			choices: choices
+				.iter()
+				.map(|choices| choices.actions.clone())
+				.flatten()
+				.collect(),
+			timeline: self.tracker().timeline.to_owned(),
 		}
 	}
 }
@@ -142,7 +167,6 @@ pub struct ChoiceAssociation {
 
 impl ChoiceAssociation {
 	fn new(association_type: ChoiceAssociationType, choice_info: &ChoicePerspective) -> Self {
-		log::info!("Found association");
 		Self {
 			choice_id: choice_info.choice_id,
 			association_type,
@@ -351,6 +375,7 @@ pub struct ChoicePerspective {
 	// This will probably need an arrow id...
 	pub arrows: Vec<(Option<ids::ElementId>, Option<ids::ElementId>)>,
 	pub roll_modification_choice: Option<RollModificationChoice>,
+	// Should we add another one of these for card actions? ^^
 }
 
 #[derive(Debug, PartialEq, Clone)]
@@ -361,7 +386,7 @@ pub struct ChoicesPerspective {
 }
 
 impl Choices {
-	pub fn to_perspective(&self, _game: &Game) -> ChoicesPerspective {
+	pub fn to_perspective(&self, game: &Game) -> ChoicesPerspective {
 		ChoicesPerspective {
 			timeline: self.timeline.to_owned(),
 			instructions: self.instructions.to_owned(),
@@ -374,7 +399,7 @@ impl Choices {
 						is_default: info.get_id() == self.default_choice,
 						choice_id: info.get_id(),
 						label: info.display.label.to_owned(),
-						highlight: None,
+						highlight: game.get_element_id(&info.display.highlight),
 						arrows: vec![],
 						roll_modification_choice: info.display.roll_modification_choice.to_owned(),
 					}
@@ -387,12 +412,14 @@ impl Choices {
 #[derive(Debug, PartialEq, Clone)]
 pub struct GamePerspective {
 	pub players: Vec<PlayerPerspective>,
-	// pub challenge: Option<ChallengeState>,
-	// pub roll: Option<RollState>,
 	pub decks: Vec<DeckPerspective>,
 	pub choices: Option<ChoicesPerspective>,
-	pub roll: Option<RollPerspective>,
 	pub turn: state::Turn,
+
+	pub roll: Option<RollPerspective>,
+	pub offer: Option<OfferChallengesPerspective>,
+	// pub challenge: Option<ChallengeState>,
+	// pub roll: Option<RollState>,
 }
 
 impl GamePerspective {
@@ -448,6 +475,10 @@ impl state::Game {
 				.showdown
 				.get_roll()
 				.map(|r| r.to_perspective(self, choices)),
+			offer: self
+				.showdown
+				.get_offer()
+				.map(|o| o.to_perspective(self, choices)),
 		}
 	}
 }

@@ -2,6 +2,7 @@ use yew::classes;
 use yew::prelude::*;
 
 use crate::common::perspective::CardSpecPerspective;
+use crate::common::perspective::ChoiceAssociation;
 use crate::common::perspective::ChoiceAssociationType;
 use crate::common::perspective::StackPerspective;
 
@@ -10,7 +11,7 @@ use super::card_modal::CardModalInfo;
 
 #[derive(Properties, PartialEq, Default)]
 pub struct ExtraSpecProps {
-	pub is_choice_representation: bool,
+	pub represented_choices: Vec<ChoiceAssociation>,
 	pub is_highlighted_choice: bool,
 	pub is_default_choice: bool,
 	pub has_been_played_this_turn: bool,
@@ -19,8 +20,8 @@ pub struct ExtraSpecProps {
 
 impl ExtraSpecProps {
 	fn get_css_class(&self) -> Option<&'static str> {
-		if self.is_choice_representation {
-			return Some("is_choice");
+		if self.represented_choices.len() > 0 {
+			return Some("is-choice");
 		}
 		return Some("is-part-of-choice");
 	}
@@ -38,7 +39,9 @@ pub struct SpecProps {
 pub fn view_spec(props: &SpecProps) -> Html {
 	let view_this_card = {
 		let view_card = props.view_card.clone();
-		let modal = props.spec.to_card_modal();
+		let modal = props
+			.spec
+			.to_card_modal(props.extra_specs.represented_choices.to_owned());
 		move |_| view_card.emit(Some(modal.clone()))
 	};
 
@@ -72,13 +75,27 @@ pub struct StackProps {
 
 impl StackProps {
 	pub fn create_extra_props(&self) -> ExtraSpecProps {
+		// for association in self.stack.top.choice_associations.iter() {
+		// 	log::info!("Association type: {:?} {}",
+		// 		association,
+		// 		self
+		// 		.stack
+		// 		.top
+		// 		.choice_associations
+		// 		.iter()
+		// 		.any(|a| a.association_type == ChoiceAssociationType::Representer),
+		// 	);
+		// }
+
 		ExtraSpecProps {
-			is_choice_representation: self
+			represented_choices: self
 				.stack
 				.top
 				.choice_associations
 				.iter()
-				.any(|a| a.association_type == ChoiceAssociationType::Representer),
+				.filter(|a| a.association_type == ChoiceAssociationType::Representer)
+				.map(|a| a.to_owned())
+				.collect(),
 			is_highlighted_choice: self.choice_state.highlighted_choice.iter().any(|id| {
 				self
 					.stack

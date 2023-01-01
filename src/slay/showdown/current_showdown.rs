@@ -1,4 +1,5 @@
 use crate::slay::choices::Choices;
+use crate::slay::deadlines::Timeline;
 use crate::slay::errors::SlayError;
 use crate::slay::errors::SlayResult;
 use crate::slay::game_context;
@@ -78,12 +79,17 @@ impl CurrentShowdown {
 		self.roll.as_ref()
 	}
 
+	pub fn get_offer(&self) -> Option<&OfferChallengesState> {
+		self.offer.as_ref()
+	}
+
 	pub fn take_current_offer(&mut self) -> SlayResult<OfferChallengesState> {
 		if self.show_down_type != ShowDownType::OfferChallenges {
 			return Err(SlayError::new(
 				"Needed to be offering challenges, instead there was no roll event.",
 			));
 		}
+		self.show_down_type = ShowDownType::None;
 		self
 			.offer
 			.take()
@@ -242,18 +248,18 @@ impl CurrentShowdown {
 	) -> SlayResult<()> {
 		match self.show_down_type {
 			ShowDownType::None => return Err(SlayError::new("alskjdf;alksjdf;")),
-			ShowDownType::Roll => self.roll.as_mut().map(|x| {
-				x.completion_tracker
-					.set_player_completion(player_index, persist)
-			}),
-			ShowDownType::OfferChallenges => self.offer.as_mut().map(|x| {
-				x.completion_tracker
-					.set_player_completion(player_index, persist)
-			}),
-			ShowDownType::Challenge => self.challenge.as_mut().map(|x| {
-				x.completion_tracker
-					.set_player_completion(player_index, persist)
-			}),
+			ShowDownType::Roll => self
+				.roll
+				.as_mut()
+				.map(|x| x.tracker_mut().set_player_completion(player_index, persist)),
+			ShowDownType::OfferChallenges => self
+				.offer
+				.as_mut()
+				.map(|x| x.tracker_mut().set_player_completion(player_index, persist)),
+			ShowDownType::Challenge => self
+				.challenge
+				.as_mut()
+				.map(|x| x.tracker_mut().set_player_completion(player_index, persist)),
 		};
 		Ok(())
 	}

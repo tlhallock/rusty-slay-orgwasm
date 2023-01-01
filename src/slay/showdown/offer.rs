@@ -1,4 +1,5 @@
-use crate::slay::deadlines::get_offer_challenges_deadline;
+use crate::common::perspective::OfferChallengesPerspective;
+use crate::slay::deadlines::{get_offer_challenges_deadline, Timeline};
 use crate::slay::game_context::GameBookKeeping;
 use crate::slay::state::Game;
 
@@ -6,36 +7,28 @@ use crate::slay::choices::{Choice, ChoiceLocator, Choices};
 use crate::slay::errors::SlayResult;
 use crate::slay::specification::CardType;
 
-use crate::slay::showdown::base::ShowDown;
 use crate::slay::showdown::challenge::ChallengeState;
 use crate::slay::showdown::completion::CompletionTracker;
 use crate::slay::showdown::consequences::RollConsequences;
+use crate::slay::showdown::current_showdown::ShowDown;
 
 use super::common::ChallengeReason;
 use super::roll_choices::{self, create_challenge_choice};
 
 #[derive(Debug, Clone)]
 pub struct OfferChallengesState {
-	player_index: usize,
-	reason: ChallengeReason,
-	pub completion_tracker: CompletionTracker,
+	pub player_index: usize,
+	pub reason: ChallengeReason,
+	pub completion_tracker: Option<CompletionTracker>,
 	consequences: RollConsequences,
-	number_of_players: usize,
 }
 
 impl OfferChallengesState {
-	pub fn new(
-		number_of_players: usize, player_index: usize, consequences: RollConsequences,
-		reason: ChallengeReason,
-	) -> Self {
+	pub fn new(player_index: usize, consequences: RollConsequences, reason: ChallengeReason) -> Self {
 		Self {
 			player_index,
-			completion_tracker: CompletionTracker::new(
-				number_of_players,
-				get_offer_challenges_deadline(),
-			),
+			completion_tracker: None,
 			consequences,
-			number_of_players,
 			reason,
 		}
 	}
@@ -77,7 +70,6 @@ impl OfferChallengesState {
 	) -> SlayResult<ChallengeState> {
 		Ok(ChallengeState::new(
 			rng,
-			self.number_of_players,
 			self.player_index,
 			challenger_index,
 			self.consequences.to_owned(), // Copied, although it is about to be dropped.
@@ -88,11 +80,11 @@ impl OfferChallengesState {
 
 impl ShowDown for OfferChallengesState {
 	fn tracker(&self) -> &CompletionTracker {
-		&self.completion_tracker
+		&self.completion_tracker.as_ref().unwrap()
 	}
 
 	fn tracker_mut(&mut self) -> &mut CompletionTracker {
-		&mut self.completion_tracker
+		self.completion_tracker.as_mut().unwrap()
 	}
 
 	fn create_choice_for(

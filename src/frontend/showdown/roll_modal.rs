@@ -7,21 +7,20 @@ use crate::common::perspective::CardSpecPerspective;
 use crate::common::perspective::RollModificationChoiceType;
 use crate::common::perspective::RollPerspective;
 use crate::frontend::dice::Dice;
-use crate::frontend::icons::Continue;
 use crate::frontend::icons::Done;
 use crate::frontend::icons::Timer;
+use crate::frontend::showdown::common::CompletionsView;
 use crate::frontend::stack::CardSpecView;
 
+use crate::frontend::app::ChoiceState;
+use crate::frontend::app::GameCallbacks;
+use crate::frontend::icons::DoNot;
+use crate::frontend::stack::ExtraSpecProps;
 use crate::slay::showdown::completion::RollCompletion;
 use crate::slay::showdown::consequences::Comparison;
 use crate::slay::showdown::consequences::Condition;
 use crate::slay::showdown::roll_state::RollReason;
 use crate::slay::tasks::TaskSpec;
-
-use super::app::ChoiceState;
-use super::app::GameCallbacks;
-use super::stack::ExtraSpecProps;
-use crate::frontend::icons::DoNot;
 
 #[derive(Properties, PartialEq)]
 pub struct SimplerRollModalProps {
@@ -256,29 +255,6 @@ fn view_roll_history(props: &SimplerRollModalProps) -> Html {
 	html! { <> { for completions } </> }
 }
 
-#[function_component(RollCompletions)]
-fn view_roll_completions(props: &SimplerRollModalProps) -> Html {
-	let completions = props.roll.completions.iter().map(|c| {
-		html! {
-			<div class={classes!{"completion"}}>
-				{ c.player_name.to_owned() }
-				{
-					match c.completion {
-						RollCompletion::Thinking => html! { <Continue/> },
-						RollCompletion::DoneUntilModification => html! { <Done/> },
-						RollCompletion::AllDone => html! { <DoNot/> },
-					}
-				}
-			</div>
-		}
-	});
-	html! {
-		<div class={classes!{"completions"}}>
-			{ for completions }
-		</div>
-	}
-}
-
 #[function_component(RollModalView)]
 pub fn view_roll_modal(props: &RollModalProps) -> Html {
 	let _open = use_state(|| false);
@@ -304,7 +280,7 @@ pub fn view_roll_modal(props: &RollModalProps) -> Html {
 				<br/>
 				<RollChoices roll={props.roll.to_owned()} callbacks={props.callbacks.to_owned()}/>
 				<br/>
-				<RollCompletions roll={props.roll.to_owned()}/>
+				<CompletionsView completions={props.roll.completions.to_owned()}/>
 				<br/>
 				<div>
 				</div>
