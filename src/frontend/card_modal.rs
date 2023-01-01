@@ -36,7 +36,7 @@ pub fn view_card_details(props: &CardModalProps) -> Html {
 		}
 	});
 	html! {
-			<div class={classes!("modal")} onclick={clear_card}>
+			<div class={classes!("card-modal")} onclick={clear_card}>
 					<div class={classes!("modal-content")}>
 							<h1>
 									{props.info.label.to_owned()}
