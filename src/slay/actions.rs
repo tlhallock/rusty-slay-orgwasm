@@ -149,7 +149,7 @@ struct PlaceItemTask {
 
 impl PlayerTask for PlaceItemTask {
 	fn make_progress(
-		&mut self, context: &mut game_context::GameBookKeeping, game: &mut state::Game,
+		&mut self, _context: &mut game_context::GameBookKeeping, _game: &mut state::Game,
 	) -> SlayResult<TaskProgressResult> {
 		log::info!("TODO: Implement placing an item card...");
 		Ok(TaskProgressResult::TaskComplete)
@@ -203,7 +203,7 @@ struct CastMagicTask {
 
 impl PlayerTask for CastMagicTask {
 	fn make_progress(
-		&mut self, context: &mut game_context::GameBookKeeping, game: &mut state::Game,
+		&mut self, _context: &mut game_context::GameBookKeeping, _game: &mut state::Game,
 	) -> SlayResult<TaskProgressResult> {
 		log::info!("TODO: Implement casting a magic card...");
 		Ok(TaskProgressResult::TaskComplete)
@@ -282,7 +282,7 @@ struct DrawTask {
 
 impl PlayerTask for DrawTask {
 	fn make_progress(
-		&mut self, context: &mut game_context::GameBookKeeping, game: &mut state::Game,
+		&mut self, _context: &mut game_context::GameBookKeeping, game: &mut state::Game,
 	) -> SlayResult<TaskProgressResult> {
 		for _ in 0..self.number_to_draw {
 			let stack = game.draw.deal();
@@ -331,7 +331,7 @@ struct ReplaceHandTask {
 
 impl PlayerTask for ReplaceHandTask {
 	fn make_progress(
-		&mut self, context: &mut game_context::GameBookKeeping, game: &mut state::Game,
+		&mut self, _context: &mut game_context::GameBookKeeping, game: &mut state::Game,
 	) -> SlayResult<TaskProgressResult> {
 		let player = &mut game.players[self.player_index];
 		player.remaining_action_points -= 3;

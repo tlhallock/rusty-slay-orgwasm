@@ -1,7 +1,7 @@
 use crate::slay::game_context::GameBookKeeping;
 use crate::slay::state::Game;
 
-use crate::slay::choices::{Choice, ChoiceLocator, Choices, TasksChoice};
+use crate::slay::choices::{ChoiceLocator, Choices, TasksChoice};
 use crate::slay::errors::SlayResult;
 use crate::slay::specification::CardType;
 

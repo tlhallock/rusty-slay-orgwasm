@@ -15,7 +15,7 @@ use rand::seq::SliceRandom;
 use rand::Rng;
 use state::Card;
 
-use crate::slay::choices::{Choice, TasksChoice};
+use crate::slay::choices::{Choice};
 use crate::slay::game_context::GameBookKeeping;
 use crate::slay::state::Game;
 use crate::slay::tasks::TaskProgressResult;

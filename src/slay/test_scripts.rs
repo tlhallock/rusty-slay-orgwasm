@@ -1,11 +1,11 @@
-use std::collections::VecDeque;
+
 
 use crate::slay::game_context::GameBookKeeping;
 use crate::slay::state::Game;
 
 use super::specification::{self, CardType};
 use super::state::{Card, Deck, Player, Stack};
-use super::{actions, ids};
+use super::{ids};
 
 pub fn initialize_empty_game(context: &mut GameBookKeeping, game: &mut Game) {
 	specification::get_card_specs().iter().for_each(|spec| {
@@ -20,7 +20,7 @@ pub fn initialize_empty_game(context: &mut GameBookKeeping, game: &mut Game) {
 	});
 
 	for player_index in 0..4 {
-		let mut player = Player::new(
+		let player = Player::new(
 			&mut context.id_generator,
 			format!("Unnamed bot {}", player_index + 1),
 			player_index,

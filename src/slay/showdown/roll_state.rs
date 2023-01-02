@@ -1,4 +1,4 @@
-use crate::slay::choices::{Choice, ChoiceLocator, Choices, TasksChoice};
+use crate::slay::choices::{ChoiceLocator, Choices, TasksChoice};
 use crate::slay::deadlines;
 
 use crate::slay::game_context::GameBookKeeping;
