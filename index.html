@@ -96,12 +96,6 @@
             align-items: center;
         }
 
-        .card-modal {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            font-size: large;
-        }
-
         h1 {
             color: rgb(172, 167, 244);
         }
@@ -116,8 +110,9 @@
             left: 0;
             top: 0;
             width: 100%;
-            overflow: auto;
-            /* Enable scroll if needed */
+
+            max-height: 100%;
+            overflow-y: scroll;
             background-color: rgb(147, 147, 147);
             background-color: rgba(147, 147, 147, 0.9);
         }
@@ -127,8 +122,8 @@
             left: 0;
             top: 0;
             width: 100%;
-            overflow: auto;
-            /* Enable scroll if needed */
+            max-height: 100%;
+            overflow-y: scroll;
             background-color: rgb(147, 147, 147);
             background-color: rgba(147, 147, 147, 0.9);
         }
@@ -193,7 +188,7 @@
             display: grid;
             grid-template-columns: repeat(4, 1fr);
         }
-        .dice {
+        .row {
             display: flex;
             flex-direction: row;
             justify-content: center;
