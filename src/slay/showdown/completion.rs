@@ -48,6 +48,10 @@ impl CompletionTracker {
 
 	pub fn is_complete(&self) -> bool {
 		// Check the deadline!?
+		log::info!("Looking at the completions...");
+		for v in self.player_completions.values() {
+			log::info!("{:?} {:?}", v, v.done());
+		}
 		self.player_completions.values().all(|rc| rc.done())
 	}
 

@@ -1,9 +1,7 @@
-
-
 use crate::slay::game_context::GameBookKeeping;
 use crate::slay::state::Game;
 
-use crate::slay::choices::{Choice, ChoiceLocator, Choices};
+use crate::slay::choices::{Choice, ChoiceLocator, Choices, TasksChoice};
 use crate::slay::errors::SlayResult;
 use crate::slay::specification::CardType;
 
@@ -40,26 +38,26 @@ impl OfferChallengesState {
 		challenging_player_index: usize,
 		// challenging_player: &Player,
 		default_choice: u32,
-	) -> Vec<Box<dyn Choice>> {
-		let mut ret = vec![
-			Box::new(roll_choices::create_set_completion_done(ChoiceLocator {
-				id: default_choice,
-				player_index: challenging_player_index,
-			})) as Box<dyn Choice>,
-		];
+	) -> Vec<TasksChoice> {
+		let mut ret = vec![roll_choices::create_set_completion_done(ChoiceLocator {
+			id: default_choice,
+			player_index: challenging_player_index,
+		})];
 		ret.extend(
 			game.players[challenging_player_index]
 				.hand
 				.list_top_cards_by_type(&CardType::Challenge)
 				.iter()
+				.next()
+				.iter()
 				.map(|card_id| {
-					Box::new(create_challenge_choice(
+					create_challenge_choice(
 						ChoiceLocator {
 							id: context.id_generator.generate(),
 							player_index: challenging_player_index,
 						},
-						*card_id,
-					)) as Box<dyn Choice>
+						**card_id,
+					)
 				}),
 		);
 		ret

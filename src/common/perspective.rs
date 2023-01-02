@@ -1,4 +1,5 @@
 use crate::slay::choices::Choices;
+use crate::slay::choices::{Choice, TasksChoice};
 use crate::slay::deadlines::Timeline;
 use crate::slay::ids;
 use crate::slay::showdown::common::{ChallengeReason, Roll, RollModification};

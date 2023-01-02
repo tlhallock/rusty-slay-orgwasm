@@ -7,19 +7,22 @@ use crate::slay::state;
 use std::fmt::Debug;
 
 use super::deadlines::Timeline;
+use super::game_context::GameBookKeeping;
 use super::showdown::common::ModificationPath;
+use super::state::Game;
+use super::tasks::PlayerTask;
 
 #[derive(Clone, Debug)]
 pub struct Choices {
 	pub instructions: String,
-	pub options: Vec<Box<dyn Choice>>,
+	pub options: Vec<TasksChoice>,
 	pub default_choice: ids::ChoiceId,
 	pub timeline: Timeline,
 }
 
 impl Choices {
 	pub fn new(
-		options: Vec<Box<dyn Choice>>, default_choice: ids::ChoiceId, timeline: Timeline,
+		options: Vec<TasksChoice>, default_choice: ids::ChoiceId, timeline: Timeline,
 		instructions: String,
 	) -> Self {
 		Self {
@@ -50,6 +53,8 @@ pub struct ChoiceDisplay {
 	pub highlight: Option<DisplayPath>,
 	pub arrows: Vec<DisplayArrow>,
 	// pub references_id: Option<ids::ElementId>,
+
+	// Replace the following string with some useful enum...
 	pub label: String,
 
 	pub roll_modification_choice: Option<RollModificationChoice>,
@@ -97,3 +102,47 @@ pub trait Choice: Debug + dyn_clone::DynClone {
 //         todo!()
 //     }
 // }
+
+#[derive(Debug, Clone)]
+pub struct TasksChoice {
+	choice_information: ChoiceInformation,
+	tasks: Vec<Box<dyn PlayerTask>>,
+	prepend: bool,
+}
+
+impl TasksChoice {
+	pub fn new(choice_information: ChoiceInformation, tasks: Vec<Box<dyn PlayerTask>>) -> Self {
+		Self {
+			choice_information,
+			tasks,
+			prepend: false,
+		}
+	}
+	pub fn prepend(choice_information: ChoiceInformation, tasks: Vec<Box<dyn PlayerTask>>) -> Self {
+		Self {
+			choice_information,
+			tasks,
+			prepend: true,
+		}
+	}
+}
+
+impl Choice for TasksChoice {
+	fn select(
+		&mut self, _context: &mut GameBookKeeping, game: &mut Game,
+	) -> super::errors::SlayResult<()> {
+		let player_index = self.choice_information.player_index();
+		if self.prepend {
+			game.players[player_index]
+				.tasks
+				.prepend_from(&mut self.tasks);
+		} else {
+			game.players[player_index].tasks.take_from(&mut self.tasks);
+		}
+		Ok(())
+	}
+
+	fn get_choice_information(&self) -> &ChoiceInformation {
+		&self.choice_information
+	}
+}

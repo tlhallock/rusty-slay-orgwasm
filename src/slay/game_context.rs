@@ -25,6 +25,6 @@ impl GameBookKeeping {
 	}
 
 	pub fn emit(&mut self, notification: &message::Notification) {
-		println!("Notification: {}", notification.message_text);
+		log::info!("Notification: {}", notification.message_text);
 	}
 }

@@ -1,8 +1,7 @@
 use crate::common::perspective::{RollModificationChoice, RollModificationChoiceType};
 use crate::slay::choices::{
-	self, ChoiceDisplay, ChoiceInformation, ChoiceLocator, DisplayArrow, DisplayPath,
+	self, ChoiceDisplay, ChoiceInformation, ChoiceLocator, DisplayArrow, DisplayPath, TasksChoice,
 };
-use crate::slay::choices_rewrite::TasksChoice;
 use crate::slay::errors::{SlayError, SlayResult};
 use crate::slay::game_context::GameBookKeeping;
 use crate::slay::ids;
@@ -50,6 +49,12 @@ impl PlayerTask for ModifyRollTask {
 				.get_modification_task(context, game, self.modifying_player_index);
 		modification_task.apply(context, game);
 		Ok(TaskProgressResult::TaskComplete)
+	}
+	fn label(&self) -> String {
+		format!(
+			"Player {} modifying {:?} with {:?}",
+			self.modifying_player_index, self.modification_path, self.modification
+		)
 	}
 }
 
@@ -203,12 +208,14 @@ impl PlayerTask for SetCompleteTask {
 		game
 			.showdown
 			.set_player_completion(player_index, self.persist)?;
-		// .as_mut()
-		// .ok_or_else(|| SlayError::new("No show down"))?
-		// .tracker_mut()
-		// .set_player_completion(player_index, self.persist);
 		game.players[player_index].choices = None;
 		Ok(TaskProgressResult::TaskComplete)
+	}
+	fn label(&self) -> String {
+		format!(
+			"Setting player {}'s completion to {:?}",
+			self.player_index, self.persist
+		)
 	}
 }
 
@@ -299,6 +306,9 @@ impl PlayerTask for ChallengeTask {
 		));
 		challenge.assign_all_choices(context, game);
 		game.showdown.challenge(challenge);
-		Ok(TaskProgressResult::ChoicesAssigned)
+		Ok(TaskProgressResult::TaskComplete)
+	}
+	fn label(&self) -> String {
+		format!("Player {} is challenging.", self.challenging_player_index)
 	}
 }

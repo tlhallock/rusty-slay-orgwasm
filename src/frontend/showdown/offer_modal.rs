@@ -1,8 +1,6 @@
 use yew::classes;
 use yew::prelude::*;
 
-use log;
-
 use crate::common::perspective::OfferChallengesPerspective;
 use crate::frontend::icons::Timer;
 
@@ -53,9 +51,6 @@ fn view_offer_choices(props: &OfferModalProps) -> Html {
 #[function_component(OfferChallengesView)]
 pub fn view_roll_modal(props: &OfferModalProps) -> Html {
 	let _open = use_state(|| false);
-
-	log::info!("We are creating the modal");
-
 	// let clear_card = {
 	//     let view_card = props.view_card.clone();
 	//     move |_| view_card.emit(None)

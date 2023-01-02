@@ -10,12 +10,13 @@ use crate::slay::state::Game;
 use std::collections::HashMap;
 use std::fmt::Debug;
 
-use super::challenge::ChallengeState;
-use super::common::ModificationPath;
-use super::common::RollModification;
-use super::completion::CompletionTracker;
-use super::offer::OfferChallengesState;
-use super::roll_state::RollState;
+use crate::slay::showdown::challenge::ChallengeState;
+use crate::slay::showdown::common::ModificationPath;
+use crate::slay::showdown::common::RollModification;
+use crate::slay::showdown::completion::CompletionTracker;
+use crate::slay::showdown::completion::RollCompletion;
+use crate::slay::showdown::offer::OfferChallengesState;
+use crate::slay::showdown::roll_state::RollState;
 
 dyn_clone::clone_trait_object!(ShowDown);
 
@@ -129,6 +130,7 @@ impl CurrentShowdown {
 		if self.show_down_type == ShowDownType::None {
 			panic!();
 		}
+		log::info!("showdown cleared");
 		self.roll = None;
 		self.challenge = None;
 		self.offer = None;
@@ -170,10 +172,18 @@ impl CurrentShowdown {
 	// }
 
 	pub fn take_complete(&mut self) -> Option<Box<dyn ShowDown>> {
-		if !self.current().iter().any(|s| s.tracker().is_complete()) {
+		if self.current().is_none() {
+			log::debug!("There is no current showdown.");
 			return None;
 		}
-		match self.show_down_type {
+		if !self.current().as_ref().unwrap().tracker().is_complete() {
+			log::debug!("The current showdown is not complete.");
+			return None;
+		}
+		log::info!("The current showdown is complete!");
+		let current_type = self.show_down_type.to_owned();
+		self.show_down_type = ShowDownType::None;
+		match current_type {
 			ShowDownType::None => panic!(),
 			ShowDownType::Roll => self.roll.take().map(|x| Box::new(x) as Box<dyn ShowDown>),
 			ShowDownType::OfferChallenges => self.offer.take().map(|x| Box::new(x) as Box<dyn ShowDown>),
@@ -244,8 +254,13 @@ impl CurrentShowdown {
 	}
 
 	pub(crate) fn set_player_completion(
-		&mut self, player_index: usize, persist: super::completion::RollCompletion,
+		&mut self, player_index: usize, persist: RollCompletion,
 	) -> SlayResult<()> {
+		log::info!(
+			"Updating the player completion for {} to {:?}",
+			player_index,
+			persist
+		);
 		match self.show_down_type {
 			ShowDownType::None => return Err(SlayError::new("alskjdf;alksjdf;")),
 			ShowDownType::Roll => self

@@ -112,7 +112,7 @@ pub struct DiceProps {
 #[function_component(Dice)]
 pub fn view_dice(props: &DiceProps) -> Html {
 	html! {
-		<div class={classes!("dice")}>
+		<div class={classes!("row")}>
 			<Die top={props.roll.die1}/>
 			<Die top={props.roll.die2}/>
 		</div>

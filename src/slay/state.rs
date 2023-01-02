@@ -3,8 +3,11 @@
 use super::choices::DisplayPath;
 // use super::ids::{CardId, ChallengeId, ChoiceId, DeckId, ElementId, IdGenerator, PlayerId, RollId};
 use super::ids;
+use super::modifiers::PlayerBuffs;
 use super::specification;
+use super::specification::CardSpec;
 use super::specification::CardType;
+use super::tasks::PlayerTask;
 use super::tasks::PlayerTasks;
 use crate::slay::showdown::current_showdown::CurrentShowdown;
 
@@ -34,12 +37,12 @@ pub enum ChoiceParamType {
 #[derive(Debug, Clone)]
 pub struct Card {
 	pub id: ids::CardId,
-	pub spec: specification::CardSpec,
+	pub spec: CardSpec,
 	pub played_this_turn: bool,
 }
 
 impl Card {
-	pub fn new(id: ids::CardId, spec: specification::CardSpec) -> Self {
+	pub fn new(id: ids::CardId, spec: CardSpec) -> Self {
 		Card {
 			id,
 			spec,
@@ -246,7 +249,7 @@ pub struct Player {
 	pub player_index: usize,
 	pub name: String,
 
-	pub buffs: modifiers::PlayerBuffs,
+	pub buffs: PlayerBuffs,
 	pub choices: Option<choices::Choices>,
 	pub tasks: PlayerTasks,
 
@@ -369,13 +372,9 @@ impl Turn {
 
 #[derive(Clone, Debug)]
 pub struct Game {
-	// pub card_specs: Vec<CardSpec>,
 	pub players: Vec<Player>,
 
 	pub showdown: CurrentShowdown,
-	// pub challenge: Option<challenges::ChallengeState>,
-	// pub challenges_offer: Option<challenges::OfferChallengesState>,
-	// pub roll: Option<rolls::RollState>,
 	turn: Turn,
 
 	// decks
@@ -409,6 +408,7 @@ impl Game {
 		self.turn.active_player_index()
 	}
 	pub fn increment(&mut self) {
+		log::info!("Incrementing the turn.");
 		self.turn.increment(self.number_of_players());
 	}
 	pub fn decks(&self) -> [&Deck; 5] {
@@ -523,7 +523,7 @@ impl Game {
 		&mut self.players[self.turn.active_player_index()]
 	}
 
-	pub fn take_current_task(&mut self, player_index: usize) -> Option<Box<dyn tasks::PlayerTask>> {
+	pub fn take_current_task(&mut self, player_index: usize) -> Option<Box<dyn PlayerTask>> {
 		self.players[player_index].take_current_task()
 		// None
 	}

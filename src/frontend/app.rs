@@ -42,7 +42,7 @@ impl AppState {
 		driver::make_selection(&mut self.context, &mut self.game, player_id, choice_id).expect("oops");
 
 		match driver::advance_game(&mut self.context, &mut self.game).expect("uh oh") {
-			AdvanceGameResult::Complete => true, // Need to return that the game is complete...
+			AdvanceGameResult::GameOver => true, // Need to return that the game is complete...
 			AdvanceGameResult::WaitingForPlayers => false,
 		}
 	}

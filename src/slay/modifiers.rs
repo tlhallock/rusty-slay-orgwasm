@@ -41,6 +41,12 @@ impl PlayerBuffs {
 	pub(crate) fn clear_expired_modifiers(&mut self, turn: &state::Turn) {
 		self.buffs.retain(|b| turn.still_active(&b.duration))
 	}
+	pub fn add(&mut self, duration: ModifierDuration, modifier: PlayerModifier) {
+		self.buffs.push(PlayerBuff { duration, modifier });
+	}
+	pub fn add_forever(&mut self, modifier: PlayerModifier) {
+		self.add(ModifierDuration::Forever, modifier);
+	}
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

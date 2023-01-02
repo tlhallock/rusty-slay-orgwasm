@@ -1,4 +1,4 @@
-use crate::slay::choices::{Choice, ChoiceLocator, Choices};
+use crate::slay::choices::{Choice, ChoiceLocator, Choices, TasksChoice};
 use crate::slay::deadlines;
 
 use crate::slay::game_context::GameBookKeeping;
@@ -107,32 +107,30 @@ impl ShowDown for RollState {
 pub fn list_modification_choices(
 	context: &mut GameBookKeeping, game: &Game, player_index: usize, default_choice: ids::ChoiceId,
 	rolls: Vec<ModificationPath>,
-) -> Vec<Box<dyn Choice>> {
-	let mut choices: Vec<Box<dyn Choice>> = vec![
-		Box::new(roll_choices::create_set_completion_done(ChoiceLocator {
+) -> Vec<TasksChoice> {
+	let mut choices: Vec<TasksChoice> = vec![
+		roll_choices::create_set_completion_done(ChoiceLocator {
 			id: default_choice,
 			player_index,
-		})),
-		Box::new(roll_choices::create_set_completion_until_modification(
-			ChoiceLocator {
-				id: context.id_generator.generate(),
-				player_index,
-			},
-		)),
+		}),
+		roll_choices::create_set_completion_until_modification(ChoiceLocator {
+			id: context.id_generator.generate(),
+			player_index,
+		}),
 	];
 
 	for stack in game.players[player_index].hand.stacks.iter() {
 		let card = &stack.top;
 		for modification_amount in card.spec.modifiers.iter() {
 			for modification_path in rolls.iter() {
-				choices.push(Box::new(create_modify_roll_choice(
+				choices.push(create_modify_roll_choice(
 					context,
 					game,
 					player_index,
 					card,
 					*modification_amount,
 					modification_path,
-				)) as Box<dyn Choice>)
+				))
 			}
 		}
 	}

@@ -1,8 +1,6 @@
 use yew::classes;
 use yew::prelude::*;
 
-use log;
-
 use crate::common::perspective::CardSpecPerspective;
 use crate::common::perspective::RollModificationChoiceType;
 use crate::common::perspective::RollPerspective;
@@ -54,17 +52,29 @@ fn format_consequences(consequences: &Vec<TaskSpec>) -> String {
 }
 
 #[function_component(RollDescription)]
-pub fn view_roll_context(props: &SimplerRollModalProps) -> Html {
+pub fn view_roll_context(props: &RollModalProps) -> Html {
 	let text = match &props.roll.reason {
 		RollReason::UseHeroAbility(spec) => html! {
 			<>
+				<div class={classes!("row")}>
 				{
 					format!(
-						"{} is rolling for {}'s ability.",
+						"{} is rolling for ",
 						props.roll.roller_name,
-						spec.label,
 					)
 				}
+					<CardSpecView
+						spec={CardSpecPerspective::new(spec)}
+						view_card={props.callbacks.view_card.to_owned()}
+						choice_state={ChoiceState::default()}
+						extra_specs={ExtraSpecProps::default()}
+					/>
+					{
+						format!(
+							"'s ability'",
+						)
+					}
+				</div>
 				<br/>
 				{
 					format!(
@@ -79,13 +89,20 @@ pub fn view_roll_context(props: &SimplerRollModalProps) -> Html {
 		},
 		RollReason::AttackMonster(spec) => html! {
 			<>
-				{
-					format!(
-						"{} is rolling to defeat {}!",
-						props.roll.roller_name,
-						spec.label,
-					)
-				}
+				<div class={classes!("row")}>
+					{
+						format!(
+							"{} is attacking ",
+							props.roll.roller_name,
+						)
+					}
+					<CardSpecView
+						spec={CardSpecPerspective::new(spec)}
+						view_card={props.callbacks.view_card.to_owned()}
+						choice_state={ChoiceState::default()}
+						extra_specs={ExtraSpecProps::default()}
+					/>
+				</div>
 				<br/>
 				{
 					format!(
@@ -115,7 +132,11 @@ pub fn view_roll_context(props: &SimplerRollModalProps) -> Html {
 		},
 	};
 	html! {
-		<label>{"The instructions go here."}<br/>{text}</label>
+		<label>
+			// {"The instructions go here."}
+			<br/>
+			{text}
+		</label>
 	}
 }
 
@@ -166,13 +187,18 @@ fn view_roll_timer(props: &SimplerRollModalProps) -> Html {
 
 #[function_component(RollChoices)]
 fn view_roll_choices(props: &RollModalProps) -> Html {
-	let choices = props
-		.roll
-		.choices
-		.iter()
-		.map(|choice| match &choice.choice_type {
+	let choices = props.roll.choices.iter().map(|choice| {
+		let choose_this = {
+			let choose = props.callbacks.choose.clone();
+			let choice_id = choice.choice_id;
+			move |_| choose.iter().for_each(|c| c.emit(choice_id))
+		};
+		match &choice.choice_type {
 			RollModificationChoiceType::AddToRoll(spec, amount) => html! {
-				<div title={format!("Modify this card by {}", amount)}>
+				<div
+					onclick={choose_this}
+					title={format!("Modify this card by {}", amount)}
+				>
 					<CardSpecView
 						spec={CardSpecPerspective::new(&spec)}
 						view_card={props.callbacks.view_card.to_owned()}
@@ -188,7 +214,10 @@ fn view_roll_choices(props: &RollModalProps) -> Html {
 				</div>
 			},
 			RollModificationChoiceType::RemoveFromRoll(spec, amount) => html! {
-				<div title={format!("Modify this card by {}", amount)}>
+				<div
+					onclick={choose_this}
+					title={format!("Modify this card by {}", amount)}
+				>
 					<CardSpecView
 						spec={CardSpecPerspective::new(&spec)}
 						view_card={props.callbacks.view_card.to_owned()}
@@ -204,7 +233,10 @@ fn view_roll_choices(props: &RollModalProps) -> Html {
 			},
 			RollModificationChoiceType::Nothing(persist) => match *persist {
 				RollCompletion::AllDone => html! {
-					<div title={"Do not modify this roll."}>
+					<div
+						onclick={choose_this}
+						title={"Do not modify this roll."}
+					>
 						<div  class={classes!("roll-choice-plus")}>
 							<DoNot/>
 							// <img
@@ -216,7 +248,10 @@ fn view_roll_choices(props: &RollModalProps) -> Html {
 					</div>
 				},
 				RollCompletion::DoneUntilModification => html! {
-					<div title={"Do not modify this roll, unless someone else does."}>
+					<div
+						onclick={choose_this}
+						title={"Do not modify this roll, unless someone else does."}
+					>
 						<div  class={classes!("roll-choice-plus")}>
 							// <img
 							// 	src={"imgs/icons/no.jpeg"}
@@ -231,7 +266,8 @@ fn view_roll_choices(props: &RollModalProps) -> Html {
 					unreachable!();
 				}
 			},
-		});
+		}
+	});
 	html! {
 		<div class={classes!("roll-choices")}>
 			{for choices}
@@ -258,17 +294,10 @@ fn view_roll_history(props: &SimplerRollModalProps) -> Html {
 #[function_component(RollModalView)]
 pub fn view_roll_modal(props: &RollModalProps) -> Html {
 	let _open = use_state(|| false);
-
-	log::info!("We are creating the modal");
-
-	// let clear_card = {
-	//     let view_card = props.view_card.clone();
-	//     move |_| view_card.emit(None)
-	// };
 	html! {
 		<div class={classes!("modal")}>
 			<div class={classes!("modal-content")}>
-				<RollDescription roll={props.roll.to_owned()}/>
+				<RollDescription roll={props.roll.to_owned()} callbacks={props.callbacks.to_owned()}/>
 				<br/>
 				<RollTimer roll={props.roll.to_owned()}/>
 				<br/>

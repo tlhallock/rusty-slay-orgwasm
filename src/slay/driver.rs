@@ -9,12 +9,16 @@ use crate::slay::message;
 use crate::slay::specification;
 use crate::slay::state;
 use crate::slay::state_modifiers;
-use crate::slay::strategy;
 use crate::slay::tasks;
 
 use rand::seq::SliceRandom;
 use rand::Rng;
 use state::Card;
+
+use crate::slay::choices::{Choice, TasksChoice};
+use crate::slay::game_context::GameBookKeeping;
+use crate::slay::state::Game;
+use crate::slay::tasks::TaskProgressResult;
 
 fn reset_cards_played_this_turn(game: &mut state::Game) {
 	// Could be only the current player...
@@ -104,7 +108,7 @@ pub fn initialize_game(context: &mut game_context::GameBookKeeping, game: &mut s
 }
 
 pub enum AdvanceGameResult {
-	Complete,
+	GameOver,
 	WaitingForPlayers,
 	// ContinueAdvancing,
 }
@@ -113,38 +117,44 @@ fn waiting_for_players(game: &state::Game) -> bool {
 	game.players.iter().any(|p| p.choices.is_some())
 }
 
+fn run_tasks(context: &mut GameBookKeeping, game: &mut Game) -> SlayResult<TaskProgressResult> {
+	let mut result = TaskProgressResult::NothingDone;
+	let number_of_players = game.number_of_players();
+	for player_index in 0..number_of_players {
+		match tasks::continue_tasks(context, game, player_index)? {
+			TaskProgressResult::NothingDone => {}
+			TaskProgressResult::TaskComplete | TaskProgressResult::ProgressMade => {
+				result = TaskProgressResult::ProgressMade;
+			}
+		}
+	}
+	Ok(result)
+}
+
 pub fn advance_game(
-	context: &mut game_context::GameBookKeeping, game: &mut state::Game,
+	context: &mut GameBookKeeping, game: &mut Game,
 ) -> SlayResult<AdvanceGameResult> {
 	// TODO: We never check if the choices have expired!
+
 	for _ in 0..10000 {
 		if game_is_over(game) {
-			return Ok(AdvanceGameResult::Complete);
+			return Ok(AdvanceGameResult::GameOver);
 		}
-
 		if let Some(mut showdown) = game.showdown.take_complete() {
 			showdown.finish(context, game);
 			continue;
 		}
 
-		let mut waiting_for_somebody = false;
-		let number_of_players = game.number_of_players();
-		for player_index in 0..number_of_players {
-			match tasks::continue_tasks(context, game, player_index)? {
-				tasks::TaskProgressResult::TaskComplete => {}
-				tasks::TaskProgressResult::ChoicesAssigned => {
-					waiting_for_somebody = true;
-				}
-			}
+		match run_tasks(context, game)? {
+			TaskProgressResult::NothingDone => break,
+			TaskProgressResult::ProgressMade | TaskProgressResult::TaskComplete => continue,
 		}
-		if waiting_for_somebody {
-			return Ok(AdvanceGameResult::WaitingForPlayers);
-		}
-
-		use_action_points(context, game);
-		return Ok(AdvanceGameResult::WaitingForPlayers);
 	}
-	unreachable!("Infinite loop?");
+
+	if !waiting_for_players(game) {
+		use_action_points(context, game);
+	}
+	Ok(AdvanceGameResult::WaitingForPlayers)
 }
 
 pub fn make_selection(
@@ -208,14 +218,14 @@ pub fn game_loop() -> SlayResult<()> {
 		// let perspective = GamePerspective::from(game, 1);
 		// let html = view::show_perspective(perspective);
 
-		let (player_id, choice_id) = strategy::pick_a_random_choice(context, game)?;
-		make_selection(context, game, player_id, choice_id)?;
-		'advancing: loop {
-			match advance_game(context, game)? {
-				AdvanceGameResult::Complete => return Ok(()),
-				AdvanceGameResult::WaitingForPlayers => continue 'turns,
-				// AdvanceGameResult::ContinueAdvancing => continue 'advancing,
-			}
-		}
+		// let (player_id, choice_id) = strategy::pick_a_random_choice(context, game)?;
+		// make_selection(context, game, player_id, choice_id)?;
+		// 'advancing: loop {
+		// 	match advance_game(context, game)? {
+		// 		AdvanceGameResult::TaskCom => return Ok(()),
+		// 		AdvanceGameResult::WaitingForPlayers => continue 'turns,
+		// 		// AdvanceGameResult::ContinueAdvancing => continue 'advancing,
+		// 	}
+		// }
 	}
 }

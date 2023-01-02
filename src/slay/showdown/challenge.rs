@@ -118,27 +118,3 @@ impl ShowDown for ChallengeState {
 		self.consequences.apply_roll_sum(game, roll_sum);
 	}
 }
-
-// pub fn do_challenge(
-//   context: &mut game_context::GameBookKeeping,
-//   game: &mut Game,
-//   player_index: usize,
-//   challenger_index: usize,
-//   consequences: RollConsequences,
-//   // consequences: Vec<specification::RollConsequenceRenameMe>,
-// ) {
-//   let challenge = ChallengeState::new(
-//       context,
-//       game.number_of_players(),
-//       player_index,
-//       challenger_index,
-//       consequences,
-//   );
-//   for player in game.players.iter_mut() {
-//       assign_challenge_choices(context, player, &challenge);
-//   }
-//   // game.players
-//   //     .iter_mut()
-//   //     .for_each(|player| assign_roll_choices(context, player, &roll));
-//   game.challenge = Some(challenge);
-// }
