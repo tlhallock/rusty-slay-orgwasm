@@ -15,7 +15,7 @@ use rand::seq::SliceRandom;
 use rand::Rng;
 use state::Card;
 
-use crate::slay::choices::{Choice};
+use crate::slay::choices::Choice;
 use crate::slay::game_context::GameBookKeeping;
 use crate::slay::state::Game;
 use crate::slay::tasks::TaskProgressResult;
@@ -229,3 +229,8 @@ pub fn game_loop() -> SlayResult<()> {
 		// }
 	}
 }
+
+/*
+Tests
+	Place a hero card without challenging.
+ */

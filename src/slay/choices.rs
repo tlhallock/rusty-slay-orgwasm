@@ -34,7 +34,7 @@ impl Choices {
 	}
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum DisplayPath {
 	DeckAt(state::DeckPath),
 	CardIn(state::DeckPath, ids::CardId),

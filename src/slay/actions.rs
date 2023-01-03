@@ -84,34 +84,37 @@ fn create_place_hero_choice(
 				roll_modification_choice: None,
 			},
 		),
-		vec![Box::new(OfferChallengesTask::new(OfferChallengesState::new(
-			player_index,
-			consequences::RollConsequences::new(
+		vec![
+			Box::new(RemoveActionPointsTask::new(player_index, 1)),
+			Box::new(OfferChallengesTask::new(OfferChallengesState::new(
 				player_index,
-				vec![
-					consequences::RollConsequenceRenameMe {
-						condition: consequences::Condition::challenge_denied(),
-						tasks: vec![
-							Box::new(tasks::MoveCardTask {
+				consequences::RollConsequences::new(
+					player_index,
+					vec![
+						consequences::RollConsequenceRenameMe {
+							condition: consequences::Condition::challenge_denied(),
+							tasks: vec![
+								Box::new(tasks::MoveCardTask {
+									source: state::DeckPath::Hand(player_index),
+									destination: state::DeckPath::Party(player_index),
+									card_id: card.id,
+								}) as Box<dyn tasks::PlayerTask>,
+								roll_for_ability,
+							],
+						},
+						consequences::RollConsequenceRenameMe {
+							condition: consequences::Condition::challenge_sustained(),
+							tasks: vec![Box::new(tasks::MoveCardTask {
 								source: state::DeckPath::Hand(player_index),
-								destination: state::DeckPath::Party(player_index),
+								destination: state::DeckPath::Discard,
 								card_id: card.id,
-							}) as Box<dyn tasks::PlayerTask>,
-							roll_for_ability,
-						],
-					},
-					consequences::RollConsequenceRenameMe {
-						condition: consequences::Condition::challenge_sustained(),
-						tasks: vec![Box::new(tasks::MoveCardTask {
-							source: state::DeckPath::Hand(player_index),
-							destination: state::DeckPath::Discard,
-							card_id: card.id,
-						}) as Box<dyn tasks::PlayerTask>],
-					},
-				],
-			),
-			ChallengeReason::PlaceHeroCard(card.spec.to_owned()),
-		))) as Box<dyn PlayerTask>],
+							}) as Box<dyn tasks::PlayerTask>],
+						},
+					],
+				),
+				ChallengeReason::PlaceHeroCard(card.spec.to_owned()),
+			))) as Box<dyn PlayerTask>,
+		],
 	)
 }
 
@@ -421,6 +424,7 @@ fn create_attack_monster_choice(
 			},
 		),
 		vec![
+			Box::new(RemoveActionPointsTask::new(player_index, 2)) as Box<dyn PlayerTask>,
 			Box::new(DoRollTask::new(RollState::new(
 				player_index,
 				monster_card
@@ -432,7 +436,6 @@ fn create_attack_monster_choice(
 				Roll::create_from(&mut context.rng),
 				RollReason::AttackMonster(monster_card.spec.to_owned()),
 			))) as Box<dyn PlayerTask>,
-			Box::new(RemoveActionPointsTask::new(player_index, 2)) as Box<dyn PlayerTask>,
 		],
 	)
 }

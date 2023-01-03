@@ -1,8 +1,9 @@
-use crate::slay::choices::Choices;
-use crate::slay::choices::{Choice};
+use crate::slay::choices::Choice;
+use crate::slay::choices::{Choices, DisplayPath};
 use crate::slay::deadlines::Timeline;
 use crate::slay::ids;
-use crate::slay::showdown::common::{ChallengeReason, Roll, RollModification};
+use crate::slay::showdown::challenge::{ChallengeRoll, ChallengeState};
+use crate::slay::showdown::common::{ChallengeReason, ModificationPath, Roll, RollModification};
 use crate::slay::showdown::completion::{CompletionTracker, RollCompletion};
 use crate::slay::showdown::current_showdown::ShowDown;
 use crate::slay::showdown::offer::OfferChallengesState;
@@ -87,7 +88,7 @@ pub struct RollPerspective {
 	pub success: bool,
 	pub timeline: Timeline,
 	pub reason: RollReason,
-	pub choices: Vec<RollModificationChoice>,
+	pub choices: Vec<ChoicePerspective>,
 }
 
 impl RollState {
@@ -114,9 +115,96 @@ impl RollState {
 					choices
 						.actions
 						.iter()
-						.map(|o| o.roll_modification_choice.to_owned())
-						.flatten()
-						.collect::<Vec<RollModificationChoice>>()
+						.map(|o| o.to_owned())
+						.collect::<Vec<ChoicePerspective>>()
+				})
+				.flatten()
+				.collect(),
+		}
+	}
+}
+
+#[derive(Debug, PartialEq, Clone)]
+pub struct ChallengeRollPerspective {
+	id: ids::RollId,
+	pub roller_name: String,
+	pub initial: Roll,
+	pub history: Vec<ModificationPerspective>,
+	pub roll_total: i32,
+	pub choices: Vec<ChoicePerspective>,
+}
+
+impl ChallengeRoll {
+	pub fn to_perspective(
+		&self, game: &Game, choices: &Option<ChoicesPerspective>, display_path: DisplayPath,
+	) -> ChallengeRollPerspective {
+		ChallengeRollPerspective {
+			id: 0, // Need to fill this in again?
+			roller_name: game.players[self.player_index].name.to_owned(),
+			initial: self.initial.to_owned(),
+			history: self
+				.history
+				.iter()
+				.map(|m| m.to_perspective(game))
+				.collect(),
+			roll_total: self.calculate_roll_total(),
+			choices: choices
+				.iter()
+				.map(|choices| {
+					choices
+						.actions
+						.iter()
+						.filter(|choice| choice.highlight_path.iter().any(|dp| *dp == display_path))
+						.map(|o| o.to_owned())
+						.collect::<Vec<ChoicePerspective>>()
+				})
+				.flatten()
+				.collect(),
+		}
+	}
+}
+
+#[derive(Debug, PartialEq, Clone)]
+pub struct ChallengePerspective {
+	pub initiator: ChallengeRollPerspective,
+	pub challenger: ChallengeRollPerspective,
+	pub completions: Vec<PlayerCompletionPerspective>,
+	pub success: bool,
+	pub timeline: Timeline,
+	pub reason: ChallengeReason,
+	pub choices: Vec<ChoicePerspective>,
+	pub roll_total: i32,
+}
+
+impl ChallengeState {
+	pub fn to_perspective(
+		&self, game: &Game, choices: &Option<ChoicesPerspective>,
+	) -> ChallengePerspective {
+		ChallengePerspective {
+			completions: self.tracker().to_perspective(game),
+			success: false,
+			timeline: self.tracker().timeline.to_owned(),
+			reason: self.reason.to_owned(),
+			initiator: self.initiator.to_perspective(
+				game,
+				choices,
+				DisplayPath::Roll(ModificationPath::Initiator),
+			),
+			challenger: self.challenger.to_perspective(
+				game,
+				choices,
+				DisplayPath::Roll(ModificationPath::Challenger),
+			),
+			roll_total: self.calculate_roll_total(),
+			choices: choices
+				.iter()
+				.map(|choices| {
+					choices
+						.actions
+						.iter()
+						.filter(|choice| choice.highlight_path.is_none())
+						.map(|o| o.to_owned())
+						.collect::<Vec<ChoicePerspective>>()
 				})
 				.flatten()
 				.collect(),
@@ -372,9 +460,12 @@ pub struct ChoicePerspective {
 	pub is_default: bool,
 	pub choice_id: ids::ChoiceId,
 	pub label: String,
+	// Which one is better...
 	pub highlight: Option<ids::ElementId>,
+	pub highlight_path: Option<DisplayPath>,
 	// This will probably need an arrow id...
 	pub arrows: Vec<(Option<ids::ElementId>, Option<ids::ElementId>)>,
+
 	pub roll_modification_choice: Option<RollModificationChoice>,
 	// Should we add another one of these for card actions? ^^
 }
@@ -401,6 +492,7 @@ impl Choices {
 						choice_id: info.get_id(),
 						label: info.display.label.to_owned(),
 						highlight: game.get_element_id(&info.display.highlight),
+						highlight_path: info.display.highlight.to_owned(),
 						arrows: vec![],
 						roll_modification_choice: info.display.roll_modification_choice.to_owned(),
 					}
@@ -419,8 +511,7 @@ pub struct GamePerspective {
 
 	pub roll: Option<RollPerspective>,
 	pub offer: Option<OfferChallengesPerspective>,
-	// pub challenge: Option<ChallengeState>,
-	// pub roll: Option<RollState>,
+	pub challenge: Option<ChallengePerspective>,
 }
 
 impl GamePerspective {
@@ -479,6 +570,10 @@ impl state::Game {
 			offer: self
 				.showdown
 				.get_offer()
+				.map(|o| o.to_perspective(self, choices)),
+			challenge: self
+				.showdown
+				.get_challenge()
 				.map(|o| o.to_perspective(self, choices)),
 		}
 	}

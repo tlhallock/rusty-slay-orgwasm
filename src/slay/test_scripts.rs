@@ -1,11 +1,9 @@
-
-
 use crate::slay::game_context::GameBookKeeping;
 use crate::slay::state::Game;
 
+use super::ids;
 use super::specification::{self, CardType};
 use super::state::{Card, Deck, Player, Stack};
-use super::{ids};
 
 pub fn initialize_empty_game(context: &mut GameBookKeeping, game: &mut Game) {
 	specification::get_card_specs().iter().for_each(|spec| {

@@ -25,7 +25,7 @@ impl Roll {
 	}
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum ModificationPath {
 	Roll,
 	Challenger,

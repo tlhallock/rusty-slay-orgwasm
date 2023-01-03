@@ -1,4 +1,4 @@
-use crate::slay::choices::{Choice};
+use crate::slay::choices::Choice;
 use crate::slay::errors::{SlayError, SlayResult};
 
 use crate::slay::ids;

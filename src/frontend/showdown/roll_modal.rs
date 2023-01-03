@@ -8,6 +8,9 @@ use crate::frontend::dice::Dice;
 use crate::frontend::icons::Done;
 use crate::frontend::icons::Timer;
 use crate::frontend::showdown::common::CompletionsView;
+use crate::frontend::showdown::common::RollChoices;
+use crate::frontend::showdown::common::RollHistory;
+use crate::frontend::showdown::common::RollTotal;
 use crate::frontend::stack::CardSpecView;
 
 use crate::frontend::app::ChoiceState;
@@ -140,40 +143,6 @@ pub fn view_roll_context(props: &RollModalProps) -> Html {
 	}
 }
 
-#[function_component(RollInitial)]
-pub fn view_initial_roll(props: &SimplerRollModalProps) -> Html {
-	html! {
-			<Dice roll={props.roll.initial.to_owned()}/>
-	}
-}
-
-// #[function_component(UseAbilityConsequence)]
-// pub fn view_use_ability_consequence(props: &SimplerRollModalProps) -> Html {
-// 	html! {
-// 			<Dice roll={props.roll.initial.to_owned()}/>
-// 	}
-// }
-
-// #[function_component(MonsterConsequence)]
-// pub fn view_attack_monster_consequence(props: &SimplerRollModalProps) -> Html {
-// 	html! {
-// 			<Dice roll={props.roll.initial.to_owned()}/>
-// 	}
-// }
-
-#[function_component(RollTotal)]
-pub fn view_roll_result(props: &SimplerRollModalProps) -> Html {
-	// let consequence = match props.roll.reason {
-	//   RollReason::UseHeroAbility(_) => html! {<MonsterConsequence roll={props.roll.to_owned()}/>},
-	//   RollReason::AttackMonster(_) => html! {<MonsterConsequence roll={props.roll.to_owned()}/>},
-	// };
-	html! {
-		<div class={classes!(if props.roll.success {"roll-total-success" } else {"roll-total-failure"})}>
-			{props.roll.roll_total}
-		</div>
-	}
-}
-
 #[function_component(RollTimer)]
 fn view_roll_timer(props: &SimplerRollModalProps) -> Html {
 	html! {
@@ -183,112 +152,6 @@ fn view_roll_timer(props: &SimplerRollModalProps) -> Html {
 			<Timer timeline={props.roll.timeline.to_owned()}/>
 		</div>
 	}
-}
-
-#[function_component(RollChoices)]
-fn view_roll_choices(props: &RollModalProps) -> Html {
-	let choices = props.roll.choices.iter().map(|choice| {
-		let choose_this = {
-			let choose = props.callbacks.choose.clone();
-			let choice_id = choice.choice_id;
-			move |_| choose.iter().for_each(|c| c.emit(choice_id))
-		};
-		match &choice.choice_type {
-			RollModificationChoiceType::AddToRoll(spec, amount) => html! {
-				<div
-					onclick={choose_this}
-					title={format!("Modify this card by {}", amount)}
-				>
-					<CardSpecView
-						spec={CardSpecPerspective::new(&spec)}
-						view_card={props.callbacks.view_card.to_owned()}
-						choice_state={ChoiceState::default()}
-						extra_specs={
-							ExtraSpecProps {
-								disable_view: true,
-								..Default::default()
-							}
-						}
-					/>
-					<div class={classes!("roll-choice-plus")}>{ format!("+{}", amount) } </div>
-				</div>
-			},
-			RollModificationChoiceType::RemoveFromRoll(spec, amount) => html! {
-				<div
-					onclick={choose_this}
-					title={format!("Modify this card by {}", amount)}
-				>
-					<CardSpecView
-						spec={CardSpecPerspective::new(&spec)}
-						view_card={props.callbacks.view_card.to_owned()}
-						choice_state={ChoiceState::default()}
-						extra_specs={
-							ExtraSpecProps {
-								disable_view: true,
-								..Default::default()
-							}}
-					/>
-					<div class={classes!("roll-choice-minus")}>{ format!("{}", amount) } </div>
-				</div>
-			},
-			RollModificationChoiceType::Nothing(persist) => match *persist {
-				RollCompletion::AllDone => html! {
-					<div
-						onclick={choose_this}
-						title={"Do not modify this roll."}
-					>
-						<div  class={classes!("roll-choice-plus")}>
-							<DoNot/>
-							// <img
-							// 	src={"imgs/icons/no.jpeg"}
-							// 	alt={"Do not modify this roll"}
-							// 	width={70}
-							// />
-						</div>
-					</div>
-				},
-				RollCompletion::DoneUntilModification => html! {
-					<div
-						onclick={choose_this}
-						title={"Do not modify this roll, unless someone else does."}
-					>
-						<div  class={classes!("roll-choice-plus")}>
-							// <img
-							// 	src={"imgs/icons/no.jpeg"}
-							// 	alt={"Do not modify this roll, unless someone else does."}
-							// 	width={50}
-							// />
-							<Done/>
-						</div>
-					</div>
-				},
-				_ => {
-					unreachable!();
-				}
-			},
-		}
-	});
-	html! {
-		<div class={classes!("roll-choices")}>
-			{for choices}
-		</div>
-	}
-}
-
-#[function_component(RollHistory)]
-fn view_roll_history(props: &SimplerRollModalProps) -> Html {
-	let completions = props.roll.history.iter().map(|m| {
-		html! {
-			 <label>
-				 { format!("Player {} used {} to modify by {}.",
-					 m.modifyer_name,
-					 "<implement this>",
-					 m.modification_amount,
-		) }
-			 </label>
-		 }
-	});
-	html! { <> { for completions } </> }
 }
 
 #[function_component(RollModalView)]
@@ -301,13 +164,13 @@ pub fn view_roll_modal(props: &RollModalProps) -> Html {
 				<br/>
 				<RollTimer roll={props.roll.to_owned()}/>
 				<br/>
-				<RollInitial roll={props.roll.to_owned()}/>
+				<Dice roll={props.roll.initial.to_owned()}/>
 				<br/>
-				<RollHistory roll={props.roll.to_owned()}/>
+				<RollHistory history={props.roll.history.to_owned()}/>
 				<br/>
-				<RollTotal roll={props.roll.to_owned()}/>
+				<RollTotal success={props.roll.success} amount={props.roll.roll_total}/>
 				<br/>
-				<RollChoices roll={props.roll.to_owned()} callbacks={props.callbacks.to_owned()}/>
+				<RollChoices choices={props.roll.choices.to_owned()} callbacks={props.callbacks.to_owned()}/>
 				<br/>
 				<CompletionsView completions={props.roll.completions.to_owned()}/>
 				<br/>

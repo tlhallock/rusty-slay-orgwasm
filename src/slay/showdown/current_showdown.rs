@@ -84,6 +84,10 @@ impl CurrentShowdown {
 		self.offer.as_ref()
 	}
 
+	pub fn get_challenge(&self) -> Option<&ChallengeState> {
+		self.challenge.as_ref()
+	}
+
 	pub fn take_current_offer(&mut self) -> SlayResult<OfferChallengesState> {
 		if self.show_down_type != ShowDownType::OfferChallenges {
 			return Err(SlayError::new(
