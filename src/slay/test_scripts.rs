@@ -10,9 +10,9 @@ pub fn initialize_empty_game(context: &mut GameBookKeeping, game: &mut Game) {
 		for _ in 0..spec.repeat {
 			let stack = Stack::new(Card::new(context.id_generator.generate(), spec.to_owned()));
 			match spec.card_type {
-				CardType::PartyLeader(_) => game.leaders.stacks.push_back(stack),
-				CardType::Monster => game.monsters.stacks.push_back(stack),
-				_ => game.draw.stacks.push_back(stack),
+				CardType::PartyLeader(_) => game.leaders.add(stack),
+				CardType::Monster => game.monsters.add(stack),
+				_ => game.draw.add(stack),
 			};
 		}
 	});
@@ -28,12 +28,11 @@ pub fn initialize_empty_game(context: &mut GameBookKeeping, game: &mut Game) {
 	}
 
 	game.set_active_player(0);
-	game.current_player_mut().remaining_action_points = 3;
+	// game.current_player_mut().remaining_action_points = 3;
 }
 
 fn find_hero_card(deck: &Deck) -> Option<ids::CardId> {
 	deck
-		.stacks
 		.iter()
 		.filter(|stack| match stack.top.spec.card_type {
 			CardType::Hero(_) => true,

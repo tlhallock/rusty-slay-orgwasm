@@ -9,6 +9,7 @@ use crate::slay::showdown::current_showdown::ShowDown;
 use crate::slay::showdown::offer::OfferChallengesState;
 use crate::slay::showdown::roll_state::{RollReason, RollState};
 use crate::slay::specification::{CardSpec, CardType, MonsterSpec, Visibility};
+use crate::slay::state::Player;
 use crate::slay::state::{self, Game, Stack};
 
 use std::fmt::Debug;
@@ -340,10 +341,12 @@ pub struct CardPerspective {
 }
 
 impl state::Card {
-	pub fn to_perspective(&self, choices: &Option<ChoicesPerspective>) -> CardPerspective {
+	pub fn to_perspective(
+		&self, player: Option<&Player>, choices: &Option<ChoicesPerspective>,
+	) -> CardPerspective {
 		CardPerspective {
 			id: self.id,
-			played_this_turn: self.played_this_turn,
+			played_this_turn: player.iter().any(|p| p.was_card_played(&self.id)),
 			spec: CardSpecPerspective::new(&self.spec),
 			choice_associations: ChoiceAssociation::create_from_choices(choices, self.id),
 		}
@@ -357,13 +360,15 @@ pub struct StackPerspective {
 }
 
 impl Stack {
-	pub fn to_perspective(&self, choices: &Option<ChoicesPerspective>) -> StackPerspective {
+	pub fn to_perspective(
+		&self, player: Option<&Player>, choices: &Option<ChoicesPerspective>,
+	) -> StackPerspective {
 		StackPerspective {
-			top: self.top.to_perspective(choices),
+			top: self.top.to_perspective(player, choices),
 			modifiers: self
 				.modifiers
 				.iter()
-				.map(|s| s.to_perspective(choices))
+				.map(|s| s.to_perspective(player, choices))
 				.collect(),
 		}
 	}
@@ -381,26 +386,25 @@ pub struct DeckPerspective {
 
 impl state::Deck {
 	pub fn to_perspective(
-		&self, perspective: &Perspective, choices: &Option<ChoicesPerspective>,
+		&self, perspective: &Perspective, player: Option<&Player>, choices: &Option<ChoicesPerspective>,
 	) -> DeckPerspective {
 		let visibility = self.spec.visibility.get(perspective);
 		match visibility {
 			Visibility::Visible => DeckPerspective {
 				id: self.id,
-				count: self.stacks.len(),
+				count: self.num_top_cards(),
 				label: self.spec.label.to_owned(),
 				stacks: Some(
 					self
-						.stacks
 						.iter()
-						.map(|s| s.to_perspective(choices))
+						.map(|s| s.to_perspective(player, choices))
 						.collect(),
 				),
 				choice_associations: ChoiceAssociation::create_from_choices(choices, self.id),
 			},
 			Visibility::Summary => DeckPerspective {
 				id: self.id,
-				count: self.stacks.len(),
+				count: self.num_top_cards(),
 				label: self.spec.label.to_owned(),
 				stacks: None,
 				choice_associations: ChoiceAssociation::create_from_choices(choices, self.id),
@@ -432,20 +436,20 @@ pub struct PlayerPerspective {
 	pub choice_associations: Vec<ChoiceAssociation>,
 }
 
-impl state::Player {
+impl Player {
 	pub fn to_perspective(
 		&self, perspective: &Perspective, choices: &Option<ChoicesPerspective>, active: bool,
 	) -> PlayerPerspective {
 		PlayerPerspective {
 			id: self.id,
 			name: self.name.to_owned(),
-			remaining_action_points: self.remaining_action_points,
-			leader: self.leader.to_perspective(choices),
+			remaining_action_points: self.get_remaining_action_points(),
+			leader: self.leader.to_perspective(Some(self), choices),
 			decks: self
 				.decks()
 				.iter()
 				.filter(|d| d.is_visible(perspective))
-				.map(|d| d.to_perspective(perspective, choices))
+				.map(|d| d.to_perspective(perspective, Some(self), choices))
 				.collect(),
 			me: perspective == &Perspective::Owner,
 			active,
@@ -556,7 +560,7 @@ impl state::Game {
 			.decks()
 			.iter()
 			.filter(|d| d.is_visible(perspective))
-			.map(|d| d.to_perspective(perspective, choices))
+			.map(|d| d.to_perspective(perspective, None, choices))
 			.collect();
 		GamePerspective {
 			players,

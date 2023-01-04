@@ -30,6 +30,7 @@ use crate::slay::tasks::TaskProgressResult;
 use super::choices::ChoiceInformation;
 use super::choices::ChoiceLocator;
 use super::choices::TasksChoice;
+use super::state_modifiers;
 
 // Emit logs like "Waiting for challenges..."
 
@@ -278,19 +279,28 @@ fn create_draw_choice(locator: ChoiceLocator) -> TasksChoice {
 }
 
 #[derive(Debug, Clone)]
-struct DrawTask {
+pub struct DrawTask {
 	player_index: usize,
-	number_to_draw: u32,
+	number_to_draw: usize,
+}
+
+impl DrawTask {
+	pub fn new(player_index: usize, number_to_draw: usize) -> Self {
+		Self {
+			player_index,
+			number_to_draw,
+		}
+	}
 }
 
 impl PlayerTask for DrawTask {
 	fn make_progress(
 		&mut self, _context: &mut game_context::GameBookKeeping, game: &mut state::Game,
 	) -> SlayResult<TaskProgressResult> {
-		for _ in 0..self.number_to_draw {
-			let stack = game.draw.deal();
-			game.players[self.player_index].hand.stacks.push_back(stack);
-		}
+		game.replentish_for(self.number_to_draw);
+		game.players[self.player_index]
+			.hand
+			.extend(game.draw.drain(0..self.number_to_draw));
 		Ok(TaskProgressResult::TaskComplete)
 	}
 
@@ -336,10 +346,13 @@ impl PlayerTask for ReplaceHandTask {
 	fn make_progress(
 		&mut self, _context: &mut game_context::GameBookKeeping, game: &mut state::Game,
 	) -> SlayResult<TaskProgressResult> {
-		let player = &mut game.players[self.player_index];
-		player.remaining_action_points -= 3;
-		game.discard.extend(player.hand.drain(..));
-		player.hand.extend(game.draw.drain(0..5));
+		game
+			.discard
+			.extend(game.players[self.player_index].hand.drain(..));
+		game.replentish_for(5);
+		game.players[self.player_index]
+			.hand
+			.extend(game.draw.drain(0..5));
 		Ok(TaskProgressResult::TaskComplete)
 	}
 
@@ -355,7 +368,7 @@ fn create_forfeit_choice(
 	_context: &mut GameBookKeeping, game: &mut Game, locator: choices::ChoiceLocator,
 ) -> TasksChoice {
 	let player_index = locator.player_index;
-	let current_amount_remaining = game.players[player_index].remaining_action_points;
+	let current_amount_remaining = game.players[player_index].get_remaining_action_points();
 	TasksChoice::new(
 		choices::ChoiceInformation::new(
 			locator,
@@ -484,7 +497,7 @@ fn create_party_action_choice(
 pub fn assign_action_choices(context: &mut game_context::GameBookKeeping, game: &mut state::Game) {
 	// let player_index = game.active_player_index();
 	let player_index = game.current_player().player_index;
-	let remaining_action_points = game.current_player().remaining_action_points;
+	let remaining_action_points = game.current_player().get_remaining_action_points();
 	let mut options: Vec<TasksChoice> = Vec::new();
 	let default_choice = context.id_generator.generate();
 	options.push(create_forfeit_choice(
@@ -500,7 +513,7 @@ pub fn assign_action_choices(context: &mut game_context::GameBookKeeping, game: 
 		options.push(create_replace_hand_choice(context.locator(player_index)));
 	}
 	if remaining_action_points >= 2 {
-		for monster_card in game.monsters.stacks.iter() {
+		for monster_card in game.monsters.iter() {
 			let locator = context.locator(player_index);
 			options.push(create_attack_monster_choice(
 				context,
@@ -511,13 +524,13 @@ pub fn assign_action_choices(context: &mut game_context::GameBookKeeping, game: 
 		}
 	}
 
-	for stack in game.current_player().hand.stacks.iter() {
+	for stack in game.current_player().hand.iter() {
 		let locator = context.locator(player_index);
 		if let Some(hand_choice) = create_hand_action_choice(context, game, locator, &stack.top) {
 			options.push(hand_choice);
 		}
 	}
-	for stack in game.current_player().party.stacks.iter() {
+	for stack in game.current_player().party.iter() {
 		let locator = context.locator(player_index);
 		if let Some(hand_choice) = create_party_action_choice(context, game, locator, &stack.top) {
 			options.push(hand_choice);
@@ -565,7 +578,8 @@ impl PlayerTask for UseAbility {
 	fn make_progress(
 		&mut self, _context: &mut GameBookKeeping, _game: &mut Game,
 	) -> SlayResult<TaskProgressResult> {
-		todo!();
+		log::info!("TODO: Implement using a hero ability.");
+		Ok(TaskProgressResult::TaskComplete)
 	}
 
 	fn label(&self) -> String {
@@ -591,7 +605,7 @@ impl PlayerTask for RemoveActionPointsTask {
 	fn make_progress(
 		&mut self, _context: &mut GameBookKeeping, game: &mut Game,
 	) -> SlayResult<TaskProgressResult> {
-		game.players[self.player_index].remaining_action_points -= self.amount;
+		game.players[self.player_index].action_points_used(self.amount);
 		Ok(TaskProgressResult::TaskComplete)
 	}
 	fn label(&self) -> String {
@@ -687,11 +701,7 @@ impl PlayerTask for CardUsedTask {
 	fn make_progress(
 		&mut self, _context: &mut game_context::GameBookKeeping, game: &mut state::Game,
 	) -> SlayResult<tasks::TaskProgressResult> {
-		game.players[self.player_index]
-			.party
-			.card_mut(self.card_id)
-			.ok_or_else(|| SlayError::new("Card no longer in party!"))?
-			.played_this_turn = true;
+		game.players[self.player_index].set_card_played(self.card_id);
 		Ok(tasks::TaskProgressResult::TaskComplete)
 	}
 	fn label(&self) -> String {

@@ -119,7 +119,7 @@ pub fn list_modification_choices(
 		}),
 	];
 
-	for stack in game.players[player_index].hand.stacks.iter() {
+	for stack in game.players[player_index].hand.iter() {
 		let card = &stack.top;
 		for modification_amount in card.spec.modifiers.iter() {
 			for modification_path in rolls.iter() {

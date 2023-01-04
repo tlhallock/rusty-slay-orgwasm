@@ -9,9 +9,10 @@ pub type SlayResult<T> = std::result::Result<T, SlayError>;
 
 impl SlayError {
 	pub fn new(reason: &'static str) -> SlayError {
-		SlayError {
-			reason: reason.to_string(),
-		}
+		unreachable!();
+		// SlayError {
+		// 	reason: reason.to_string(),
+		// }
 	}
 }
 

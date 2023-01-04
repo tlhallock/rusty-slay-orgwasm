@@ -1,67 +1,59 @@
-use std::fs::File;
-use std::io::Write;
-
 use crate::slay::actions;
+use crate::slay::choices::Choice;
 use crate::slay::errors::{SlayError, SlayResult};
 use crate::slay::game_context;
+use crate::slay::game_context::GameBookKeeping;
 use crate::slay::ids;
 use crate::slay::message;
 use crate::slay::specification;
-use crate::slay::state;
+use crate::slay::state::Card;
+use crate::slay::state::Game;
+use crate::slay::state::Summarizable;
+use crate::slay::state::{Player, Stack};
 use crate::slay::state_modifiers;
-use crate::slay::tasks;
+use crate::slay::tasks::TaskProgressResult;
+use crate::slay::{strategy, tasks};
 
 use rand::seq::SliceRandom;
 use rand::Rng;
-use state::Card;
+use std::fs::File;
+use std::io::{BufWriter, Write};
 
-use crate::slay::choices::Choice;
-use crate::slay::game_context::GameBookKeeping;
-use crate::slay::state::Game;
-use crate::slay::tasks::TaskProgressResult;
+use log::LevelFilter;
 
-fn reset_cards_played_this_turn(game: &mut state::Game) {
-	// Could be only the current player...
-	game.players.iter_mut().for_each(|p| {
-		p.party
-			.stacks
-			.iter_mut()
-			.for_each(|s| s.top.played_this_turn = false)
-	});
+pub fn player_has_won(player: &Player) -> bool {
+	player.slain_monsters.num_top_cards() >= 3 || player.hero_types().len() >= 6
 }
 
-pub fn player_has_won(player: &state::Player) -> bool {
-	player.slain_monsters.stacks.len() >= 3 || player.hero_types().len() >= 6
-}
-
-pub fn game_is_over(game: &state::Game) -> bool {
+pub fn game_is_over(game: &Game) -> bool {
 	game.players.iter().any(player_has_won)
 }
 
-fn use_action_points(context: &mut game_context::GameBookKeeping, game: &mut state::Game) {
-	if game.current_player().remaining_action_points > 0 {
+fn use_action_points(context: &mut game_context::GameBookKeeping, game: &mut Game) {
+	if game.current_player().get_remaining_action_points() > 0 {
 		actions::assign_action_choices(context, game);
+		return;
 	}
-	reset_cards_played_this_turn(game);
+	game.current_player_mut().turn_end();
 	game.increment();
 	game.clear_expired_modifiers();
-	game.current_player_mut().remaining_action_points = 3;
+	game.current_player_mut().turn_begin();
 	actions::assign_action_choices(context, game);
 }
 
-fn check_for_expired_modifiers(game: &mut state::Game) {
+fn check_for_expired_modifiers(game: &mut Game) {
 	for _player in game.players.iter_mut() {}
 	todo!()
 }
 
-pub fn initialize_game(context: &mut game_context::GameBookKeeping, game: &mut state::Game) {
+pub fn initialize_game(context: &mut game_context::GameBookKeeping, game: &mut Game) {
 	let (draw_capacity, leaders_capacity, monsters_capacity) = (101, 10, 20);
 	let mut draw = Vec::with_capacity(draw_capacity);
 	let mut leaders = Vec::with_capacity(leaders_capacity);
 	let mut monsters = Vec::with_capacity(monsters_capacity);
 	specification::get_card_specs().iter().for_each(|spec| {
 		for _ in 0..spec.repeat {
-			let stack = state::Stack::new(Card::new(context.id_generator.generate(), spec.to_owned()));
+			let stack = Stack::new(Card::new(context.id_generator.generate(), spec.to_owned()));
 			match spec.card_type {
 				specification::CardType::PartyLeader(_) => leaders.push(stack),
 				specification::CardType::Monster => monsters.push(stack),
@@ -83,27 +75,26 @@ pub fn initialize_game(context: &mut game_context::GameBookKeeping, game: &mut s
 		.iter_mut()
 		.for_each(|deck| deck.shuffle(&mut context.rng));
 
-	game.draw.stacks.extend(draw);
-	game.next_monsters.stacks.extend(monsters);
-	game.leaders.stacks.extend(leaders);
+	game.draw.extend(draw.drain(..));
+	game.next_monsters.extend(monsters.drain(..));
+	game.leaders.extend(leaders.drain(..));
 
-	state_modifiers::transfer_upto_n(3, &mut game.next_monsters, &mut game.monsters);
+	game.monsters.extend(game.next_monsters.drain(0..3));
 
 	for player_index in 0..4 {
-		let mut player = state::Player::new(
+		let mut player = Player::new(
 			&mut context.id_generator,
 			format!("Unnamed bot {}", player_index + 1),
 			player_index,
 			game.leaders.deal().top,
 		);
-		state_modifiers::transfer_upto_n(5, &mut game.draw, &mut player.hand);
+		player.hand.extend(game.draw.drain(0..5));
 		game.players.push(player);
 	}
 
 	// initialize the first first random player
 	game.set_active_player(context.rng.gen_range(0..game.number_of_players()));
-
-	game.current_player_mut().remaining_action_points = 3;
+	game.current_player_mut().turn_begin();
 	actions::assign_action_choices(context, game);
 }
 
@@ -113,7 +104,7 @@ pub enum AdvanceGameResult {
 	// ContinueAdvancing,
 }
 
-fn waiting_for_players(game: &state::Game) -> bool {
+fn waiting_for_players(game: &Game) -> bool {
 	game.players.iter().any(|p| p.choices.is_some())
 }
 
@@ -136,7 +127,8 @@ pub fn advance_game(
 ) -> SlayResult<AdvanceGameResult> {
 	// TODO: We never check if the choices have expired!
 
-	for _ in 0..10000 {
+	let mut iteration = 0;
+	loop {
 		if game_is_over(game) {
 			return Ok(AdvanceGameResult::GameOver);
 		}
@@ -149,6 +141,11 @@ pub fn advance_game(
 			TaskProgressResult::NothingDone => break,
 			TaskProgressResult::ProgressMade | TaskProgressResult::TaskComplete => continue,
 		}
+
+		iteration += 1;
+		if iteration > 10000 {
+			unreachable!();
+		}
 	}
 
 	if !waiting_for_players(game) {
@@ -158,7 +155,7 @@ pub fn advance_game(
 }
 
 pub fn make_selection(
-	context: &mut game_context::GameBookKeeping, game: &mut state::Game, player_id: ids::ElementId,
+	context: &mut game_context::GameBookKeeping, game: &mut Game, player_id: ids::ElementId,
 	choice_id: ids::ElementId,
 ) -> SlayResult<()> {
 	let player_index = game
@@ -193,23 +190,44 @@ pub fn make_selection(
 }
 
 pub fn game_loop() -> SlayResult<()> {
-	let context = &mut game_context::GameBookKeeping::new();
-	let game = &mut state::Game::new(context);
+	simple_logging::log_to_file("output/log.txt", LevelFilter::Info).expect("Unable to log.");
+
+	let context = &mut GameBookKeeping::new();
+	let game = &mut Game::new(context);
 
 	initialize_game(context, game);
 
-	let iteration = 0;
+	let mut iteration = 0;
 	'turns: loop {
+		iteration += 1;
+
 		if game.get_turn().over_the_limit() {
 			return Err(SlayError::new("Hit maximum iterations"));
 		}
 
 		{
-			let mut file = File::create(format!("output/turn_{}.txt", iteration)).expect("msg");
-			file
-				.write_all(format!("{:#?}", game).as_bytes())
-				.expect("msg");
+			// log::info!("Writing iteration {} to file.", iteration);
+			// let write_file = File::create(
+			// 	format!("./output/iteration_{:04}.txt", iteration))
+			// 	.unwrap();
+			// let mut writer = BufWriter::new(&write_file);
+			let mut writer = BufWriter::new(Vec::new());
+			game
+				.summarize(&mut writer, 0)
+				.expect("Error writing to file");
+			let bytes = writer.into_inner().expect("whoops");
+			let string = String::from_utf8(bytes).expect("error logging state");
+			log::info!("iteration {:04} information:\n{}", iteration, string);
 		}
+
+		// flush!(writer);
+
+		// {
+		// 	let mut file = File::create(format!("output/turn_{}.txt", iteration)).expect("msg");
+		// 	file
+		// 		.write_all(format!("{:#?}", game).as_bytes())
+		// 		.expect("msg");
+		// }
 		// println!("{}", game);
 
 		// let serialized = serde_json::to_string(game).unwrap();
@@ -218,15 +236,12 @@ pub fn game_loop() -> SlayResult<()> {
 		// let perspective = GamePerspective::from(game, 1);
 		// let html = view::show_perspective(perspective);
 
-		// let (player_id, choice_id) = strategy::pick_a_random_choice(context, game)?;
-		// make_selection(context, game, player_id, choice_id)?;
-		// 'advancing: loop {
-		// 	match advance_game(context, game)? {
-		// 		AdvanceGameResult::TaskCom => return Ok(()),
-		// 		AdvanceGameResult::WaitingForPlayers => continue 'turns,
-		// 		// AdvanceGameResult::ContinueAdvancing => continue 'advancing,
-		// 	}
-		// }
+		let (player_id, choice_id) = strategy::pick_a_random_choice(context, game)?;
+		make_selection(context, game, player_id, choice_id)?;
+		match advance_game(context, game)? {
+			AdvanceGameResult::GameOver => return Ok(()),
+			AdvanceGameResult::WaitingForPlayers => continue 'turns,
+		}
 	}
 }
 

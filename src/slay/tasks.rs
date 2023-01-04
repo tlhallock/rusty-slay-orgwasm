@@ -6,6 +6,13 @@ use crate::slay::game_context;
 use crate::slay::ids;
 use crate::slay::modifiers;
 use crate::slay::state;
+use std::io::Result as IoResult;
+use std::io::Write;
+
+use std::fs::File;
+use std::io::BufWriter;
+
+use crate::slay::state::Summarizable;
 
 use core::fmt::Debug;
 
@@ -25,6 +32,8 @@ use crate::slay::choices::DisplayPath;
 use crate::slay::choices::TasksChoice;
 use crate::slay::state::DeckPath;
 
+use super::actions::DrawTask;
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum TaskSpec {
 	Sacrifice(u32),
@@ -41,7 +50,7 @@ impl TaskSpec {
 			TaskSpec::ReceiveModifier(modifier) => {
 				Box::new(ReceiveModifier::new(player_index, *modifier))
 			}
-			TaskSpec::Draw(num) => Box::new(Draw::new(player_index, *num)),
+			TaskSpec::Draw(num) => Box::new(DrawTask::new(player_index, (*num) as usize)),
 		}
 	}
 }
@@ -78,10 +87,44 @@ pub trait PlayerTask: Debug + dyn_clone::DynClone {
 
 #[derive(Debug, Default, Clone)]
 pub struct PlayerTasks {
-	// tasks: VecDeque<PlayerTask>,
+	// I don't like this part of the code. Seems complicated.
+	// Help? (interior mutability?)
+	// Each task is mutable while being performed (maybe it updates some params..),
+	// and the game is mutable (obvioiusly) and the task is part of the game.
+	// Due to ownership rules, we cannot pass a mutable game into the task, while
+	// the task is still within the game.
+	// Therefore, we remove the task, do the task, then put it back.
+	// While doing the task, the task may prepend more tasks.
+	// These have to go before the current task, after it is put back.
+	prepend: Vec<Box<dyn PlayerTask>>, // if we were worried about efficiency, this would not be a vec...
 	upcoming: VecDeque<Box<dyn PlayerTask>>,
 	current: Option<Box<dyn PlayerTask>>,
 	params: TaskParams,
+}
+
+impl Summarizable for PlayerTasks {
+	fn summarize<W: Write>(
+		&self, f: &mut BufWriter<W>, indentation_level: u32,
+	) -> Result<(), std::io::Error> {
+		if self.upcoming.is_empty() && self.current.is_none() {
+			return Ok(());
+		}
+		for _ in 0..indentation_level {
+			write!(f, "  ")?;
+		}
+		write!(f, "tasks: ")?;
+		for task in self.prepend.iter() {
+			write!(f, "{}, ", task.label())?;
+		}
+		if let Some(task) = self.current.as_ref() {
+			write!(f, "{}, ", task.label())?;
+		}
+		for task in self.upcoming.iter() {
+			write!(f, "{}, ", task.label())?;
+		}
+		write!(f, "\n")?;
+		Ok(())
+	}
 }
 
 impl PlayerTasks {
@@ -90,6 +133,7 @@ impl PlayerTasks {
 			upcoming: VecDeque::from(tasks),
 			current: None,
 			params: Default::default(),
+			prepend: Default::default(),
 		}
 	}
 
@@ -98,23 +142,40 @@ impl PlayerTasks {
 	}
 	pub fn prepend_from(&mut self, to_take: &mut Vec<Box<dyn PlayerTask>>) {
 		// Should this have been a stack all along?
-		while !to_take.is_empty() {
-			let task = to_take.remove(0);
-			self.upcoming.push_front(task);
-		}
+		self.prepend.extend(to_take.drain(..));
+		// log::info!("About to prepend {:?} to {:?}")
+		// while !to_take.is_empty() {
+		// 	let task = to_take.remove(0);
+		// 	self.upcoming.push_front(task);
+		// }
 	}
 
 	pub fn put_current_task_back(&mut self, task: Box<dyn PlayerTask>) -> SlayResult<()> {
 		// reviewer: How do you make this a one liner?
 		if self.current.is_some() {
 			return Err(errors::SlayError::new(
-				"The current action should be taken out right now.",
+				"The current action should have been taken out right now.",
 			));
 		}
 		self.current = Some(task);
 		Ok(())
 	}
+
+	fn ensure_rotated(&mut self) {
+		if self.prepend.is_empty() {
+			return;
+		}
+		if let Some(task) = self.current.take() {
+			self.upcoming.push_front(task);
+		}
+		while !self.prepend.is_empty() {
+			let task = self.prepend.remove(0);
+			self.upcoming.push_front(task);
+		}
+	}
+
 	pub fn take_current_task(&mut self) -> Option<Box<dyn PlayerTask>> {
+		self.ensure_rotated();
 		self.current.take().or_else(|| {
 			// Initialize the task, if need be...
 			self.upcoming.pop_front()
@@ -169,7 +230,6 @@ impl PlayerTask for Sacrifice {
 
 		let party = &game.players[self.player_index].party;
 		let mut options: Vec<TasksChoice> = party
-			.stacks
 			.iter()
 			// .filter(card_is_sacrificable)
 			.map(|s| {
@@ -290,7 +350,6 @@ impl PlayerTask for Discard {
 		self.num -= 1;
 		let options: Vec<TasksChoice> = game.players[self.player_index]
 			.hand
-			.stacks
 			.iter()
 			.map(|stack| {
 				TasksChoice::prepend(
@@ -339,31 +398,33 @@ impl PlayerTask for Discard {
 	}
 }
 
-#[derive(Debug, Clone)]
-struct Draw {
-	player_index: usize,
-	num: u32,
-}
+// #[derive(Debug, Clone)]
+// struct Draw {
+// 	player_index: usize,
+// 	num: u32,
+// }
 
-impl Draw {
-	pub fn new(player_index: usize, num: u32) -> Self {
-		Self { player_index, num }
-	}
-}
+// impl Draw {
+// 	pub fn new(player_index: usize, num: u32) -> Self {
+// 		Self { player_index, num }
+// 	}
+// }
 
-impl PlayerTask for Draw {
-	fn make_progress(
-		&mut self, _context: &mut game_context::GameBookKeeping, _game: &mut state::Game,
-	) -> SlayResult<TaskProgressResult> {
-		todo!()
-	}
-	fn label(&self) -> String {
-		format!(
-			"Player {} is drawing {} cards.",
-			self.player_index, self.num
-		)
-	}
-}
+// impl PlayerTask for Draw {
+// 	fn make_progress(
+// 		&mut self, _context: &mut GameBookKeeping, _game: &mut Game,
+// 	) -> SlayResult<TaskProgressResult> {
+// 		let stack = _game.draw.deal();
+// 		_game.players[self.player_index].hand.add(stack);
+// 		Ok(TaskProgressResult::TaskComplete)
+// 	}
+// 	fn label(&self) -> String {
+// 		format!(
+// 			"Player {} is drawing {} cards.",
+// 			self.player_index, self.num
+// 		)
+// 	}
+// }
 
 pub(crate) fn continue_tasks(
 	context: &mut game_context::GameBookKeeping, game: &mut state::Game, player_index: usize,
@@ -404,6 +465,7 @@ pub struct MoveCardTask {
 	pub source: state::DeckPath,
 	pub destination: state::DeckPath,
 	pub card_id: ids::CardId,
+	// Could have a replentish here...
 }
 
 impl PlayerTask for MoveCardTask {

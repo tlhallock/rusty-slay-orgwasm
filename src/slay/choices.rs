@@ -6,11 +6,19 @@ use crate::slay::state;
 
 use std::fmt::Debug;
 
-use super::deadlines::Timeline;
-use super::game_context::GameBookKeeping;
-use super::showdown::common::ModificationPath;
-use super::state::Game;
-use super::tasks::PlayerTask;
+use crate::slay::deadlines::Timeline;
+use crate::slay::game_context::GameBookKeeping;
+use crate::slay::showdown::common::ModificationPath;
+use crate::slay::state::Game;
+use crate::slay::tasks::PlayerTask;
+
+use std::io::Result as IoResult;
+use std::io::Write;
+
+use std::fs::File;
+use std::io::BufWriter;
+
+use crate::slay::state::Summarizable;
 
 #[derive(Clone, Debug)]
 pub struct Choices {
@@ -31,6 +39,22 @@ impl Choices {
 			timeline,
 			instructions,
 		}
+	}
+}
+
+impl Summarizable for Choices {
+	fn summarize<W: Write>(
+		&self, f: &mut BufWriter<W>, indentation_level: u32,
+	) -> Result<(), std::io::Error> {
+		for _ in 0..indentation_level {
+			write!(f, "  ")?;
+		}
+		write!(f, "choices: ({}): ", self.instructions)?;
+		for option in self.options.iter() {
+			write!(f, "an option goes here.")?;
+		}
+		write!(f, "\n")?;
+		Ok(())
 	}
 }
 

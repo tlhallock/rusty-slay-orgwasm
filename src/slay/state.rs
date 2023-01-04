@@ -9,22 +9,29 @@ use super::specification::CardSpec;
 use super::specification::CardType;
 use super::tasks::PlayerTask;
 use super::tasks::PlayerTasks;
-use crate::slay::showdown::current_showdown::CurrentShowdown;
-
 use crate::slay::choices;
 use crate::slay::errors;
 use crate::slay::game_context;
 use crate::slay::modifiers;
+use crate::slay::showdown::current_showdown::CurrentShowdown;
+use std::io::Write;
 
 use crate::slay::specification::HeroType;
 use crate::slay::tasks;
+
 use errors::SlayResult;
 
-use std::collections::vec_deque::Drain;
 use std::collections::HashSet;
 use std::collections::VecDeque;
+use std::fmt;
 use std::fmt::Debug;
+use std::fmt::Formatter;
+use std::fs::File;
+use std::io::BufWriter;
 use std::ops::RangeBounds;
+
+use std::io::Result as IoResult;
+use std::iter::Iterator;
 
 #[derive(Debug, Clone, Copy)]
 pub enum ChoiceParamType {
@@ -38,16 +45,11 @@ pub enum ChoiceParamType {
 pub struct Card {
 	pub id: ids::CardId,
 	pub spec: CardSpec,
-	pub played_this_turn: bool,
 }
 
 impl Card {
 	pub fn new(id: ids::CardId, spec: CardSpec) -> Self {
-		Card {
-			id,
-			spec,
-			played_this_turn: false,
-		}
+		Card { id, spec }
 	}
 
 	pub fn modification_amounts(&self) -> Vec<i32> {
@@ -131,11 +133,23 @@ pub enum DeckPath {
 pub struct Deck {
 	// TODO: hide internals...
 	pub id: ids::DeckId,
-	pub stacks: VecDeque<Stack>,
+	stacks: VecDeque<Stack>,
 	pub spec: specification::DeckSpec,
 }
 
 impl Deck {
+	pub fn new(id_gen: &mut ids::IdGenerator, spec: specification::DeckSpec) -> Self {
+		Self {
+			id: id_gen.generate(),
+			stacks: Default::default(),
+			spec,
+		}
+	}
+
+	pub fn num_top_cards(&self) -> usize {
+		self.stacks.len()
+	}
+
 	pub fn list_top_cards_by_type(&self, card_type: &CardType) -> Vec<ids::CardId> {
 		self
 			.stacks
@@ -145,19 +159,16 @@ impl Deck {
 			.collect()
 	}
 
-	pub fn new(id_gen: &mut ids::IdGenerator, spec: specification::DeckSpec) -> Self {
-		Self {
-			id: id_gen.generate(),
-			stacks: Default::default(),
-			spec,
-		}
+	pub fn iter(&self) -> impl Iterator<Item = &Stack> {
+		self.stacks.iter()
 	}
 
-	pub fn extend(&mut self, drained: Drain<Stack>) {
+	pub fn extend<D: IntoIterator<Item = Stack>>(&mut self, drained: D) {
 		self.stacks.extend(drained);
 	}
 
-	pub fn drain<R>(&mut self, range: R) -> Drain<Stack>
+	// Wish the return type didn't have to expose the inner data type...
+	pub fn drain<R>(&mut self, range: R) -> std::collections::vec_deque::Drain<Stack>
 	where
 		R: RangeBounds<usize>,
 	{
@@ -166,6 +177,10 @@ impl Deck {
 
 	pub fn is_visible(&self, perspective: &specification::Perspective) -> bool {
 		self.spec.visibility.is_visible(perspective)
+	}
+
+	pub fn add(&mut self, stack: Stack) {
+		self.stacks.push_back(stack);
 	}
 
 	pub fn add_card(&mut self, c: Card) {
@@ -253,13 +268,14 @@ pub struct Player {
 	pub choices: Option<choices::Choices>,
 	pub tasks: PlayerTasks,
 
-	pub remaining_action_points: u32,
-
 	pub leader: Card,
 
 	pub hand: Deck,
 	pub party: Deck,
 	pub slain_monsters: Deck,
+
+	played_this_turn: HashSet<ids::CardId>,
+	remaining_action_points: u32,
 	// current modifiers
 	// player information
 }
@@ -313,7 +329,28 @@ impl Player {
 					label: "Slain monsters".to_string(),
 				},
 			},
+			played_this_turn: Default::default(),
 		}
+	}
+
+	pub fn turn_begin(&mut self) {
+		self.remaining_action_points = 3;
+	}
+
+	pub fn action_points_used(&mut self, amount: u32) {
+		self.remaining_action_points -= amount;
+	}
+
+	pub fn set_card_played(&mut self, card_id: ids::CardId) {
+		self.played_this_turn.insert(card_id);
+	}
+
+	pub fn was_card_played(&self, card_id: &ids::CardId) -> bool {
+		self.played_this_turn.contains(card_id)
+	}
+
+	pub fn turn_end(&mut self) {
+		self.played_this_turn.clear();
 	}
 
 	pub fn hero_types(&self) -> HashSet<HeroType> {
@@ -329,6 +366,10 @@ impl Player {
 
 	fn clear_expired_modifiers(&mut self, turn: &Turn) {
 		self.buffs.clear_expired_modifiers(turn);
+	}
+
+	pub(crate) fn get_remaining_action_points(&self) -> u32 {
+		self.remaining_action_points
 	}
 }
 
@@ -356,10 +397,12 @@ impl Turn {
 		self.player_index += 1;
 		self.turn_number += 1;
 		if self.player_index < number_of_players as u32 {
+			log::info!("Incremented turn to {:?}", &self);
 			return;
 		}
 		self.player_index = 0;
 		self.round_number += 1;
+		log::info!("Incremented round to {:?}", &self);
 	}
 
 	pub fn over_the_limit(&self) -> bool {
@@ -408,7 +451,6 @@ impl Game {
 		self.turn.active_player_index()
 	}
 	pub fn increment(&mut self) {
-		log::info!("Incrementing the turn.");
 		self.turn.increment(self.number_of_players());
 	}
 	pub fn decks(&self) -> [&Deck; 5] {
@@ -613,5 +655,108 @@ impl Game {
 
 	pub(crate) fn get_turn(&self) -> Turn {
 		self.turn.to_owned()
+	}
+
+	pub(crate) fn replentish_for(&mut self, number_to_draw: usize) {
+		if self.draw.num_top_cards() >= number_to_draw {
+			return;
+		}
+		self.draw.extend(self.discard.drain(..));
+	}
+}
+
+pub trait Summarizable {
+	fn summarize<W: Write>(
+		&self, f: &mut BufWriter<W>, indentation_level: u32,
+	) -> Result<(), std::io::Error>;
+}
+
+impl Summarizable for Card {
+	fn summarize<W: Write>(
+		&self, f: &mut BufWriter<W>, indentation_level: u32,
+	) -> Result<(), std::io::Error> {
+		write!(
+			f,
+			"{}",
+			self.spec.label,
+			//  if self.played_this_turn { "X" } else { "" }
+		)
+	}
+}
+impl Summarizable for Stack {
+	fn summarize<W: Write>(
+		&self, f: &mut BufWriter<W>, indentation_level: u32,
+	) -> Result<(), std::io::Error> {
+		write!(f, "[")?;
+		self.top.summarize(f, indentation_level + 1)?;
+		write!(f, " {}], ", self.modifiers.len())
+	}
+}
+
+impl Summarizable for Deck {
+	fn summarize<W: Write>(
+		&self, f: &mut BufWriter<W>, indentation_level: u32,
+	) -> Result<(), std::io::Error> {
+		for _ in 0..indentation_level {
+			write!(f, "  ")?;
+		}
+		write!(f, "{}: ", self.spec.label)?;
+		let num_stacks = self.stacks.len();
+		if num_stacks > 8 {
+			for stack in self.stacks.range(0..4) {
+				stack.summarize(f, indentation_level + 1)?;
+			}
+			write!(f, "...  ")?;
+			for stack in self.stacks.range((num_stacks - 4)..num_stacks) {
+				stack.summarize(f, indentation_level + 1)?;
+			}
+		} else {
+			for stack in self.stacks.iter() {
+				stack.summarize(f, indentation_level + 1)?;
+			}
+		}
+		write!(f, "\n")?;
+		Ok(())
+	}
+}
+
+impl Summarizable for Player {
+	fn summarize<W: Write>(
+		&self, f: &mut BufWriter<W>, indentation_level: u32,
+	) -> Result<(), std::io::Error> {
+		for _ in 0..indentation_level {
+			write!(f, "  ")?;
+		}
+		writeln!(f, "player {}", self.player_index)?;
+		self.hand.summarize(f, indentation_level + 1)?;
+		self.party.summarize(f, indentation_level + 1)?;
+		self.slain_monsters.summarize(f, indentation_level + 1)?;
+
+		if let Some(choices) = self.choices.as_ref() {
+			choices.summarize(f, indentation_level + 1)?;
+		}
+		self.tasks.summarize(f, indentation_level + 1)?;
+
+		Ok(())
+	}
+}
+
+impl Summarizable for Game {
+	fn summarize<W: Write>(
+		&self, f: &mut BufWriter<W>, indentation_level: u32,
+	) -> Result<(), std::io::Error> {
+		for _ in 0..indentation_level {
+			write!(f, "  ")?;
+		}
+		writeln!(f, "players:")?;
+		for player in self.players.iter() {
+			player.summarize(f, indentation_level + 1)?;
+		}
+		self.discard.summarize(f, indentation_level + 1)?;
+		self.monsters.summarize(f, indentation_level + 1)?;
+		self.draw.summarize(f, indentation_level + 1)?;
+		self.next_monsters.summarize(f, indentation_level + 1)?;
+
+		Ok(())
 	}
 }

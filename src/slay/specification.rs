@@ -7,7 +7,7 @@ use super::showdown::consequences::Condition;
 use super::showdown::consequences::RollConsequenceSpec;
 use super::showdown::consequences::RollConsequences;
 
-pub const MAX_TURNS: u32 = 50;
+pub const MAX_TURNS: u32 = 50000;
 
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub enum Visibility {
