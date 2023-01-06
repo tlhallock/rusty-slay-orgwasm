@@ -2,22 +2,17 @@ use yew::classes;
 use yew::prelude::*;
 
 use crate::common::perspective::CardSpecPerspective;
-use crate::common::perspective::RollModificationChoiceType;
 use crate::common::perspective::RollPerspective;
+use crate::frontend::app::ChoiceState;
+use crate::frontend::app::GameCallbacks;
 use crate::frontend::dice::Dice;
-use crate::frontend::icons::Done;
 use crate::frontend::icons::Timer;
 use crate::frontend::showdown::common::CompletionsView;
 use crate::frontend::showdown::common::RollChoices;
 use crate::frontend::showdown::common::RollHistory;
 use crate::frontend::showdown::common::RollTotal;
 use crate::frontend::stack::CardSpecView;
-
-use crate::frontend::app::ChoiceState;
-use crate::frontend::app::GameCallbacks;
-use crate::frontend::icons::DoNot;
 use crate::frontend::stack::ExtraSpecProps;
-use crate::slay::showdown::completion::RollCompletion;
 use crate::slay::showdown::consequences::Comparison;
 use crate::slay::showdown::consequences::Condition;
 use crate::slay::showdown::roll_state::RollReason;

@@ -86,7 +86,7 @@ pub fn create_modify_roll_choice(
 				],
 				label: format!(
 					"Use {} to modify {}'s roll by {}",
-					card.id, "somebody", player_index,
+					card.id, "somebody", modification_amount,
 				),
 				roll_modification_choice: Some(RollModificationChoice {
 					choice_id,

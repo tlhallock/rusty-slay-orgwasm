@@ -1,9 +1,12 @@
+use std::collections::VecDeque;
+
 use yew::Callback;
 
 use crate::common::perspective::GamePerspective;
 use crate::slay::driver::AdvanceGameResult;
 use crate::slay::game_context::GameBookKeeping;
 use crate::slay::ids;
+use crate::slay::message::Notification;
 use crate::slay::state::Game;
 use crate::slay::{driver, strategy};
 
@@ -14,6 +17,7 @@ pub struct AppState {
 	pub context: GameBookKeeping,
 	pub game: Game,
 	pub my_player_index: usize,
+	pub notifications: VecDeque<Notification>,
 }
 
 impl AppState {
@@ -29,6 +33,7 @@ impl AppState {
 			context,
 			game,
 			my_player_index: player_index,
+			notifications: Default::default(),
 		}
 	}
 
@@ -39,7 +44,24 @@ impl AppState {
 
 	fn make_selection(&mut self, choice_id: ids::ChoiceId) -> bool {
 		let player_id = self.game.players[self.my_player_index].id;
-		driver::make_selection(&mut self.context, &mut self.game, player_id, choice_id).expect("oops");
+
+		let mut new_notifications = &mut Vec::new();
+		{
+			let mut notify = |n| new_notifications.push(n);
+			// let mut notify = {
+			// 	move |n| new_notifications.push(n)
+			// };
+			driver::make_selection(
+				&mut self.context,
+				&mut self.game,
+				player_id,
+				choice_id,
+				&mut notify,
+			)
+			.expect("oops");
+		}
+
+		self.notifications.extend(new_notifications.drain(..));
 
 		match driver::advance_game(&mut self.context, &mut self.game).expect("uh oh") {
 			AdvanceGameResult::GameOver => true, // Need to return that the game is complete...

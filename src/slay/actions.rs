@@ -1,36 +1,33 @@
 use crate::slay::choices;
+use crate::slay::choices::ChoiceDisplay;
+use crate::slay::choices::ChoiceInformation;
+use crate::slay::choices::ChoiceLocator;
+use crate::slay::choices::TasksChoice;
 use crate::slay::deadlines;
+use crate::slay::errors::SlayError;
 use crate::slay::errors::SlayResult;
 use crate::slay::game_context;
-use crate::slay::ids;
-use crate::slay::showdown::completion::RollCompletion;
-use crate::slay::showdown::consequences;
-use crate::slay::specification;
-use crate::slay::state;
-use crate::slay::tasks;
-
-use crate::slay::choices::ChoiceDisplay;
-use crate::slay::errors::SlayError;
 use crate::slay::game_context::GameBookKeeping;
+use crate::slay::ids;
 use crate::slay::showdown::common::ChallengeReason;
 use crate::slay::showdown::common::Roll;
 use crate::slay::showdown::completion::CompletionTracker;
+use crate::slay::showdown::completion::RollCompletion;
+use crate::slay::showdown::consequences;
 use crate::slay::showdown::consequences::RollConsequenceRenameMe;
 use crate::slay::showdown::consequences::RollConsequences;
 use crate::slay::showdown::current_showdown::ShowDown;
 use crate::slay::showdown::offer::OfferChallengesState;
 use crate::slay::showdown::roll_state::RollReason;
 use crate::slay::showdown::roll_state::RollState;
+use crate::slay::specification;
 use crate::slay::specification::CardType;
+use crate::slay::state;
 use crate::slay::state::Card;
 use crate::slay::state::Game;
+use crate::slay::tasks;
 use crate::slay::tasks::PlayerTask;
 use crate::slay::tasks::TaskProgressResult;
-
-use super::choices::ChoiceInformation;
-use super::choices::ChoiceLocator;
-use super::choices::TasksChoice;
-use super::state_modifiers;
 
 // Emit logs like "Waiting for challenges..."
 
@@ -554,7 +551,7 @@ pub fn assign_action_choices(context: &mut game_context::GameBookKeeping, game: 
 	game.current_player_mut().choices = Some(choices::Choices {
 		instructions: "Please choose an action".to_string(),
 		options,
-		default_choice,
+		default_choice: Some(default_choice),
 		timeline: deadlines::get_action_point_choice_deadline(),
 	});
 }

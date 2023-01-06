@@ -279,7 +279,7 @@ impl PlayerTask for Sacrifice {
 		game.players[self.player_index].choices = Some(choices::Choices {
 			instructions: "Choose a card to sacrifice.".to_string(),
 			options,
-			default_choice,
+			default_choice: Some(default_choice),
 			timeline: deadlines::get_sacrifice_deadline(),
 		});
 
@@ -384,7 +384,7 @@ impl PlayerTask for Discard {
 
 		game.players[self.player_index].choices = Some(Choices::new(
 			options,
-			default_choice,
+			Some(default_choice),
 			deadlines::get_discard_deadline(),
 			"Choose a card to discard.".to_owned(),
 		));

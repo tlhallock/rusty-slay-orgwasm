@@ -4,22 +4,19 @@ use crate::slay::errors::{SlayError, SlayResult};
 use crate::slay::game_context;
 use crate::slay::game_context::GameBookKeeping;
 use crate::slay::ids;
-use crate::slay::message;
+use crate::slay::message::Notification;
 use crate::slay::specification;
 use crate::slay::state::Card;
 use crate::slay::state::Game;
 use crate::slay::state::Summarizable;
 use crate::slay::state::{Player, Stack};
-use crate::slay::state_modifiers;
 use crate::slay::tasks::TaskProgressResult;
 use crate::slay::{strategy, tasks};
 
+use log::LevelFilter;
 use rand::seq::SliceRandom;
 use rand::Rng;
-use std::fs::File;
-use std::io::{BufWriter, Write};
-
-use log::LevelFilter;
+use std::io::BufWriter;
 
 pub fn player_has_won(player: &Player) -> bool {
 	player.slain_monsters.num_top_cards() >= 3 || player.hero_types().len() >= 6
@@ -156,7 +153,7 @@ pub fn advance_game(
 
 pub fn make_selection(
 	context: &mut game_context::GameBookKeeping, game: &mut Game, player_id: ids::ElementId,
-	choice_id: ids::ElementId,
+	choice_id: ids::ElementId, notify: &mut dyn FnMut(Notification) -> (),
 ) -> SlayResult<()> {
 	let player_index = game
 		.player_index(player_id)
@@ -178,7 +175,8 @@ pub fn make_selection(
 		.find(|c| c.get_choice_information().get_id() == choice_id)
 		.ok_or_else(|| SlayError::new("Choice not found."))?;
 
-	context.emit(&message::Notification {
+	/*context.emit*/
+	notify(Notification {
 		message_text: format!(
 			"Player {} chose {}",
 			player_index,
@@ -202,7 +200,8 @@ pub fn game_loop() -> SlayResult<()> {
 		iteration += 1;
 
 		if game.get_turn().over_the_limit() {
-			return Err(SlayError::new("Hit maximum iterations"));
+			return Ok(());
+			// return Err(SlayError::new("Hit maximum iterations"));
 		}
 
 		{
@@ -237,7 +236,9 @@ pub fn game_loop() -> SlayResult<()> {
 		// let html = view::show_perspective(perspective);
 
 		let (player_id, choice_id) = strategy::pick_a_random_choice(context, game)?;
-		make_selection(context, game, player_id, choice_id)?;
+		make_selection(context, game, player_id, choice_id, &mut |notification| {
+			log::info!("Notification: '{}'", notification.message_text);
+		})?;
 		match advance_game(context, game)? {
 			AdvanceGameResult::GameOver => return Ok(()),
 			AdvanceGameResult::WaitingForPlayers => continue 'turns,
@@ -248,4 +249,11 @@ pub fn game_loop() -> SlayResult<()> {
 /*
 Tests
 	Place a hero card without challenging.
+	replentishing the draw pile
+
+
+
+
+
+
  */

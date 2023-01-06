@@ -7,6 +7,7 @@
 //   message_text: String,
 // }
 
+#[derive(Clone, Debug)]
 pub struct Notification {
 	pub message_text: String,
 }

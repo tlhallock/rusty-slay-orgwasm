@@ -4,10 +4,13 @@ use crate::slay::message;
 use rand::rngs::ThreadRng;
 use rand::thread_rng;
 
+use super::message::Notification;
+
 #[derive(Clone)]
 pub struct GameBookKeeping {
 	pub id_generator: ids::IdGenerator,
 	pub rng: ThreadRng,
+	// pub notifier: Option<Box<dyn Fn(Notification) -> ()>>,
 }
 
 impl Default for GameBookKeeping {
@@ -26,5 +29,6 @@ impl GameBookKeeping {
 
 	pub fn emit(&mut self, notification: &message::Notification) {
 		log::info!("Notification: {}", notification.message_text);
+		// self.notifier.iter().for_each(|f| f(notification.to_owned()));
 	}
 }

@@ -4,23 +4,17 @@ use yew::prelude::*;
 use crate::common::perspective::CardSpecPerspective;
 use crate::common::perspective::ChallengePerspective;
 use crate::common::perspective::ChallengeRollPerspective;
-use crate::common::perspective::RollModificationChoiceType;
+use crate::frontend::app::ChoiceState;
+use crate::frontend::app::GameCallbacks;
 use crate::frontend::dice::Dice;
-use crate::frontend::icons::Done;
 use crate::frontend::icons::Timer;
 use crate::frontend::showdown::common::CompletionsView;
 use crate::frontend::showdown::common::RollChoices;
 use crate::frontend::showdown::common::RollHistory;
 use crate::frontend::showdown::common::RollTotal;
 use crate::frontend::stack::CardSpecView;
-
-use crate::frontend::app::ChoiceState;
-use crate::frontend::app::GameCallbacks;
-use crate::frontend::icons::DoNot;
 use crate::frontend::stack::ExtraSpecProps;
-use crate::slay::showdown::completion::RollCompletion;
-
-use crate::slay::showdown::common::{ChallengeReason, ModificationPath, Roll, RollModification};
+use crate::slay::showdown::common::ChallengeReason;
 
 #[function_component(ChallengeDescription)]
 pub fn view_challenge_description(props: &ChallengeModalProps) -> Html {

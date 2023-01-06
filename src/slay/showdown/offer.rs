@@ -91,7 +91,7 @@ impl ShowDown for OfferChallengesState {
 		let default_choice = context.id_generator.generate();
 		Choices {
 			instructions: "Choose whether to modify the current challenge.".to_string(),
-			default_choice,
+			default_choice: Some(default_choice),
 			timeline: self.tracker().timeline.to_owned(),
 			options: self.list_challenge_choices(context, game, player_index, default_choice),
 		}

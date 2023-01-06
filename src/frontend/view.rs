@@ -7,6 +7,20 @@ use crate::frontend::game::GamePerspectiveView;
 
 #[function_component(App)]
 fn app() -> Html {
+	// let notifications = use_state(|| VecDeque::new());
+	// let notify = {
+	// 	let notifications = notifications.clone();
+	// 	let mut prev = (*notifications).to_owned();
+
+	// 	Callback::from(move |notification: Notification| {
+	// 		prev.push_back(notification);
+	// 		if prev.len() > 50 {
+	// 			prev.pop_front();
+	// 		}
+	// 		notifications.set(prev);
+	// 	});
+	// };
+
 	let current_game = use_state(|| AppState::new());
 	let _player_index = use_state(|| 0usize);
 

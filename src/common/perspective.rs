@@ -492,7 +492,7 @@ impl Choices {
 				.map(|o| {
 					let info = o.get_choice_information();
 					ChoicePerspective {
-						is_default: info.get_id() == self.default_choice,
+						is_default: self.default_choice.iter().any(|dc| *dc == info.get_id()),
 						choice_id: info.get_id(),
 						label: info.display.label.to_owned(),
 						highlight: game.get_element_id(&info.display.highlight),

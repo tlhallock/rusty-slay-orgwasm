@@ -1,36 +1,30 @@
-use crate::common::perspective::RollModificationChoice;
-use crate::slay::errors::SlayResult;
-use crate::slay::game_context;
-use crate::slay::ids;
-use crate::slay::state;
-
 use std::fmt::Debug;
-
-use crate::slay::deadlines::Timeline;
-use crate::slay::game_context::GameBookKeeping;
-use crate::slay::showdown::common::ModificationPath;
-use crate::slay::state::Game;
-use crate::slay::tasks::PlayerTask;
-
-use std::io::Result as IoResult;
+use std::io::BufWriter;
 use std::io::Write;
 
-use std::fs::File;
-use std::io::BufWriter;
-
+use crate::common::perspective::RollModificationChoice;
+use crate::slay::deadlines::Timeline;
+use crate::slay::errors::SlayResult;
+use crate::slay::game_context;
+use crate::slay::game_context::GameBookKeeping;
+use crate::slay::ids;
+use crate::slay::showdown::common::ModificationPath;
+use crate::slay::state;
+use crate::slay::state::Game;
 use crate::slay::state::Summarizable;
+use crate::slay::tasks::PlayerTask;
 
 #[derive(Clone, Debug)]
 pub struct Choices {
 	pub instructions: String,
 	pub options: Vec<TasksChoice>,
-	pub default_choice: ids::ChoiceId,
+	pub default_choice: Option<ids::ChoiceId>,
 	pub timeline: Timeline,
 }
 
 impl Choices {
 	pub fn new(
-		options: Vec<TasksChoice>, default_choice: ids::ChoiceId, timeline: Timeline,
+		options: Vec<TasksChoice>, default_choice: Option<ids::ChoiceId>, timeline: Timeline,
 		instructions: String,
 	) -> Self {
 		Self {
@@ -51,7 +45,7 @@ impl Summarizable for Choices {
 		}
 		write!(f, "choices: ({}): ", self.instructions)?;
 		for option in self.options.iter() {
-			write!(f, "an option goes here.")?;
+			write!(f, "'{}', ", option.get_choice_information().display.label)?;
 		}
 		write!(f, "\n")?;
 		Ok(())

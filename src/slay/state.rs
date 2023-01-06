@@ -677,7 +677,8 @@ impl Summarizable for Card {
 	) -> Result<(), std::io::Error> {
 		write!(
 			f,
-			"{}",
+			"({}) {}",
+			self.id,
 			self.spec.label,
 			//  if self.played_this_turn { "X" } else { "" }
 		)
@@ -741,6 +742,7 @@ impl Summarizable for Player {
 	}
 }
 
+// Summarize the roll...
 impl Summarizable for Game {
 	fn summarize<W: Write>(
 		&self, f: &mut BufWriter<W>, indentation_level: u32,
