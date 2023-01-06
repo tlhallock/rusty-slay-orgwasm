@@ -110,24 +110,6 @@ pub fn view_game(props: &GamePerspectiveProps) -> Html {
 				/>
 			}
 		});
-	let offer = props
-		.game
-		.offer
-		.as_ref()
-		// vec![].iter()
-		.map(|o| {
-			html! {
-				<OfferChallengesView
-					offer={o.to_owned()}
-					callbacks={
-						GameCallbacks {
-							choose: props.choose.to_owned(),
-							view_card: view_card.to_owned(),
-						}
-					}
-				/>
-			}
-		});
 
 	let challenge = props.game.challenge.as_ref().map(|c| {
 		html! {

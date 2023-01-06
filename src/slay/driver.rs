@@ -126,6 +126,11 @@ pub fn advance_game(
 
 	let mut iteration = 0;
 	loop {
+		iteration += 1;
+		if iteration > 10000 {
+			unreachable!();
+		}
+
 		if game_is_over(game) {
 			return Ok(AdvanceGameResult::GameOver);
 		}
@@ -137,11 +142,6 @@ pub fn advance_game(
 		match run_tasks(context, game)? {
 			TaskProgressResult::NothingDone => break,
 			TaskProgressResult::ProgressMade | TaskProgressResult::TaskComplete => continue,
-		}
-
-		iteration += 1;
-		if iteration > 10000 {
-			unreachable!();
 		}
 	}
 

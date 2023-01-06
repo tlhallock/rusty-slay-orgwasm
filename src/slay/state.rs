@@ -236,13 +236,6 @@ impl Deck {
 			.find(|s| s.top.id == card_id)
 			.map(|s| &s.top)
 	}
-	pub(crate) fn card_mut(&mut self, card_id: u32) -> Option<&mut Card> {
-		self
-			.stacks
-			.iter_mut()
-			.find(|s| s.top.id == card_id)
-			.map(|s| &mut s.top)
-	}
 }
 
 // Split into choice type?
