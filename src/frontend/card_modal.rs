@@ -1,8 +1,9 @@
 use yew::classes;
 use yew::prelude::*;
 
-use crate::common::perspective::CardSpecPerspective;
-use crate::common::perspective::ChoiceAssociation;
+
+use crate::slay::choices::ChoiceAssociation;
+use crate::slay::state::stack::CardSpecPerspective;
 
 use super::app::GameCallbacks;
 

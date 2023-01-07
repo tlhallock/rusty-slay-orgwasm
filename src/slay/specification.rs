@@ -3,63 +3,26 @@ use crate::slay::tasks;
 
 use std::vec;
 
+use super::abilities::discard::Discard;
+use super::abilities::heros::VictimDraws;
+use super::abilities::params::ChoosePlayerParameterTask;
+use super::abilities::pull::PullFromTask;
+use super::abilities::sacrifice::Sacrifice;
+use super::actions::DrawTask;
+use super::choices::TasksChoice;
+use super::ids;
+use super::modifiers::PlayerModifier;
+use super::showdown::common::Roll;
 use super::showdown::consequences::Condition;
-use super::showdown::consequences::RollConsequenceSpec;
+use super::showdown::consequences::RollConsequence;
 use super::showdown::consequences::RollConsequences;
+use super::tasks::PlayerTask;
+use super::tasks::ReceiveModifier;
+use super::tasks::TaskParamName;
+use super::visibility::VisibilitySpec;
 
 pub const MAX_TURNS: u32 = 100;
 
-#[derive(Debug, PartialEq, Eq, Clone)]
-pub enum Visibility {
-	Visible,
-	Summary,
-	//   Hidden,
-	Invisible,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub enum Perspective {
-	Owner,
-	Spectator,
-	Jesus,
-}
-
-#[derive(Debug, Clone)]
-pub struct VisibilitySpec {
-	pub owner: Visibility,
-	pub others: Visibility,
-}
-
-impl VisibilitySpec {
-	pub fn summary() -> Self {
-		Self {
-			owner: Visibility::Visible,
-			others: Visibility::Summary,
-		}
-	}
-	pub fn invisible() -> Self {
-		Self {
-			owner: Visibility::Invisible,
-			others: Visibility::Invisible,
-		}
-	}
-	pub fn visible() -> Self {
-		Self {
-			owner: Visibility::Visible,
-			others: Visibility::Visible,
-		}
-	}
-	pub fn get(&self, perspective: &Perspective) -> &Visibility {
-		match perspective {
-			Perspective::Jesus => &self.owner,
-			Perspective::Owner => &self.owner,
-			Perspective::Spectator => &self.others,
-		}
-	}
-	pub fn is_visible(&self, perspective: &Perspective) -> bool {
-		self.get(perspective) != &Visibility::Invisible
-	}
-}
 
 #[derive(Debug, Clone)]
 pub struct DeckSpec {
@@ -67,27 +30,31 @@ pub struct DeckSpec {
 	pub label: String,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone)]
 pub struct HeroAbility {
-	pub success_condition: Condition,
+	pub condition: Condition,
+  pub tasks: Vec<Box<dyn PlayerTask>>,
 }
 
-impl HeroAbility {
-	pub fn new(success_condition: Condition) -> Self {
-		Self { success_condition }
-	}
-}
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+
+type ActionsCreator = Box<dyn Fn(ids::PlayerIndex) -> Vec<Box<TasksChoice>>>;
+
+#[derive(Debug, Clone, )]
 pub struct CardSpec {
 	pub card_type: CardType,
 	pub repeat: u32,
 	pub label: String,
 	pub description: String,
 	pub image_path: String,
+
+  // challenge tasks...
 	pub monster: Option<MonsterSpec>,
 	pub modifiers: Vec<i32>,
 	pub hero_ability: Option<HeroAbility>,
+
+  // pub hand_actions: ActionsCreator,
+  // pub party_actions: ActionsCreator,
 }
 
 impl Default for CardSpec {
@@ -146,24 +113,12 @@ pub enum MonsterRequirements {
 //     DefeatedByMonster(ids::CardId),
 // }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone)]
 pub struct MonsterSpec {
-	pub victory: RollConsequenceSpec,
-	pub loss: RollConsequenceSpec,
+  pub consequences: RollConsequences,
 	pub requirements: Vec<MonsterRequirements>,
 }
 
-impl MonsterSpec {
-	pub fn create_consequences(&self, player_index: usize) -> RollConsequences {
-		RollConsequences::new(
-			player_index,
-			vec![
-				self.victory.to_smh(player_index),
-				self.loss.to_smh(player_index),
-			],
-		)
-	}
-}
 
 // const spec: MonsterSpec = MonsterSpec {
 //   win_condition: Condition { ge: true, threshold: 11 },
@@ -241,7 +196,28 @@ pub fn get_card_specs() -> [CardSpec; 33] {
         label: "Plundering Puma".to_string(),
         image_path: "cards/heros/thief/plundering_puma.jpg".to_string(),
         description: "Pull 2 cards from another player's hand. That player may DRAW a card.".to_string(),
-        hero_ability: Some(HeroAbility::new(Condition::ge(6))),
+        hero_ability: Some(
+          HeroAbility {
+            condition: Condition::ge(6),
+            tasks: vec![
+
+      Box::new(ChoosePlayerParameterTask {
+        param_name: TaskParamName::PlayerToPullFrom,
+        instructions: "Choose a player to pull from.".to_owned(),
+      }) as Box<dyn PlayerTask>,
+      Box::new(PullFromTask {
+        pulled_index_param_name: TaskParamName::PlayerToPullFrom,
+      }) as Box<dyn PlayerTask>,
+      Box::new(PullFromTask {
+        pulled_index_param_name: TaskParamName::PlayerToPullFrom,
+      }) as Box<dyn PlayerTask>,
+      Box::new(VictimDraws {
+        param_name: TaskParamName::PlayerToPullFrom,
+        number_to_draw: 1,
+      })
+            ],
+          }
+        ),
         ..Default::default()
     },
     CardSpec {
@@ -249,7 +225,13 @@ pub fn get_card_specs() -> [CardSpec; 33] {
         label: "Slippery Paws".to_string(),
         image_path: "cards/heros/thief/slippery_paws.jpg".to_string(),
         description: "Pull 2 cards from another player's hand, then DISCARD one of those cards.".to_string(),
-        hero_ability: Some(HeroAbility::new(Condition::ge(6))),
+        hero_ability: Some(
+          HeroAbility {
+            condition: Condition::ge(6),
+            tasks: vec![
+            ],
+          }
+        ),
         ..Default::default()
     },
     CardSpec {
@@ -257,7 +239,13 @@ pub fn get_card_specs() -> [CardSpec; 33] {
         label: "Smooth Mimimeow".to_string(),
         image_path: "cards/heros/thief/smooth_mimimeow.jpg".to_string(),
         description: "Pull a card from the hand of each other player with a Thief in their Party.".to_string(),
-        hero_ability: Some(HeroAbility::new(Condition::ge(7))),
+        hero_ability: Some(
+          HeroAbility {
+            condition: Condition::ge(7),
+            tasks: vec![
+            ],
+          }
+        ),
         ..Default::default()
     },
     CardSpec {
@@ -265,7 +253,13 @@ pub fn get_card_specs() -> [CardSpec; 33] {
         label: "Meowzio".to_string(),
         image_path: "cards/heros/thief/meowzio.jpg".to_string(),
         description: "Choose a player. STEAL a Hero card from that player's Party and pull a card from that player's hand.".to_string(),
-        hero_ability: Some(HeroAbility::new(Condition::ge(10))),
+        hero_ability: Some(
+          HeroAbility {
+            condition: Condition::ge(10),
+            tasks: vec![
+            ],
+          }
+        ),
         ..Default::default()
     },
     CardSpec {
@@ -273,7 +267,13 @@ pub fn get_card_specs() -> [CardSpec; 33] {
         label: "Shurikitty".to_string(),
         image_path: "cards/heros/thief/shurikitty.jpg".to_string(),
         description: "DESTROY a Hero card. If that Hero card had an item card equipped to it, add that Item card to your hand instead of moving it to the discard pile.".to_string(),
-        hero_ability: Some(HeroAbility::new(Condition::ge(9))),
+        hero_ability: Some(
+          HeroAbility {
+            condition: Condition::ge(9),
+            tasks: vec![
+            ],
+          }
+        ),
         ..Default::default()
     },
     CardSpec {
@@ -281,7 +281,13 @@ pub fn get_card_specs() -> [CardSpec; 33] {
         label: "Kit Napper".to_string(),
         image_path: "cards/heros/thief/kit_napper.jpg".to_string(),
         description: "Steal a Hero card.".to_string(),
-        hero_ability: Some(HeroAbility::new(Condition::ge(9))),
+        hero_ability: Some(
+          HeroAbility {
+            condition: Condition::ge(9),
+            tasks: vec![
+            ],
+          }
+        ),
         ..Default::default()
     },
     CardSpec {
@@ -289,7 +295,13 @@ pub fn get_card_specs() -> [CardSpec; 33] {
         label: "Silent Shadow".to_string(),
         image_path: "cards/heros/thief/silent_shadow.jpg".to_string(),
         description: "Look at another player's hand. Choose a card and add it to your hand.".to_string(),
-        hero_ability: Some(HeroAbility::new(Condition::ge(8))),
+        hero_ability: Some(
+          HeroAbility {
+            condition: Condition::ge(8),
+            tasks: vec![
+            ],
+          }
+        ),
         ..Default::default()
     },
     CardSpec {
@@ -297,7 +309,13 @@ pub fn get_card_specs() -> [CardSpec; 33] {
         label: "Sly Pickings".to_string(),
         image_path: "cards/heros/thief/sly_pickings.jpg".to_string(),
         description: "Pull a card from another player's hand. If that card is an Item card, you may play it immediately.".to_string(),
-        hero_ability: Some(HeroAbility::new(Condition::ge(6))),
+        hero_ability: Some(
+          HeroAbility {
+            condition: Condition::ge(6),
+            tasks: vec![
+            ],
+          }
+        ),
         ..Default::default()
     },
     CardSpec {
@@ -305,7 +323,13 @@ pub fn get_card_specs() -> [CardSpec; 33] {
         label: "Holy Curselifter".to_string(),
         image_path: "cards/heros/guardian/holy_curse_lifter.jpg".to_string(),
         description: "Return a Cursed Item card equipped to a Hero card in your Part to your hand.".to_string(),
-        hero_ability: Some(HeroAbility::new(Condition::ge(5))),
+        hero_ability: Some(
+          HeroAbility {
+            condition: Condition::ge(5),
+            tasks: vec![
+            ],
+          }
+        ),
         ..Default::default()
     },
     CardSpec {
@@ -313,7 +337,13 @@ pub fn get_card_specs() -> [CardSpec; 33] {
         label: "Iron Resolve".to_string(),
         image_path: "cards/heros/guardian/iron_resolve.jpg".to_string(),
         description: "Cards you play cannot be challenged for the rest of your turn.".to_string(),
-        hero_ability: Some(HeroAbility::new(Condition::ge(8))),
+        hero_ability: Some(
+          HeroAbility {
+            condition: Condition::ge(8),
+            tasks: vec![
+            ],
+          }
+        ),
         ..Default::default()
     },
     CardSpec {
@@ -321,7 +351,13 @@ pub fn get_card_specs() -> [CardSpec; 33] {
         label: "Calming Voice".to_string(),
         image_path: "cards/heros/guardian/calming_voice.jpg".to_string(),
         description: "Hero cards in your Party cannot be stolen until your next turn.".to_string(),
-        hero_ability: Some(HeroAbility::new(Condition::ge(9))),
+        hero_ability: Some(
+          HeroAbility {
+            condition: Condition::ge(9),
+            tasks: vec![
+            ],
+          }
+        ),
         ..Default::default()
     },
     CardSpec {
@@ -329,7 +365,13 @@ pub fn get_card_specs() -> [CardSpec; 33] {
         label: "Vibrant Glow".to_string(),
         image_path: "cards/heros/guardian/vibrant_glow.jpg".to_string(),
         description: "+5 to all of your rolls until the end of your turn.".to_string(),
-        hero_ability: Some(HeroAbility::new(Condition::ge(9))),
+        hero_ability: Some(
+          HeroAbility {
+            condition: Condition::ge(9),
+            tasks: vec![
+            ],
+          }
+        ),
         ..Default::default()
     },
     CardSpec {
@@ -337,7 +379,13 @@ pub fn get_card_specs() -> [CardSpec; 33] {
         label: "Mighty Blade".to_string(),
         image_path: "cards/heros/guardian/mighty_blade.jpg".to_string(),
         description: "Hero cards in your Party cannot be destroyed until your next turn.".to_string(),
-        hero_ability: Some(HeroAbility::new(Condition::ge(8))),
+        hero_ability: Some(
+          HeroAbility {
+            condition: Condition::ge(8),
+            tasks: vec![
+            ],
+          }
+        ),
         ..Default::default()
     },
     CardSpec {
@@ -345,7 +393,13 @@ pub fn get_card_specs() -> [CardSpec; 33] {
         label: "Radiant Horn".to_string(),
         image_path: "cards/heros/guardian/radiant_horn.jpg".to_string(),
         description: "Search the discard pile for a Modifier card and add it to your hand.".to_string(),
-        hero_ability: Some(HeroAbility::new(Condition::ge(6))),
+        hero_ability: Some(
+          HeroAbility {
+            condition: Condition::ge(6),
+            tasks: vec![
+            ],
+          }
+        ),
         ..Default::default()
     },
     CardSpec {
@@ -353,7 +407,13 @@ pub fn get_card_specs() -> [CardSpec; 33] {
         label: "Guiding Light".to_string(),
         image_path: "cards/heros/guardian/guiding_light.jpg".to_string(),
         description: "Search the discard pile for a Hero card and add it to your hand.".to_string(),
-        hero_ability: Some(HeroAbility::new(Condition::ge(7))),
+        hero_ability: Some(
+          HeroAbility {
+            condition: Condition::ge(7),
+            tasks: vec![
+            ],
+          }
+        ),
         ..Default::default()
     },
     CardSpec {
@@ -361,7 +421,13 @@ pub fn get_card_specs() -> [CardSpec; 33] {
         label: "Wise Shield".to_string(),
         image_path: "cards/heros/guardian/wise_shield.jpg".to_string(),
         description: "+3 to all of your rolls until the end of your turn.".to_string(),
-        hero_ability: Some(HeroAbility::new(Condition::ge(6))),
+        hero_ability: Some(
+          HeroAbility {
+            condition: Condition::ge(6),
+            tasks: vec![
+            ],
+          }
+        ),
         ..Default::default()
     },
     CardSpec {
@@ -369,7 +435,13 @@ pub fn get_card_specs() -> [CardSpec; 33] {
         label: "Qi Bear".to_string(),
         image_path: "cards/heros/fighter/chi_bear.jpg".to_string(),
         description: "DISCARD up to 3 cards. For each card discarded, DESTROY a Hero card.".to_string(),
-        hero_ability: Some(HeroAbility::new(Condition::ge(10))),
+        hero_ability: Some(
+          HeroAbility {
+            condition: Condition::ge(10),
+            tasks: vec![
+            ],
+          }
+        ),
         ..Default::default()
     },
     CardSpec {
@@ -377,7 +449,13 @@ pub fn get_card_specs() -> [CardSpec; 33] {
         label: "Pan Chucks".to_string(),
         image_path: "cards/heros/fighter/pan_chucks.jpg".to_string(),
         description: "DRAW 2 cards. If at least one of those cards is a Challenge card, you may reveal it, then DESTROY a Hero card.".to_string(),
-        hero_ability: Some(HeroAbility::new(Condition::ge(8))),
+        hero_ability: Some(
+          HeroAbility {
+            condition: Condition::ge(8),
+            tasks: vec![
+            ],
+          }
+        ),
         ..Default::default()
     },
 
@@ -707,19 +785,24 @@ pub fn get_card_specs() -> [CardSpec; 33] {
         label: "Mega Slime".to_string(),
         image_path: "cards/monsters/mega_slime.jpg".to_string(),
         description: "You may spend an extra action point on each of your turns.".to_string(),
-        monster: Some(MonsterSpec {
-            requirements: vec![MonsterRequirements::Hero; 4],
-            victory: RollConsequenceSpec {
+        monster: Some(
+          MonsterSpec {
+            consequences: RollConsequences {
+              success: RollConsequence {
                 condition: Condition::ge(8),
                 tasks: vec![
-                    tasks::TaskSpec::ReceiveModifier(modifiers::PlayerModifier::ExtraActionPoint),
-                    tasks::TaskSpec::Draw(2),
+                  Box::new(ReceiveModifier::new(PlayerModifier::ExtraActionPoint)),
+                  Box::new(DrawTask::new(2)),
                 ]
+              },
+              loss: Some(
+                RollConsequence {
+                  condition: Condition::le(7),
+                  tasks: vec![Box::new(Sacrifice::new(2))],
+                }
+              )
             },
-            loss: RollConsequenceSpec {
-                condition: Condition::le(7),
-                tasks: vec![tasks::TaskSpec::Discard(2)],
-            }
+            requirements: vec![MonsterRequirements::Hero; 4],
         }),
         ..Default::default()
     },
@@ -730,19 +813,22 @@ pub fn get_card_specs() -> [CardSpec; 33] {
         description: "Each time you DRAW a Magic card, you may play it immediately.".to_string(),
         monster: Some(
             MonsterSpec {
-                victory: RollConsequenceSpec {
-                    condition: Condition::ge(8),
-                    tasks: vec![tasks::TaskSpec::ReceiveModifier(modifiers::PlayerModifier::PlayMagicOnDraw),]
+              consequences: RollConsequences {
+                success: RollConsequence {
+                  condition: Condition::ge(8),
+                  tasks: vec![Box::new(ReceiveModifier::new(PlayerModifier::PlayMagicOnDraw)),]
                 },
-                loss: RollConsequenceSpec {
+                loss: Some(
+                  RollConsequence {
                     condition: Condition::le(4),
-                    tasks: vec![tasks::TaskSpec::Sacrifice(1)],
-                },
+                    tasks: vec![Box::new(Sacrifice::new(1))],
+                  }
+                )
+              },
             requirements: vec![
                 MonsterRequirements::Hero,
                 MonsterRequirements::HeroType(HeroType::Wizard),
             ],
-
         }),
         ..Default::default()
     },
@@ -751,16 +837,21 @@ pub fn get_card_specs() -> [CardSpec; 33] {
         label: "Terratuga".to_string(),
         image_path: "cards/monsters/terratuga.jpg".to_string(),
         description: "Your Hero cards cannot be destroyed.".to_string(),
-        monster: Some(MonsterSpec {
-            requirements: vec![MonsterRequirements::Hero],
-            victory: RollConsequenceSpec {
+        monster: Some(
+          MonsterSpec {
+            consequences: RollConsequences {
+              success: RollConsequence {
                 condition: Condition::ge(11),
-                tasks: vec![tasks::TaskSpec::ReceiveModifier(modifiers::PlayerModifier::UndestroyableHeros),]
+                tasks: vec![Box::new(ReceiveModifier::new(PlayerModifier::UndestroyableHeros))]
+              },
+              loss: Some(
+                RollConsequence {
+                  condition: Condition::le(7),
+                  tasks: vec![Box::new(Discard::new(2))],
+                }
+              )
             },
-            loss: RollConsequenceSpec {
-                condition: Condition::le(7),
-                tasks: vec![tasks::TaskSpec::Discard(2)],
-            },
+            requirements: vec![MonsterRequirements::Hero],
         }),
         ..Default::default()
     },

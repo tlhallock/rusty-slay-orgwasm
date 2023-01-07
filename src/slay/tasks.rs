@@ -1,3 +1,4 @@
+use crate::slay::abilities::heros::do_hero_ability;
 use crate::slay::choices;
 use crate::slay::deadlines;
 use crate::slay::errors;
@@ -6,80 +7,92 @@ use crate::slay::game_context;
 use crate::slay::ids;
 use crate::slay::modifiers;
 use crate::slay::state;
-use std::io::Result as IoResult;
+use crate::slay::game_context::GameBookKeeping;
+use crate::slay::modifiers::PlayerModifier;
+use crate::slay::state::game::Game;
+use crate::slay::abilities::discard::Discard;
+use crate::slay::abilities::sacrifice::Sacrifice;
+use crate::slay::abilities::heros::Ability;
+use crate::slay::actions::DrawTask;
+use crate::slay::errors::SlayError;
+
 use std::io::Write;
-
-use std::fs::File;
 use std::io::BufWriter;
-
-use crate::slay::state::Summarizable;
-
 use core::fmt::Debug;
-
 use std::collections::HashMap;
 use std::collections::VecDeque;
 
-use crate::slay::choices::ChoiceDisplay;
-use crate::slay::game_context::GameBookKeeping;
-use crate::slay::modifiers::PlayerModifier;
-use crate::slay::state::Game;
+use super::state::deck::DeckPath;
+use super::state::summarizable::Summarizable;
 
-use crate::slay::choices::Choice;
-use crate::slay::choices::ChoiceInformation;
-use crate::slay::choices::ChoiceLocator;
-use crate::slay::choices::Choices;
-use crate::slay::choices::DisplayPath;
-use crate::slay::choices::TasksChoice;
-use crate::slay::state::DeckPath;
 
-use super::actions::DrawTask;
 
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub enum TaskSpec {
-	Sacrifice(u32),
-	Discard(u32),
-	ReceiveModifier(modifiers::PlayerModifier),
-	Draw(u32),
-}
 
-impl TaskSpec {
-	pub fn to_task(&self, player_index: usize) -> Box<dyn PlayerTask> {
-		match &self {
-			TaskSpec::Sacrifice(num) => Box::new(Sacrifice::new(*num, player_index)),
-			TaskSpec::Discard(num) => Box::new(Discard::new(player_index, *num)),
-			TaskSpec::ReceiveModifier(modifier) => {
-				Box::new(ReceiveModifier::new(player_index, *modifier))
-			}
-			TaskSpec::Draw(num) => Box::new(DrawTask::new(player_index, (*num) as usize)),
-		}
-	}
-}
+// impl TaskSpec {
 
-#[derive(Debug, PartialEq, Eq, Hash, Clone)]
+// 	pub fn to_task(&self, player_index: ids::PlayerIndex) -> Box<dyn PlayerTask> {
+// 		unreachable!();
+// 		match &self {
+// 			TaskSpec::Sacrifice(num) => Box::new(Sacrifice::new(*num)),
+// 			TaskSpec::Discard(num) => Box::new(Discard::new(*num)),
+// 			TaskSpec::ReceiveModifier(modifier) => {
+// 				Box::new(ReceiveModifier::new(*modifier))
+// 			}
+// 			TaskSpec::Draw(num) => Box::new(DrawTask::new(player_index, (*num) as usize)),
+// 		}
+// 	}
+// }
+
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
 pub enum TaskParamName {
-	Victim,
+	PlayerToStealFrom,
+	CardToSteal,
+
+	PlayerToPullFrom,
 }
 
 #[derive(Debug, Default, Clone)]
-pub struct TaskParams {
-	pub players: HashMap<TaskParamName, ids::PlayerId>,
-	pub cards: HashMap<TaskParamName, ids::CardId>,
-	pub index: HashMap<TaskParamName, usize>,
+struct TaskParams {
+	players: HashMap<TaskParamName, ids::PlayerIndex>,
+	// None of the player did not choose a card.
+	cards: HashMap<TaskParamName, Option<ids::CardId>>,
+	index: HashMap<TaskParamName, usize>,
+}
+
+impl TaskParams {
+	pub fn clear(&mut self) {
+		self.players.clear();
+		self.cards.clear();
+		self.index.clear();
+	}
 }
 
 pub enum TaskProgressResult {
 	NothingDone,
 	ProgressMade,
 	TaskComplete,
-	// ChoicesAssigned,
-	// ChoicesAlreadyAssigned,
+	/*
+	If TaskComplete, the task is     REMOVED from the queue, and the next Task IS     tried.
+	If NothingDone,  the task is NOT REMOVED from the queue, and the next Task IS NOT tried.
+	If ProgressMade, the task is NOT REMOVED from the queue, and the next Task IS     tried.
+
+	Note: No need for another result for when the task is complete, but the next task should not be tried.
+	In this scenario, choices are assigned, and no more tasks are attempted anyway.
+
+
+
+	Dude, if we could make them all be TaskComplete, then we could always just remove 'em!!!
+	*/
 }
 
 dyn_clone::clone_trait_object!(PlayerTask);
 
 pub trait PlayerTask: Debug + dyn_clone::DynClone {
 	fn make_progress(
-		&mut self, context: &mut game_context::GameBookKeeping, game: &mut state::Game,
+		&mut self,
+		context: &mut GameBookKeeping,
+		game: &mut Game,
+		player_index: ids::PlayerIndex,
 	) -> SlayResult<TaskProgressResult>;
 
 	fn label(&self) -> String;
@@ -149,6 +162,9 @@ impl PlayerTasks {
 		// 	self.upcoming.push_front(task);
 		// }
 	}
+	pub fn prepend(&mut self, next_task: Box<dyn PlayerTask>) {
+		self.prepend.push(next_task);
+	}
 
 	pub fn put_current_task_back(&mut self, task: Box<dyn PlayerTask>) -> SlayResult<()> {
 		// reviewer: How do you make this a one liner?
@@ -181,130 +197,52 @@ impl PlayerTasks {
 			self.upcoming.pop_front()
 		})
 	}
-}
 
-#[derive(Debug, Clone)]
-struct Sacrifice {
-	num: u32,
-	player_index: usize,
-}
-
-impl Sacrifice {
-	pub fn new(num: u32, player_index: usize) -> Self {
-		Self { num, player_index }
-	}
-}
-
-// TODO: This could use the move card task?
-// #[derive(Debug, Clone)]
-// struct MoveCardChoice {
-// 	source: state::DeckPath,
-// 	destination: state::DeckPath,
-// 	card_id: ids::CardId,
-// 	choice_information: choices::ChoiceInformation,
-// }
-
-// impl choices::Choice for MoveCardChoice {
-// 	fn select(
-// 		&mut self, _context: &mut game_context::GameBookKeeping, game: &mut state::Game,
-// 	) -> SlayResult<()> {
-// 		game.move_card(self.source, self.destination, self.card_id)
-// 	}
-
-// 	fn get_choice_information(&self) -> &choices::ChoiceInformation {
-// 		&self.choice_information
-// 	}
-// }
-
-// fn card_is_sacrificable(stack: &state::Stack) -> bool {
-//   true
-// }
-
-impl PlayerTask for Sacrifice {
-	fn make_progress(
-		&mut self, context: &mut game_context::GameBookKeeping, game: &mut state::Game,
-	) -> SlayResult<TaskProgressResult> {
-		if self.num == 0 {
-			return Ok(TaskProgressResult::TaskComplete);
+	pub(crate) fn set_player_value(
+		&mut self, param_name: TaskParamName, player_index: ids::PlayerIndex,
+	) -> SlayResult<()> {
+		if self
+			.params
+			.players
+			.insert(param_name, player_index)
+			.is_some()
+		{
+			Err(SlayError::new("Overwriting a parameter value."))
+		} else {
+			Ok(())
 		}
-
-		let party = &game.players[self.player_index].party;
-		let mut options: Vec<TasksChoice> = party
-			.iter()
-			// .filter(card_is_sacrificable)
-			.map(|s| {
-				TasksChoice::new(
-					choices::ChoiceInformation {
-						locator: choices::ChoiceLocator {
-							id: context.id_generator.generate(),
-							player_index: self.player_index,
-						},
-						display: ChoiceDisplay {
-							label: format!("Sacrifice {}.", s.top.label()),
-							highlight: Some(choices::DisplayPath::CardIn(
-								state::DeckPath::Hand(self.player_index),
-								s.top.id,
-							)),
-							arrows: vec![choices::DisplayArrow {
-								source: choices::DisplayPath::CardIn(
-									state::DeckPath::Hand(self.player_index),
-									s.top.id,
-								),
-								destination: choices::DisplayPath::DeckAt(state::DeckPath::Discard),
-							}],
-							roll_modification_choice: None,
-						},
-					},
-					vec![Box::new(MoveCardTask {
-						source: state::DeckPath::Party(self.player_index),
-						destination: state::DeckPath::Discard,
-						card_id: s.top.id,
-					})],
-				)
-			})
-			.collect();
-
-		if options.len() == self.num as usize {
-			for option in options.iter_mut() {
-				option.select(context, game)?;
-			}
-			return Ok(TaskProgressResult::TaskComplete);
-		}
-
-		if options.is_empty() {
-			return Ok(TaskProgressResult::TaskComplete);
-		}
-
-		let default_choice = options[0].get_choice_information().get_id();
-		game.players[self.player_index].choices = Some(choices::Choices {
-			instructions: "Choose a card to sacrifice.".to_string(),
-			options,
-			default_choice: Some(default_choice),
-			timeline: deadlines::get_sacrifice_deadline(),
-		});
-
-		self.num -= 1;
-		Ok(TaskProgressResult::TaskComplete)
 	}
 
-	fn label(&self) -> String {
-		format!(
-			"Player {} is sacrificing {} heros.",
-			self.player_index, self.num
-		)
+	pub(crate) fn set_card_value(
+		&mut self, param_name: TaskParamName, card_id: Option<ids::CardId>,
+	) -> SlayResult<()> {
+		if self.params.cards.insert(param_name, card_id).is_some() {
+			Err(SlayError::new("Overwriting a parameter value."))
+		} else {
+			Ok(())
+		}
+	}
+	pub(crate) fn get_card_value(&self, param_name: &TaskParamName) -> Option<Option<ids::CardId>> {
+		self.params.cards.get(param_name).copied()
+	}
+
+	pub(crate) fn get_player_value(&self, param_name: &TaskParamName) -> Option<ids::PlayerIndex> {
+		self.params.players.get(param_name).copied()
+	}
+
+	pub fn clear_params(&mut self) {
+		self.params.clear();
 	}
 }
 
 #[derive(Debug, Clone)]
-struct ReceiveModifier {
-	player_index: usize,
+pub struct ReceiveModifier {
 	modifier: PlayerModifier,
 }
 
 impl ReceiveModifier {
-	pub fn new(player_index: usize, modifier: PlayerModifier) -> Self {
+	pub fn new(modifier: PlayerModifier) -> Self {
 		Self {
-			player_index,
 			modifier,
 		}
 	}
@@ -313,8 +251,9 @@ impl ReceiveModifier {
 impl PlayerTask for ReceiveModifier {
 	fn make_progress(
 		&mut self, _context: &mut GameBookKeeping, game: &mut Game,
+		player_index: ids::PlayerIndex,
 	) -> SlayResult<TaskProgressResult> {
-		game.players[self.player_index]
+		game.players[player_index]
 			.buffs
 			.add_forever(self.modifier.to_owned());
 		Ok(TaskProgressResult::TaskComplete)
@@ -322,78 +261,8 @@ impl PlayerTask for ReceiveModifier {
 
 	fn label(&self) -> String {
 		format!(
-			"Player {} is receiving modifier {:?}",
-			self.player_index, self.modifier
-		)
-	}
-}
-
-#[derive(Debug, Clone)]
-struct Discard {
-	player_index: usize,
-	num: u32,
-}
-
-impl Discard {
-	pub fn new(player_index: usize, num: u32) -> Self {
-		Self { player_index, num }
-	}
-}
-
-impl PlayerTask for Discard {
-	fn make_progress(
-		&mut self, context: &mut game_context::GameBookKeeping, game: &mut state::Game,
-	) -> SlayResult<TaskProgressResult> {
-		if self.num == 0 {
-			return Ok(TaskProgressResult::TaskComplete);
-		}
-		self.num -= 1;
-		let options: Vec<TasksChoice> = game.players[self.player_index]
-			.hand
-			.iter()
-			.map(|stack| {
-				TasksChoice::prepend(
-					ChoiceInformation {
-						locator: ChoiceLocator {
-							id: context.id_generator.generate(),
-							player_index: self.player_index,
-						},
-						display: ChoiceDisplay {
-							highlight: Some(DisplayPath::CardIn(
-								DeckPath::Hand(self.player_index),
-								stack.top.id,
-							)),
-							arrows: vec![], // Todo
-							label: format!("Discard {}", stack.top.spec.label),
-							roll_modification_choice: None,
-						},
-					},
-					vec![Box::new(MoveCardTask {
-						source: DeckPath::Hand(self.player_index),
-						destination: DeckPath::Discard,
-						card_id: stack.top.id,
-					}) as Box<dyn PlayerTask>],
-				)
-			})
-			.collect();
-
-		if options.is_empty() {
-			return Ok(TaskProgressResult::TaskComplete);
-		}
-		let default_choice = options[0].get_choice_information().locator.id;
-
-		game.players[self.player_index].choices = Some(Choices::new(
-			options,
-			Some(default_choice),
-			deadlines::get_discard_deadline(),
-			"Choose a card to discard.".to_owned(),
-		));
-		Ok(TaskProgressResult::ProgressMade)
-	}
-	fn label(&self) -> String {
-		format!(
-			"Player {} is discarding {} cards",
-			self.player_index, self.num
+			"Player is receiving modifier {:?}",
+			self.modifier
 		)
 	}
 }
@@ -427,7 +296,7 @@ impl PlayerTask for Discard {
 // }
 
 pub(crate) fn continue_tasks(
-	context: &mut game_context::GameBookKeeping, game: &mut state::Game, player_index: usize,
+	context: &mut GameBookKeeping, game: &mut Game, player_index: ids::PlayerIndex,
 ) -> SlayResult<TaskProgressResult> {
 	let mut result = TaskProgressResult::NothingDone;
 	loop {
@@ -438,15 +307,15 @@ pub(crate) fn continue_tasks(
 		if let Some(mut task) = game.take_current_task(player_index) {
 			let label = task.as_ref().label();
 			log::debug!("Took task '{}'", label);
-			match task.make_progress(context, game)? {
+			match task.make_progress(context, game, player_index)? {
 				TaskProgressResult::TaskComplete => {
 					result = TaskProgressResult::ProgressMade;
 					log::debug!("Task '{}' complete", label);
 				}
 				TaskProgressResult::ProgressMade => {
 					game.players[player_index].put_current_task_back(task)?;
+					result = TaskProgressResult::ProgressMade;
 					log::debug!("Returning to '{}' later", label);
-					return Ok(TaskProgressResult::ProgressMade);
 				}
 				TaskProgressResult::NothingDone => {
 					log::debug!("Nothing to be done for task '{}'", label);
@@ -462,15 +331,16 @@ pub(crate) fn continue_tasks(
 
 #[derive(Debug, Clone)]
 pub struct MoveCardTask {
-	pub source: state::DeckPath,
-	pub destination: state::DeckPath,
+	pub source: DeckPath,
+	pub destination: DeckPath,
 	pub card_id: ids::CardId,
 	// Could have a replentish here...
 }
 
 impl PlayerTask for MoveCardTask {
 	fn make_progress(
-		&mut self, _context: &mut game_context::GameBookKeeping, game: &mut state::Game,
+		&mut self, _context: &mut GameBookKeeping, game: &mut Game,
+		player_index: ids::PlayerIndex,
 	) -> SlayResult<TaskProgressResult> {
 		game.move_card(self.source, self.destination, self.card_id)?;
 		Ok(TaskProgressResult::TaskComplete)
@@ -483,34 +353,20 @@ impl PlayerTask for MoveCardTask {
 	}
 }
 
-// #[derive(Debug, Clone)]
-// pub struct RollForAbilityTask {
-//     pub player_index: usize,
-//     pub card_id: ids::CardId,
-// }
-
-// impl PlayerTask for RollForAbilityTask {
-//     fn make_progress(
-//         &mut self,
-//         context: &mut game_context::GameBookKeeping,
-//         game: &mut state::Game,
-//     ) -> SlayResult<TaskProgressResult> {
-//     }
-// }
 
 #[derive(Debug, Clone)]
 pub struct UseAbilityTask {
-	pub deck_path: state::DeckPath,
-	pub card_id: ids::CardId,
+	ability: Ability,
 }
 
 impl PlayerTask for UseAbilityTask {
 	fn make_progress(
-		&mut self, _context: &mut game_context::GameBookKeeping, _game: &mut state::Game,
+		&mut self, context: &mut GameBookKeeping, game: &mut Game,
+		player_index: ids::PlayerIndex,
 	) -> SlayResult<TaskProgressResult> {
-		// do the ability!!
-		// Implement it!
-		log::info!("We got here!");
+		let hero_tasks = &mut do_hero_ability(
+			context, game, player_index, self.ability);
+		game.players[player_index].tasks.prepend_from(hero_tasks);
 		Ok(TaskProgressResult::TaskComplete)
 	}
 	fn label(&self) -> String {

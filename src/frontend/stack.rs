@@ -1,10 +1,11 @@
 use yew::classes;
 use yew::prelude::*;
 
-use crate::common::perspective::CardSpecPerspective;
-use crate::common::perspective::ChoiceAssociation;
-use crate::common::perspective::ChoiceAssociationType;
-use crate::common::perspective::StackPerspective;
+
+use crate::slay::choices::ChoiceAssociation;
+use crate::slay::choices::ChoiceAssociationType;
+use crate::slay::state::stack::CardSpecPerspective;
+use crate::slay::state::stack::StackPerspective;
 
 use super::app::ChoiceState;
 use super::card_modal::CardModalInfo;

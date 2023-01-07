@@ -1,6 +1,4 @@
-use crate::slay::errors::{SlayError, SlayResult};
-use crate::slay::ids;
-use crate::slay::state::Deck;
+use crate::slay::state::deck::Deck;
 use std::cmp;
 
 pub fn deal(source: &mut Deck, destination: &mut Deck, num: usize) {

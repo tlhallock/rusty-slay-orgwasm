@@ -1,15 +1,14 @@
 use crate::slay::actions;
-use crate::slay::choices::Choice;
 use crate::slay::errors::{SlayError, SlayResult};
-use crate::slay::game_context;
 use crate::slay::game_context::GameBookKeeping;
 use crate::slay::ids;
 use crate::slay::message::Notification;
 use crate::slay::specification;
-use crate::slay::state::Card;
-use crate::slay::state::Game;
-use crate::slay::state::Summarizable;
-use crate::slay::state::{Player, Stack};
+use crate::slay::state::stack::Card;
+use crate::slay::state::game::Game;
+use crate::slay::state::summarizable::Summarizable;
+use crate::slay::state::player::Player;
+use crate::slay::state::stack::Stack;
 use crate::slay::tasks::TaskProgressResult;
 use crate::slay::{strategy, tasks};
 
@@ -26,7 +25,7 @@ pub fn game_is_over(game: &Game) -> bool {
 	game.players.iter().any(player_has_won)
 }
 
-fn use_action_points(context: &mut game_context::GameBookKeeping, game: &mut Game) {
+fn use_action_points(context: &mut GameBookKeeping, game: &mut Game) {
 	if game.current_player().get_remaining_action_points() > 0 {
 		actions::assign_action_choices(context, game);
 		return;
@@ -43,7 +42,7 @@ fn check_for_expired_modifiers(game: &mut Game) {
 	todo!()
 }
 
-pub fn initialize_game(context: &mut game_context::GameBookKeeping, game: &mut Game) {
+pub fn initialize_game(context: &mut GameBookKeeping, game: &mut Game) {
 	let (draw_capacity, leaders_capacity, monsters_capacity) = (101, 10, 20);
 	let mut draw = Vec::with_capacity(draw_capacity);
 	let mut leaders = Vec::with_capacity(leaders_capacity);
@@ -152,7 +151,7 @@ pub fn advance_game(
 }
 
 pub fn make_selection(
-	context: &mut game_context::GameBookKeeping, game: &mut Game, player_id: ids::ElementId,
+	context: &mut GameBookKeeping, game: &mut Game, player_id: ids::ElementId,
 	choice_id: ids::ElementId, notify: &mut dyn FnMut(Notification) -> (),
 ) -> SlayResult<()> {
 	let player_index = game

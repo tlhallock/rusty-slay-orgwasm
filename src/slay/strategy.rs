@@ -1,4 +1,3 @@
-use crate::slay::choices::Choice;
 use crate::slay::errors::{SlayError, SlayResult};
 
 use crate::slay::ids;
@@ -6,7 +5,8 @@ use crate::slay::ids;
 use rand::Rng;
 
 use crate::slay::game_context::GameBookKeeping;
-use crate::slay::state::Game;
+
+use super::state::game::Game;
 
 // Emit logs like "Waiting for challenges..."
 
@@ -30,8 +30,8 @@ pub fn pick_a_random_choice(
 }
 
 // pub fn pick_a_random_choice(
-//     context: &mut game_context::GameBookKeeping,
-//     game: &mut state::Game,
+//     context: &mut GameBookKeeping,
+//     game: &mut Game,
 // ) -> Result<(ids::PlayerId, ids::ChoiceId)> {
 //     // reservoir sampling
 //     let mut count = 0;

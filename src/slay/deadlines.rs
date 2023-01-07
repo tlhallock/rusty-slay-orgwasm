@@ -59,6 +59,9 @@ pub fn get_action_point_choice_deadline() -> Timeline {
 	Timeline::new(Some(30))
 }
 
+pub fn get_refactor_me_deadline() -> Timeline {
+	Timeline::new(Some(30))
+}
 pub fn get_discard_deadline() -> Timeline {
 	Timeline::new(Some(30))
 }

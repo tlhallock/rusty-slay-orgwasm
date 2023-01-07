@@ -1,9 +1,6 @@
 use yew::classes;
 use yew::prelude::*;
 
-use crate::common::perspective::CardSpecPerspective;
-use crate::common::perspective::ChallengePerspective;
-use crate::common::perspective::ChallengeRollPerspective;
 use crate::frontend::app::ChoiceState;
 use crate::frontend::app::GameCallbacks;
 use crate::frontend::dice::Dice;
@@ -14,7 +11,10 @@ use crate::frontend::showdown::common::RollHistory;
 use crate::frontend::showdown::common::RollTotal;
 use crate::frontend::stack::CardSpecView;
 use crate::frontend::stack::ExtraSpecProps;
+use crate::slay::showdown::challenge::ChallengePerspective;
+use crate::slay::showdown::challenge::ChallengeRollPerspective;
 use crate::slay::showdown::common::ChallengeReason;
+use crate::slay::state::stack::CardSpecPerspective;
 
 #[function_component(ChallengeDescription)]
 pub fn view_challenge_description(props: &ChallengeModalProps) -> Html {
@@ -30,7 +30,7 @@ pub fn view_challenge_description(props: &ChallengeModalProps) -> Html {
 					)
 				}
 					<CardSpecView
-						spec={CardSpecPerspective::new(spec)}
+						spec={spec.to_owned()}
 						view_card={props.callbacks.view_card.to_owned()}
 						choice_state={ChoiceState::default()}
 						extra_specs={ExtraSpecProps::default()}
@@ -52,7 +52,7 @@ pub fn view_challenge_description(props: &ChallengeModalProps) -> Html {
 					)
 				}
 					<CardSpecView
-						spec={CardSpecPerspective::new(spec)}
+						spec={spec.to_owned()}
 						view_card={props.callbacks.view_card.to_owned()}
 						choice_state={ChoiceState::default()}
 						extra_specs={ExtraSpecProps::default()}
@@ -71,7 +71,7 @@ pub fn view_challenge_description(props: &ChallengeModalProps) -> Html {
 					)
 				}
 					<CardSpecView
-						spec={CardSpecPerspective::new(spec)}
+						spec={spec.to_owned()}
 						view_card={props.callbacks.view_card.to_owned()}
 						choice_state={ChoiceState::default()}
 						extra_specs={ExtraSpecProps::default()}

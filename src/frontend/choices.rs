@@ -1,8 +1,7 @@
 use yew::prelude::*;
 
-use crate::common::perspective::ChoicePerspective;
-use crate::common::perspective::ChoicesPerspective;
 use crate::slay::ids;
+use crate::slay::choices::{ChoicePerspective, ChoicesPerspective};
 
 use super::app::GameCallbacks;
 

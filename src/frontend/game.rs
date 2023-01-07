@@ -3,7 +3,6 @@ use yew::prelude::*;
 
 use log;
 
-use crate::common::perspective::GamePerspective;
 use crate::frontend::app::ChoiceState;
 use crate::frontend::app::GameCallbacks;
 use crate::frontend::card_modal::CardModalInfo;
@@ -15,6 +14,7 @@ use crate::frontend::showdown::challenge::ChallengeModalView;
 use crate::frontend::showdown::offer_modal::OfferChallengesView;
 use crate::frontend::showdown::roll_modal::RollModalView;
 use crate::slay::ids;
+use crate::slay::state::game::GamePerspective;
 
 #[derive(Properties, PartialEq)]
 pub struct GamePerspectiveProps {

@@ -14,7 +14,6 @@ use crate::slay::showdown::common::Roll;
 use crate::slay::showdown::completion::CompletionTracker;
 use crate::slay::showdown::completion::RollCompletion;
 use crate::slay::showdown::consequences;
-use crate::slay::showdown::consequences::RollConsequenceRenameMe;
 use crate::slay::showdown::consequences::RollConsequences;
 use crate::slay::showdown::current_showdown::ShowDown;
 use crate::slay::showdown::offer::OfferChallengesState;
@@ -22,38 +21,69 @@ use crate::slay::showdown::roll_state::RollReason;
 use crate::slay::showdown::roll_state::RollState;
 use crate::slay::specification;
 use crate::slay::specification::CardType;
-use crate::slay::state;
-use crate::slay::state::Card;
-use crate::slay::state::Game;
 use crate::slay::tasks;
 use crate::slay::tasks::PlayerTask;
 use crate::slay::tasks::TaskProgressResult;
+use crate::slay::showdown::consequences::Condition;
+use crate::slay::showdown::consequences::RollConsequence;
+use crate::slay::state::deck::DeckPath;
+use crate::slay::state::stack::Card;
+use crate::slay::tasks::MoveCardTask;
+
+use super::choices::DisplayArrow;
+use super::choices::DisplayPath;
+use super::state::game::Game;
+use super::state::stack::CardSpecPerspective;
 
 // Emit logs like "Waiting for challenges..."
 
+
+
+#[derive(Debug, Clone)]
+pub struct AddTasks {
+	tasks: Vec<Box<dyn PlayerTask>>,
+}
+
+impl PlayerTask for AddTasks {
+  fn make_progress(
+		&mut self,
+		context: &mut GameBookKeeping,
+		game: &mut Game,
+		player_index: ids::PlayerIndex,
+	) -> SlayResult<TaskProgressResult> {
+		game.players[player_index].tasks.prepend_from(&mut self.tasks);
+		Ok(TaskProgressResult::TaskComplete)
+  }
+
+    fn label(&self) -> String {
+        "Adding some tasks".to_owned()
+    }
+}
+
 fn create_roll_for_ability_task(
-	context: &mut GameBookKeeping, game: &Game, player_index: usize, card: &Card,
+	context: &mut GameBookKeeping, game: &Game, player_index: ids::PlayerIndex, card: &Card,
 ) -> DoRollTask {
-	let condition = card
-		.hero_ability()
-		.as_ref()
-		.unwrap()
-		.success_condition
-		.to_owned();
-	let use_ability =
-		Box::new(create_use_ability_task(context, game, player_index, card)) as Box<dyn PlayerTask>;
-	DoRollTask::new(RollState::new(
-		player_index,
-		RollConsequences::new(
-			player_index,
-			vec![RollConsequenceRenameMe {
-				condition,
-				tasks: vec![use_ability],
-			}],
-		),
-		Roll::create_from(&mut context.rng),
-		RollReason::UseHeroAbility(card.spec.to_owned()),
-	))
+	todo!();
+	// let condition = card
+	// 	.hero_ability()
+	// 	.as_ref()
+	// 	.unwrap()
+	// 	.success_condition
+	// 	.to_owned();
+	// let use_ability =
+	// 	Box::new(create_use_ability_task(context, game, player_index, card)) as Box<dyn PlayerTask>;
+	// DoRollTask::new(RollState::new(
+	// 	player_index,
+	// 	RollConsequences::new(
+	// 		player_index,
+	// 		vec![RollConsequenceRenameMe {
+	// 			condition,
+	// 			tasks: card.ability.tasks.clone(),
+	// 		}],
+	// 	),
+	// 	Roll::create_from(&mut context.rng),
+	// 	RollReason::UseHeroAbility(card.spec.to_owned()),
+	// ))
 }
 
 fn create_place_hero_choice(
@@ -71,59 +101,60 @@ fn create_place_hero_choice(
 			locator,
 			ChoiceDisplay {
 				highlight: Some(choices::DisplayPath::CardIn(
-					state::DeckPath::Hand(player_index),
+					DeckPath::Hand(player_index),
 					card.id,
 				)),
 				arrows: vec![choices::DisplayArrow {
-					source: choices::DisplayPath::CardIn(state::DeckPath::Hand(player_index), card.id),
-					destination: choices::DisplayPath::DeckAt(state::DeckPath::Party(player_index)),
+					source: choices::DisplayPath::CardIn(DeckPath::Hand(player_index), card.id),
+					destination: choices::DisplayPath::DeckAt(DeckPath::Party(player_index)),
 				}],
 				label: format!("Place {} in your party.", card.label()),
 				roll_modification_choice: None,
 			},
 		),
 		vec![
-			Box::new(RemoveActionPointsTask::new(player_index, 1)),
+			Box::new(RemoveActionPointsTask::new(1)),
 			Box::new(OfferChallengesTask::new(OfferChallengesState::new(
 				player_index,
-				consequences::RollConsequences::new(
-					player_index,
-					vec![
-						consequences::RollConsequenceRenameMe {
-							condition: consequences::Condition::challenge_denied(),
-							tasks: vec![
-								Box::new(tasks::MoveCardTask {
-									source: state::DeckPath::Hand(player_index),
-									destination: state::DeckPath::Party(player_index),
-									card_id: card.id,
-								}) as Box<dyn tasks::PlayerTask>,
-								roll_for_ability,
-							],
-						},
-						consequences::RollConsequenceRenameMe {
-							condition: consequences::Condition::challenge_sustained(),
-							tasks: vec![Box::new(tasks::MoveCardTask {
-								source: state::DeckPath::Hand(player_index),
-								destination: state::DeckPath::Discard,
+				RollConsequences {
+					success: RollConsequence {
+						condition: Condition::challenge_denied(),
+						tasks: vec![
+							Box::new(MoveCardTask {
+								source: DeckPath::Hand(player_index),
+								destination: DeckPath::Party(player_index),
 								card_id: card.id,
-							}) as Box<dyn tasks::PlayerTask>],
-						},
-					],
-				),
-				ChallengeReason::PlaceHeroCard(card.spec.to_owned()),
+							}) as Box<dyn tasks::PlayerTask>,
+							roll_for_ability,
+						],
+					},
+					loss: Some(
+						RollConsequence {
+							condition: Condition::challenge_sustained(),
+							tasks: vec![
+								Box::new(MoveCardTask {
+									source: DeckPath::Hand(player_index),
+									destination: DeckPath::Discard,
+									card_id: card.id,
+								}) as Box<dyn tasks::PlayerTask>
+							],
+						}	
+					),
+				},
+				ChallengeReason::PlaceHeroCard(CardSpecPerspective::new(&card.spec)),
 			))) as Box<dyn PlayerTask>,
 		],
 	)
 }
 
-fn create_place_item_choice(locator: choices::ChoiceLocator, card: &state::Card) -> TasksChoice {
+fn create_place_item_choice(locator: choices::ChoiceLocator, card: &Card) -> TasksChoice {
 	let player_index = locator.player_index;
 	TasksChoice::new(
 		choices::ChoiceInformation::new(
 			locator.to_owned(),
 			choices::ChoiceDisplay {
 				highlight: Some(choices::DisplayPath::CardIn(
-					state::DeckPath::Hand(locator.player_index),
+					DeckPath::Hand(locator.player_index),
 					card.id,
 				)),
 				// Could have it going to each other deck?
@@ -133,9 +164,8 @@ fn create_place_item_choice(locator: choices::ChoiceLocator, card: &state::Card)
 			},
 		),
 		vec![
-			Box::new(RemoveActionPointsTask::new(player_index, 1)),
+			Box::new(RemoveActionPointsTask::new(1)),
 			Box::new(PlaceItemTask {
-				player_index,
 				card_id: card.id,
 			}),
 		],
@@ -144,13 +174,13 @@ fn create_place_item_choice(locator: choices::ChoiceLocator, card: &state::Card)
 
 #[derive(Debug, Clone)]
 struct PlaceItemTask {
-	player_index: usize,
 	card_id: ids::CardId,
 }
 
 impl PlayerTask for PlaceItemTask {
 	fn make_progress(
-		&mut self, _context: &mut game_context::GameBookKeeping, _game: &mut state::Game,
+		&mut self, _context: &mut GameBookKeeping, _game: &mut Game,
+		player_index: ids::PlayerIndex,
 	) -> SlayResult<TaskProgressResult> {
 		log::info!("TODO: Implement placing an item card...");
 		Ok(TaskProgressResult::TaskComplete)
@@ -158,28 +188,27 @@ impl PlayerTask for PlaceItemTask {
 
 	fn label(&self) -> String {
 		format!(
-			"Player {} places the item {}",
-			self.player_index, self.card_id
+			"Places the item {}", self.card_id
 		)
 	}
 }
 
-fn create_cast_magic_choice(locator: choices::ChoiceLocator, card: &state::Card) -> TasksChoice {
+fn create_cast_magic_choice(locator: choices::ChoiceLocator, card: &Card) -> TasksChoice {
 	let player_index = locator.player_index;
 	TasksChoice::new(
 		choices::ChoiceInformation::new(
 			locator.to_owned(),
 			choices::ChoiceDisplay {
 				highlight: Some(choices::DisplayPath::CardIn(
-					state::DeckPath::Hand(locator.player_index),
+					DeckPath::Hand(locator.player_index),
 					card.id,
 				)),
 				arrows: vec![choices::DisplayArrow {
 					source: choices::DisplayPath::CardIn(
-						state::DeckPath::Hand(locator.player_index),
+						DeckPath::Hand(locator.player_index),
 						card.id,
 					),
-					destination: choices::DisplayPath::DeckAt(state::DeckPath::Discard),
+					destination: choices::DisplayPath::DeckAt(DeckPath::Discard),
 				}],
 				// Could show arrows to each of the possibilities
 				label: format!("Cast {}.", card.label()),
@@ -187,9 +216,8 @@ fn create_cast_magic_choice(locator: choices::ChoiceLocator, card: &state::Card)
 			},
 		),
 		vec![
-			Box::new(RemoveActionPointsTask::new(player_index, 1)),
+			Box::new(RemoveActionPointsTask::new(1)),
 			Box::new(CastMagicTask {
-				player_index,
 				card_id: card.id,
 			}),
 		],
@@ -198,13 +226,13 @@ fn create_cast_magic_choice(locator: choices::ChoiceLocator, card: &state::Card)
 
 #[derive(Debug, Clone)]
 struct CastMagicTask {
-	player_index: usize,
 	card_id: ids::CardId,
 }
 
 impl PlayerTask for CastMagicTask {
 	fn make_progress(
-		&mut self, _context: &mut game_context::GameBookKeeping, _game: &mut state::Game,
+		&mut self, _context: &mut GameBookKeeping, _game: &mut Game,
+		player_index: ids::PlayerIndex
 	) -> SlayResult<TaskProgressResult> {
 		log::info!("TODO: Implement casting a magic card...");
 		Ok(TaskProgressResult::TaskComplete)
@@ -212,8 +240,7 @@ impl PlayerTask for CastMagicTask {
 
 	fn label(&self) -> String {
 		format!(
-			"Player {} places the item {}",
-			self.player_index, self.card_id
+			"cast some magic {}", self.card_id
 		)
 	}
 }
@@ -256,19 +283,18 @@ fn create_draw_choice(locator: ChoiceLocator) -> TasksChoice {
 		choices::ChoiceInformation::new(
 			locator,
 			choices::ChoiceDisplay {
-				highlight: Some(choices::DisplayPath::DeckAt(state::DeckPath::Draw)),
+				highlight: Some(choices::DisplayPath::DeckAt(DeckPath::Draw)),
 				arrows: vec![choices::DisplayArrow {
-					source: choices::DisplayPath::DeckAt(state::DeckPath::Draw),
-					destination: choices::DisplayPath::DeckAt(state::DeckPath::Hand(player_index)),
+					source: choices::DisplayPath::DeckAt(DeckPath::Draw),
+					destination: choices::DisplayPath::DeckAt(DeckPath::Hand(player_index)),
 				}],
 				label: format!("Draw a card."),
 				roll_modification_choice: None,
 			},
 		),
 		vec![
-			Box::new(RemoveActionPointsTask::new(player_index, 1)),
+			Box::new(RemoveActionPointsTask::new(1)),
 			Box::new(DrawTask {
-				player_index,
 				number_to_draw: 1,
 			}),
 		],
@@ -277,14 +303,12 @@ fn create_draw_choice(locator: ChoiceLocator) -> TasksChoice {
 
 #[derive(Debug, Clone)]
 pub struct DrawTask {
-	player_index: usize,
 	number_to_draw: usize,
 }
 
 impl DrawTask {
-	pub fn new(player_index: usize, number_to_draw: usize) -> Self {
+	pub fn new(number_to_draw: usize) -> Self {
 		Self {
-			player_index,
 			number_to_draw,
 		}
 	}
@@ -292,17 +316,18 @@ impl DrawTask {
 
 impl PlayerTask for DrawTask {
 	fn make_progress(
-		&mut self, _context: &mut game_context::GameBookKeeping, game: &mut state::Game,
+		&mut self, _context: &mut GameBookKeeping, game: &mut Game,
+		player_index: ids::PlayerIndex
 	) -> SlayResult<TaskProgressResult> {
 		game.replentish_for(self.number_to_draw);
-		game.players[self.player_index]
+		game.players[player_index]
 			.hand
 			.extend(game.draw.drain(0..self.number_to_draw));
 		Ok(TaskProgressResult::TaskComplete)
 	}
 
 	fn label(&self) -> String {
-		format!("{} draws {} cards.", self.player_index, self.number_to_draw)
+		format!("Draw {} cards.", self.number_to_draw)
 	}
 }
 
@@ -312,15 +337,15 @@ fn create_replace_hand_choice(locator: ChoiceLocator) -> TasksChoice {
 		ChoiceInformation::new(
 			locator.to_owned(),
 			choices::ChoiceDisplay {
-				highlight: Some(choices::DisplayPath::DeckAt(state::DeckPath::Discard)),
+				highlight: Some(choices::DisplayPath::DeckAt(DeckPath::Discard)),
 				arrows: vec![
 					choices::DisplayArrow {
-						source: choices::DisplayPath::DeckAt(state::DeckPath::Hand(locator.player_index)),
-						destination: choices::DisplayPath::DeckAt(state::DeckPath::Discard),
+						source: choices::DisplayPath::DeckAt(DeckPath::Hand(locator.player_index)),
+						destination: choices::DisplayPath::DeckAt(DeckPath::Discard),
 					},
 					choices::DisplayArrow {
-						source: choices::DisplayPath::DeckAt(state::DeckPath::Draw),
-						destination: choices::DisplayPath::DeckAt(state::DeckPath::Hand(locator.player_index)),
+						source: choices::DisplayPath::DeckAt(DeckPath::Draw),
+						destination: choices::DisplayPath::DeckAt(DeckPath::Hand(locator.player_index)),
 					},
 				],
 				label: "Replace your hand with 5 new cards.".to_string(),
@@ -328,26 +353,26 @@ fn create_replace_hand_choice(locator: ChoiceLocator) -> TasksChoice {
 			},
 		),
 		vec![
-			Box::new(RemoveActionPointsTask::new(player_index, 3)),
-			Box::new(ReplaceHandTask { player_index }),
+			Box::new(RemoveActionPointsTask::new(3)),
+			Box::new(ReplaceHandTask { }),
 		],
 	)
 }
 
 #[derive(Debug, Clone)]
 struct ReplaceHandTask {
-	player_index: usize,
 }
 
 impl PlayerTask for ReplaceHandTask {
 	fn make_progress(
-		&mut self, _context: &mut game_context::GameBookKeeping, game: &mut state::Game,
+		&mut self, _context: &mut GameBookKeeping, game: &mut Game,
+		player_index: ids::PlayerIndex
 	) -> SlayResult<TaskProgressResult> {
 		game
 			.discard
-			.extend(game.players[self.player_index].hand.drain(..));
+			.extend(game.players[player_index].hand.drain(..));
 		game.replentish_for(5);
-		game.players[self.player_index]
+		game.players[player_index]
 			.hand
 			.extend(game.draw.drain(0..5));
 		Ok(TaskProgressResult::TaskComplete)
@@ -355,8 +380,7 @@ impl PlayerTask for ReplaceHandTask {
 
 	fn label(&self) -> String {
 		format!(
-			"{} replaces their hand with 5 new cards.",
-			self.player_index
+			"Replace your hand with 5 new cards.",
 		)
 	}
 }
@@ -375,57 +399,69 @@ fn create_forfeit_choice(
 			},
 		),
 		vec![Box::new(RemoveActionPointsTask::new(
-			player_index,
 			current_amount_remaining,
 		)) as Box<dyn PlayerTask>],
 	)
 }
 
 fn create_use_ability_task(
-	_context: &mut GameBookKeeping, _game: &Game, _player_index: usize, _card: &Card,
+	_context: &mut GameBookKeeping, _game: &Game, _player_index: ids::PlayerIndex, _card: &Card,
 ) -> UseAbility {
 	UseAbility::new()
 }
 
-fn create_use_ability_choice(
+fn create_roll_for_ability_choice(
 	context: &mut GameBookKeeping, game: &Game, locator: choices::ChoiceLocator, card: &Card,
 ) -> TasksChoice {
-	let player_index = locator.player_index;
-	let _use_ability = Box::new(create_roll_for_ability_task(
-		context,
-		game,
-		player_index,
-		card,
-	)) as Box<dyn PlayerTask>;
-	TasksChoice::new(
-		choices::ChoiceInformation::new(
-			locator.to_owned(),
-			choices::ChoiceDisplay {
-				// TODO
-				..Default::default()
-			},
-		),
-		vec![
-			Box::new(CardUsedTask::new(player_index, card.id)),
-			Box::new(RemoveActionPointsTask::new(player_index, 1)),
-			// TODO
-		],
-	)
+	todo!();
+	// let player_index = locator.player_index;
+	// let roll_for_ability = Box::new(create_roll_for_ability_task(
+	// 	context,
+	// 	game,
+	// 	player_index,
+	// 	card,
+	// )) as Box<dyn PlayerTask>;
+	// TasksChoice::new(
+	// 	choices::ChoiceInformation::new(
+	// 		locator.to_owned(),
+	// 		choices::ChoiceDisplay {
+	// 			// TODO
+	// 			..Default::default()
+	// 		},
+	// 	),
+	// 	vec![
+	// 		Box::new(CardUsedTask::new(player_index, card.id)),
+	// 		Box::new(RemoveActionPointsTask::new(1)),
+	// 		Box::new(DoRollTask::new(RollState::new(
+	// 			player_index,
+	// 			card.spec.create_ability_consequences()
+	// 			monster_card
+	// 				.spec
+	// 				.monster
+	// 				.as_ref()
+	// 				.unwrap()
+	// 				.create_consequences(player_index),
+	// 			Roll::create_from(&mut context.rng),
+	// 			RollReason::,
+	// 		))) as Box<dyn PlayerTask>,
+	// 		roll_for_ability,
+	// 	],
+	// )
 }
 
 fn create_attack_monster_choice(
-	context: &mut GameBookKeeping, _game: &Game, locator: choices::ChoiceLocator,
-	monster_card: &state::Card,
+	context: &mut GameBookKeeping, _game: &Game, locator: ChoiceLocator,
+	monster_card: &Card,
 ) -> TasksChoice {
 	let player_index = locator.player_index;
 	TasksChoice::new(
-		choices::ChoiceInformation::new(
+		ChoiceInformation::new(
 			locator.to_owned(),
-			choices::ChoiceDisplay {
-				highlight: Some(choices::DisplayPath::DeckAt(state::DeckPath::Discard)),
-				arrows: vec![choices::DisplayArrow {
-					source: choices::DisplayPath::DeckAt(state::DeckPath::ActiveMonsters),
-					destination: choices::DisplayPath::DeckAt(state::DeckPath::SlainMonsters(
+			ChoiceDisplay {
+				highlight: Some(DisplayPath::DeckAt(DeckPath::Discard)),
+				arrows: vec![DisplayArrow {
+					source: DisplayPath::DeckAt(DeckPath::ActiveMonsters),
+					destination: DisplayPath::DeckAt(DeckPath::SlainMonsters(
 						locator.player_index,
 					)),
 				}],
@@ -434,24 +470,20 @@ fn create_attack_monster_choice(
 			},
 		),
 		vec![
-			Box::new(RemoveActionPointsTask::new(player_index, 2)) as Box<dyn PlayerTask>,
+			Box::new(RemoveActionPointsTask::new(2)) as Box<dyn PlayerTask>,
 			Box::new(DoRollTask::new(RollState::new(
 				player_index,
-				monster_card
-					.spec
-					.monster
-					.as_ref()
-					.unwrap()
-					.create_consequences(player_index),
+				monster_card.spec.monster.as_ref().unwrap()
+					.consequences.clone(),
 				Roll::create_from(&mut context.rng),
-				RollReason::AttackMonster(monster_card.spec.to_owned()),
+				RollReason::AttackMonster(CardSpecPerspective::new(&monster_card.spec)),
 			))) as Box<dyn PlayerTask>,
 		],
 	)
 }
 
-impl game_context::GameBookKeeping {
-	pub fn locator(&mut self, player_index: usize) -> choices::ChoiceLocator {
+impl GameBookKeeping {
+	pub fn locator(&mut self, player_index: ids::PlayerIndex) -> choices::ChoiceLocator {
 		choices::ChoiceLocator {
 			id: self.id_generator.generate(),
 			player_index,
@@ -460,7 +492,7 @@ impl game_context::GameBookKeeping {
 }
 
 fn create_hand_action_choice(
-	context: &mut GameBookKeeping, game: &Game, locator: choices::ChoiceLocator, card: &state::Card,
+	context: &mut GameBookKeeping, game: &Game, locator: choices::ChoiceLocator, card: &Card,
 ) -> Option<TasksChoice> {
 	match card.card_type() {
 		CardType::Blank => None,
@@ -475,7 +507,7 @@ fn create_hand_action_choice(
 }
 
 fn create_party_action_choice(
-	context: &mut GameBookKeeping, game: &Game, locator: choices::ChoiceLocator, card: &state::Card,
+	context: &mut GameBookKeeping, game: &Game, locator: ChoiceLocator, card: &Card,
 ) -> Option<TasksChoice> {
 	match card.card_type() {
 		specification::CardType::Blank => None,
@@ -486,12 +518,12 @@ fn create_party_action_choice(
 		specification::CardType::Magic => unreachable!(),
 		specification::CardType::PartyLeader(_) => None, // TODO: Some hero leaders provide action points
 		specification::CardType::Hero(_) => {
-			Some(create_use_ability_choice(context, game, locator, card))
+			Some(create_roll_for_ability_choice(context, game, locator, card))
 		}
 	}
 }
 
-pub fn assign_action_choices(context: &mut game_context::GameBookKeeping, game: &mut state::Game) {
+pub fn assign_action_choices(context: &mut GameBookKeeping, game: &mut Game) {
 	// let player_index = game.active_player_index();
 	let player_index = game.current_player().player_index;
 	let remaining_action_points = game.current_player().get_remaining_action_points();
@@ -562,7 +594,7 @@ pub fn assign_action_choices(context: &mut game_context::GameBookKeeping, game: 
 
 #[derive(Clone, Debug)]
 pub struct UseAbility {
-	// player_index: usize,
+	// player_index: ids::PlayerIndex,
 	// amount: u32,
 }
 
@@ -574,6 +606,7 @@ impl UseAbility {
 impl PlayerTask for UseAbility {
 	fn make_progress(
 		&mut self, _context: &mut GameBookKeeping, _game: &mut Game,
+		player_index: ids::PlayerIndex
 	) -> SlayResult<TaskProgressResult> {
 		log::info!("TODO: Implement using a hero ability.");
 		Ok(TaskProgressResult::TaskComplete)
@@ -586,29 +619,27 @@ impl PlayerTask for UseAbility {
 
 #[derive(Clone, Debug)]
 pub struct RemoveActionPointsTask {
-	player_index: usize,
 	amount: u32,
 }
 
 impl RemoveActionPointsTask {
-	pub fn new(player_index: usize, amount: u32) -> Self {
+	pub fn new(amount: u32) -> Self {
 		Self {
-			player_index,
 			amount,
 		}
 	}
 }
 impl PlayerTask for RemoveActionPointsTask {
 	fn make_progress(
-		&mut self, _context: &mut GameBookKeeping, game: &mut Game,
+		&mut self, _context: &mut GameBookKeeping, game: &mut Game, player_index: ids::PlayerIndex
 	) -> SlayResult<TaskProgressResult> {
-		game.players[self.player_index].action_points_used(self.amount);
+		game.players[player_index].action_points_used(self.amount);
 		Ok(TaskProgressResult::TaskComplete)
 	}
 	fn label(&self) -> String {
 		format!(
-			"Deducting {} action points from {}.",
-			self.amount, self.player_index
+			"Deducting {} action points.",
+			self.amount
 		)
 	}
 }
@@ -625,7 +656,8 @@ impl OfferChallengesTask {
 }
 impl PlayerTask for OfferChallengesTask {
 	fn make_progress(
-		&mut self, context: &mut game_context::GameBookKeeping, game: &mut state::Game,
+		&mut self, context: &mut GameBookKeeping, game: &mut Game,
+		player_index: ids::PlayerIndex,
 	) -> SlayResult<tasks::TaskProgressResult> {
 		log::info!("making progress");
 		if let Some(mut offer) = self.offer.take() {
@@ -661,7 +693,8 @@ impl DoRollTask {
 }
 impl PlayerTask for DoRollTask {
 	fn make_progress(
-		&mut self, context: &mut game_context::GameBookKeeping, game: &mut state::Game,
+		&mut self, context: &mut GameBookKeeping, game: &mut Game,
+		player_index: ids::PlayerIndex
 	) -> SlayResult<tasks::TaskProgressResult> {
 		if let Some(mut roll) = self.roll.take() {
 			roll.completion_tracker = Some(CompletionTracker::new(
@@ -682,29 +715,28 @@ impl PlayerTask for DoRollTask {
 
 #[derive(Clone, Debug)]
 pub struct CardUsedTask {
-	player_index: usize,
 	card_id: ids::CardId,
 }
 
 impl CardUsedTask {
-	pub fn new(player_index: usize, card_id: ids::CardId) -> Self {
+	pub fn new(player_index: ids::PlayerIndex, card_id: ids::CardId) -> Self {
 		Self {
-			player_index,
 			card_id,
 		}
 	}
 }
 impl PlayerTask for CardUsedTask {
 	fn make_progress(
-		&mut self, _context: &mut game_context::GameBookKeeping, game: &mut state::Game,
+		&mut self, _context: &mut GameBookKeeping, game: &mut Game,
+		player_index: ids::PlayerIndex
 	) -> SlayResult<tasks::TaskProgressResult> {
-		game.players[self.player_index].set_card_played(self.card_id);
+		game.players[player_index].set_card_played(self.card_id);
 		Ok(tasks::TaskProgressResult::TaskComplete)
 	}
 	fn label(&self) -> String {
 		format!(
-			"Marking {} as used for player {}",
-			self.card_id, self.player_index
+			"Marking {} as used",
+			self.card_id
 		)
 	}
 }

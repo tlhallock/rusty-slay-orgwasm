@@ -6,6 +6,8 @@ pub type RollId = ElementId;
 pub type ChallengeId = ElementId;
 pub type DeckId = ElementId;
 
+pub type PlayerIndex = usize;
+
 #[derive(Default, Debug, Clone)]
 pub struct IdGenerator {
 	pub next_id: u32,

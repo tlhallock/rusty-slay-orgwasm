@@ -1,31 +1,32 @@
-use crate::slay::choices::{ChoiceLocator, Choices, TasksChoice};
-use crate::slay::deadlines;
+use crate::slay::choices::{ChoiceLocator, Choices, TasksChoice, ChoicePerspective, ChoicesPerspective};
+use crate::slay::deadlines::{self, Timeline};
 
 use crate::slay::game_context::GameBookKeeping;
 use crate::slay::ids;
 use crate::slay::specification::CardSpec;
-use crate::slay::state::Game;
+use crate::slay::state::game::Game;
+use crate::slay::state::stack::CardSpecPerspective;
 
 use super::current_showdown::ShowDown;
 
-use super::common::ModificationPath;
+use super::common::{ModificationPath, ModificationPerspective};
 use super::common::Roll;
 use super::common::RollModification;
-use super::completion::CompletionTracker;
+use super::completion::{CompletionTracker, PlayerCompletionPerspective};
 use super::consequences::RollConsequences;
-use super::roll_choices::{self, create_modify_roll_choice};
+use super::roll_choices::{create_modify_roll_choice, self};
 
 // Only the party needs stacks...
 
-#[derive(Debug, PartialEq, Clone, Eq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum RollReason {
-	UseHeroAbility(CardSpec),
-	AttackMonster(CardSpec),
+	UseHeroAbility(CardSpecPerspective),
+	AttackMonster(CardSpecPerspective),
 }
 
 #[derive(Debug, Clone)]
 pub struct RollState {
-	pub roller_index: usize,
+	pub roller_index: ids::PlayerIndex,
 	pub reason: RollReason,
 	consequences: RollConsequences,
 	pub initial: Roll,
@@ -35,7 +36,8 @@ pub struct RollState {
 
 impl RollState {
 	pub fn new(
-		roller_index: usize, consequences: RollConsequences, initial: Roll, reason: RollReason,
+		roller_index: ids::PlayerIndex, consequences: RollConsequences, initial: Roll,
+		reason: RollReason,
 	) -> Self {
 		Self {
 			roller_index,
@@ -61,13 +63,6 @@ impl RollState {
 				.map(|h| h.modification_amount)
 				.sum::<i32>()
 	}
-	// fn set_player_completion(&mut self, player_index: usize, persist: RollCompletion) {
-	//     self.completion_tracker.set_player_completion(player_index, persist);
-	// }
-
-	// fn should_offer_modifications_again(&self, player_index: usize) -> bool {
-	//     self.completion_tracker.should_offer_modifications_again(player_index)
-	// }
 }
 
 impl ShowDown for RollState {
@@ -80,7 +75,7 @@ impl ShowDown for RollState {
 	}
 
 	fn create_choice_for(
-		&self, context: &mut GameBookKeeping, game: &Game, player_index: usize,
+		&self, context: &mut GameBookKeeping, game: &Game, player_index: ids::PlayerIndex,
 	) -> Choices {
 		let default_choice = context.id_generator.generate();
 		Choices {
@@ -99,14 +94,14 @@ impl ShowDown for RollState {
 
 	fn finish(&mut self, _context: &mut GameBookKeeping, game: &mut Game) {
 		let roll_sum = self.calculate_roll_total();
-		self.consequences.apply_roll_sum(game, roll_sum);
+		self.consequences.apply_roll_sum(game, roll_sum, self.roller_index);
 		// game.players[roll.roller_index].tasks = Some(roll.consequences.take_tasks(roll_sum));
 	}
 }
 
 pub fn list_modification_choices(
-	context: &mut GameBookKeeping, game: &Game, player_index: usize, default_choice: ids::ChoiceId,
-	rolls: Vec<ModificationPath>,
+	context: &mut GameBookKeeping, game: &Game, player_index: ids::PlayerIndex,
+	default_choice: ids::ChoiceId, rolls: Vec<ModificationPath>,
 ) -> Vec<TasksChoice> {
 	let mut choices: Vec<TasksChoice> = vec![
 		roll_choices::create_set_completion_done(ChoiceLocator {
@@ -161,23 +156,52 @@ pub fn list_modification_choices(
 	choices
 }
 
-// pub fn do_roll(
-//     context: &mut game_context::GameBookKeeping,
-//     game: &mut state::Game,
-//     roller_index: usize,
-//     consequences: RollConsequences,
-// ) {
-//     let roll = RollState::new(
-//         roller_index,
-//         consequences,
-//         Roll::create_from(&mut context.rng),
-//         game.number_of_players(),
-//     );
-//     for player in game.players.iter_mut() {
-//         assign_roll_choices(context, player, &roll);
-//     }
-//     // game.players
-//     //     .iter_mut()
-//     //     .for_each(|player| assign_roll_choices(context, player, &roll));
-//     game.roll = Some(roll);
-// }
+
+
+
+#[derive(Debug, PartialEq, Clone)]
+pub struct RollPerspective {
+	id: ids::RollId,
+	pub roller_name: String,
+	pub initial: Roll,
+	pub history: Vec<ModificationPerspective>,
+	pub completions: Vec<PlayerCompletionPerspective>,
+	pub roll_total: i32,
+	pub success: bool,
+	pub timeline: Timeline,
+	pub reason: RollReason,
+	pub choices: Vec<ChoicePerspective>,
+}
+
+impl RollState {
+	pub fn to_perspective(
+		&self, game: &Game, choices: &Option<ChoicesPerspective>,
+	) -> RollPerspective {
+		RollPerspective {
+			id: 0, // Need to fill this in again?
+			roller_name: game.players[self.roller_index].name.to_owned(),
+			initial: self.initial.to_owned(),
+			history: self
+				.history
+				.iter()
+				.map(|m| m.to_perspective(game))
+				.collect(),
+			completions: self.tracker().to_perspective(game),
+			roll_total: self.calculate_roll_total(),
+			success: false,
+			timeline: self.tracker().timeline.to_owned(),
+			reason: self.reason.to_owned(),
+			choices: choices
+				.iter()
+				.map(|choices| {
+					choices
+						.actions
+						.iter()
+						.map(|o| o.to_owned())
+						.collect::<Vec<ChoicePerspective>>()
+				})
+				.flatten()
+				.collect(),
+		}
+	}
+}

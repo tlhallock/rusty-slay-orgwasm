@@ -1,8 +1,8 @@
 use yew::classes;
 use yew::prelude::*;
 
-use crate::common::perspective::PlayerPerspective;
 use crate::frontend::deck::DeckView;
+use crate::slay::state::player::PlayerPerspective;
 
 use super::app::ChoiceState;
 use super::card_modal::CardModalInfo;

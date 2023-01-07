@@ -1,5 +1,7 @@
 use crate::slay::state;
 
+use super::state::game::Turn;
+
 #[derive(Debug, Clone, Copy)]
 pub enum ModifierDuration {
 	UntilTurn(u32, u32),
@@ -38,7 +40,7 @@ pub struct PlayerBuffs {
 	buffs: Vec<PlayerBuff>,
 }
 impl PlayerBuffs {
-	pub(crate) fn clear_expired_modifiers(&mut self, turn: &state::Turn) {
+	pub(crate) fn clear_expired_modifiers(&mut self, turn: &Turn) {
 		self.buffs.retain(|b| turn.still_active(&b.duration))
 	}
 	pub fn add(&mut self, duration: ModifierDuration, modifier: PlayerModifier) {

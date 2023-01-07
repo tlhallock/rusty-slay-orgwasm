@@ -4,8 +4,8 @@ use crate::slay::errors::SlayError;
 use crate::slay::errors::SlayResult;
 use crate::slay::game_context;
 use crate::slay::game_context::GameBookKeeping;
-use crate::slay::state;
-use crate::slay::state::Game;
+use crate::slay::ids;
+use crate::slay::state::game::Game;
 
 use std::collections::HashMap;
 use std::fmt::Debug;
@@ -49,7 +49,7 @@ impl Default for CurrentShowdown {
 }
 
 pub struct ModificationTask {
-	choices_to_assign: HashMap<usize, Choices>,
+	choices_to_assign: HashMap<ids::PlayerIndex, Choices>,
 }
 
 impl ModificationTask {
@@ -63,7 +63,7 @@ impl ModificationTask {
 impl CurrentShowdown {
 	// pub fn set_showdown(
 	//     &mut self,
-	//     context: &mut game_context::GameBookKeeping,
+	//     context: &mut GameBookKeeping,
 	//     showdown: &mut Option<Box<dyn ShowDown>>,
 	// ) {
 	//     showdown
@@ -236,7 +236,7 @@ impl CurrentShowdown {
 	}
 
 	pub(crate) fn get_modification_task(
-		&self, context: &mut GameBookKeeping, game: &Game, modifying_player_index: usize,
+		&self, context: &mut GameBookKeeping, game: &Game, modifying_player_index: ids::PlayerIndex,
 	) -> ModificationTask {
 		let current = self.current().unwrap();
 		ModificationTask {
@@ -258,7 +258,7 @@ impl CurrentShowdown {
 	}
 
 	pub(crate) fn set_player_completion(
-		&mut self, player_index: usize, persist: RollCompletion,
+		&mut self, player_index: ids::PlayerIndex, persist: RollCompletion,
 	) -> SlayResult<()> {
 		log::info!(
 			"Updating the player completion for {} to {:?}",
@@ -294,13 +294,13 @@ pub trait ShowDown: Debug + dyn_clone::DynClone {
 	// );
 
 	fn create_choice_for(
-		&self, context: &mut GameBookKeeping, game: &Game, player_index: usize,
+		&self, context: &mut GameBookKeeping, game: &Game, player_index: ids::PlayerIndex,
 	) -> Choices;
 
-	fn finish(&mut self, _context: &mut game_context::GameBookKeeping, game: &mut state::Game);
+	fn finish(&mut self, _context: &mut GameBookKeeping, game: &mut Game);
 
 	fn assign_all_choices(
-		&self, context: &mut game_context::GameBookKeeping, game: &mut state::Game,
+		&self, context: &mut GameBookKeeping, game: &mut Game,
 	) {
 		let nb_players = game.number_of_players();
 		for player_index in 0..nb_players {
@@ -311,8 +311,8 @@ pub trait ShowDown: Debug + dyn_clone::DynClone {
 
 	// fn assign_unpersisted_choices(
 	//     &self,
-	//     context: &mut game_context::GameBookKeeping,
-	//     game: &mut state::Game,
+	//     context: &mut GameBookKeeping,
+	//     game: &mut Game,
 	// ) {
 	//     game.players
 	//         .iter_mut()

@@ -1,9 +1,11 @@
 use crate::slay::game_context::GameBookKeeping;
-use crate::slay::state::Game;
 
 use super::ids;
 use super::specification::{self, CardType};
-use super::state::{Card, Deck, Player, Stack};
+use super::state::deck::Deck;
+use super::state::game::Game;
+use super::state::player::Player;
+use super::state::stack::{Card, Stack};
 
 pub fn initialize_empty_game(context: &mut GameBookKeeping, game: &mut Game) {
 	specification::get_card_specs().iter().for_each(|spec| {
@@ -46,7 +48,8 @@ fn find_hero_card(deck: &Deck) -> Option<ids::CardId> {
 mod tests {
 	use crate::slay::actions;
 	use crate::slay::game_context::GameBookKeeping;
-	use crate::slay::state::{DeckPath, Game};
+	use crate::slay::state::deck::DeckPath;
+	use crate::slay::state::game::Game;
 
 	#[test]
 	pub fn test_add() {

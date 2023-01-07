@@ -1,12 +1,12 @@
 use yew::classes;
 use yew::prelude::*;
 
-use crate::common::perspective::OfferChallengesPerspective;
 use crate::frontend::icons::Timer;
 
 use crate::frontend::app::GameCallbacks;
 
 use crate::frontend::showdown::common::CompletionsView;
+use crate::slay::showdown::offer::OfferChallengesPerspective;
 
 #[derive(Properties, PartialEq)]
 pub struct OfferModalProps {

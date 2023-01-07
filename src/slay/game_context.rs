@@ -4,8 +4,6 @@ use crate::slay::message;
 use rand::rngs::ThreadRng;
 use rand::thread_rng;
 
-use super::message::Notification;
-
 #[derive(Clone)]
 pub struct GameBookKeeping {
 	pub id_generator: ids::IdGenerator,

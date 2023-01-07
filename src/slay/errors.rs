@@ -1,3 +1,4 @@
+use log;
 use std::fmt;
 
 #[derive(Debug)]
@@ -9,6 +10,7 @@ pub type SlayResult<T> = std::result::Result<T, SlayError>;
 
 impl SlayError {
 	pub fn new(reason: &'static str) -> SlayError {
+		log::info!("Reason: {}", reason);
 		unreachable!();
 		// SlayError {
 		// 	reason: reason.to_string(),

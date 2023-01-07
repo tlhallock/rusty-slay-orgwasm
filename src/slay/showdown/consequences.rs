@@ -1,5 +1,8 @@
 use crate::slay::game_context;
+use crate::slay::game_context::GameBookKeeping;
+use crate::slay::ids;
 use crate::slay::state;
+use crate::slay::state::game::Game;
 use crate::slay::tasks;
 use crate::slay::tasks::PlayerTask;
 
@@ -52,71 +55,60 @@ impl Condition {
 	}
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct RollConsequenceSpec {
-	pub condition: Condition,
-	pub tasks: Vec<tasks::TaskSpec>,
-}
+#[derive(Debug, Clone)]
+pub enum ConsequenceName {
 
-impl RollConsequenceSpec {
-	fn tasks(&self, player_index: usize) -> Vec<Box<dyn tasks::PlayerTask>> {
-		self.tasks.iter().map(|t| t.to_task(player_index)).collect()
-	}
-
-	pub fn to_smh(&self, player_index: usize) -> RollConsequenceRenameMe {
-		RollConsequenceRenameMe {
-			condition: self.condition.to_owned(),
-			tasks: self.tasks(player_index),
-		}
-	}
 }
 
 #[derive(Debug, Clone)]
-pub struct RollConsequenceRenameMe {
+pub struct RollConsequence {
 	pub condition: Condition,
-	pub tasks: Vec<Box<dyn tasks::PlayerTask>>,
+	pub tasks: Vec<Box<dyn PlayerTask>>,
 }
+
 
 #[derive(Debug, Clone)]
 pub struct RollConsequences {
-	player_index: usize,
-	consequences: Vec<RollConsequenceRenameMe>,
+	pub success: RollConsequence,
+	pub loss: Option<RollConsequence>,
 }
 
 impl RollConsequences {
-	pub fn new(player_index: usize, consequences: Vec<RollConsequenceRenameMe>) -> Self {
-		Self {
-			player_index,
-			consequences,
-		}
+	pub fn new(
+		success: RollConsequence,
+		loss: Option<RollConsequence>,
+	) -> Self {
+		Self { success, loss, }
 	}
 
-	pub fn take(&mut self) -> Self {
-		Self {
-			player_index: self.player_index,
-			consequences: self.consequences.drain(..).collect(),
+	pub fn take_tasks_for(&mut self, roll_sum: i32) -> Vec<Box<dyn PlayerTask>> {
+		let mut ret = Vec::new();
+		if self.success.condition.applies_to(roll_sum) {
+			ret.extend(self.success.tasks.drain(..));
 		}
-	}
-
-	pub fn take_tasks(&mut self, roll_sum: i32) -> Vec<Box<dyn PlayerTask>> {
-		self
-			.consequences
-			.drain(..)
-			.filter(|c| c.condition.applies_to(roll_sum))
-			.flat_map(|c| c.tasks)
-			.collect() // reviewer: Shouldn't need to collect here.
+		if let Some(consequence) = self.loss.as_mut() {
+			if consequence.condition.applies_to(roll_sum) {
+				ret.extend(consequence.tasks.drain(..));
+			}
+		}
+		ret
 	}
 
 	pub(crate) fn proceed(
-		&mut self, _context: &mut game_context::GameBookKeeping, game: &mut state::Game,
+		&mut self, _context: &mut GameBookKeeping, game: &mut Game, player_index: ids::PlayerIndex,
 	) {
-		self.apply_roll_sum(game, 1);
+		self.apply_roll_sum(game, 1, player_index);
 	}
 
-	pub(crate) fn apply_roll_sum(&mut self, game: &mut state::Game, roll_sum: i32) {
+	pub(crate) fn apply_roll_sum(
+		&mut self,
+		game: &mut Game,
+		roll_sum: i32,
+		player_index: ids::PlayerIndex
+	) {
 		game.players.iter_mut().for_each(|p| p.choices = None);
 		// TODO: An extra copy here...
-		let mut tasks = self.take_tasks(roll_sum);
-		game.players[self.player_index].tasks.take_from(&mut tasks);
+		let mut tasks = self.take_tasks_for(roll_sum);
+		game.players[player_index].tasks.take_from(&mut tasks);
 	}
 }

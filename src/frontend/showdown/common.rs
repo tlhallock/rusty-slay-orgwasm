@@ -1,11 +1,6 @@
 use yew::classes;
 use yew::prelude::*;
 
-use crate::common::perspective::CardSpecPerspective;
-use crate::common::perspective::ChoicePerspective;
-use crate::common::perspective::ModificationPerspective;
-use crate::common::perspective::PlayerCompletionPerspective;
-use crate::common::perspective::RollModificationChoiceType;
 use crate::frontend::app::ChoiceState;
 use crate::frontend::app::GameCallbacks;
 use crate::frontend::icons::Continue;
@@ -13,9 +8,14 @@ use crate::frontend::icons::Done;
 
 use crate::frontend::stack::CardSpecView;
 use crate::frontend::stack::ExtraSpecProps;
+use crate::slay::choices::ChoicePerspective;
+use crate::slay::showdown::common::ModificationPerspective;
+use crate::slay::showdown::common::RollModificationChoiceType;
+use crate::slay::showdown::completion::PlayerCompletionPerspective;
 use crate::slay::showdown::completion::RollCompletion;
 
 use crate::frontend::icons::DoNot;
+use crate::slay::state::stack::CardSpecPerspective;
 
 #[derive(Properties, PartialEq)]
 pub struct CompletionsProps {
@@ -111,7 +111,7 @@ pub fn view_roll_choices(props: &RollChoicesProps) -> Html {
 						title={format!("Modify this card by {}", amount)}
 					>
 						<CardSpecView
-							spec={CardSpecPerspective::new(&spec)}
+							spec={spec.to_owned()}
 							view_card={props.callbacks.view_card.to_owned()}
 							choice_state={ChoiceState::default()}
 							extra_specs={
@@ -130,7 +130,7 @@ pub fn view_roll_choices(props: &RollChoicesProps) -> Html {
 						title={format!("Modify this card by {}", amount)}
 					>
 						<CardSpecView
-							spec={CardSpecPerspective::new(&spec)}
+							spec={spec.to_owned()}
 							view_card={props.callbacks.view_card.to_owned()}
 							choice_state={ChoiceState::default()}
 							extra_specs={

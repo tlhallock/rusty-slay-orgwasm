@@ -1,7 +1,8 @@
+use crate::slay::deadlines::Timeline;
 use crate::slay::game_context::GameBookKeeping;
-use crate::slay::state::Game;
+use crate::slay::ids;
 
-use crate::slay::choices::{ChoiceLocator, Choices, TasksChoice};
+use crate::slay::choices::{ChoiceLocator, Choices, TasksChoice, ChoicesPerspective, ChoicePerspective};
 use crate::slay::errors::SlayResult;
 use crate::slay::specification::CardType;
 
@@ -9,20 +10,24 @@ use crate::slay::showdown::challenge::ChallengeState;
 use crate::slay::showdown::completion::CompletionTracker;
 use crate::slay::showdown::consequences::RollConsequences;
 use crate::slay::showdown::current_showdown::ShowDown;
+use crate::slay::state::game::Game;
 
 use super::common::ChallengeReason;
+use super::completion::PlayerCompletionPerspective;
 use super::roll_choices::{self, create_challenge_choice};
 
 #[derive(Debug, Clone)]
 pub struct OfferChallengesState {
-	pub player_index: usize,
+	pub player_index: ids::PlayerIndex,
 	pub reason: ChallengeReason,
 	pub completion_tracker: Option<CompletionTracker>,
 	consequences: RollConsequences,
 }
 
 impl OfferChallengesState {
-	pub fn new(player_index: usize, consequences: RollConsequences, reason: ChallengeReason) -> Self {
+	pub fn new(
+		player_index: ids::PlayerIndex, consequences: RollConsequences, reason: ChallengeReason,
+	) -> Self {
 		Self {
 			player_index,
 			completion_tracker: None,
@@ -35,7 +40,7 @@ impl OfferChallengesState {
 		&self,
 		context: &mut GameBookKeeping,
 		game: &Game,
-		challenging_player_index: usize,
+		challenging_player_index: ids::PlayerIndex,
 		// challenging_player: &Player,
 		default_choice: u32,
 	) -> Vec<TasksChoice> {
@@ -64,7 +69,7 @@ impl OfferChallengesState {
 	}
 
 	pub fn to_challenge(
-		&self, rng: &mut rand::rngs::ThreadRng, challenger_index: usize,
+		&self, rng: &mut rand::rngs::ThreadRng, challenger_index: ids::PlayerIndex,
 	) -> SlayResult<ChallengeState> {
 		Ok(ChallengeState::new(
 			rng,
@@ -86,7 +91,7 @@ impl ShowDown for OfferChallengesState {
 	}
 
 	fn create_choice_for(
-		&self, context: &mut GameBookKeeping, game: &Game, player_index: usize,
+		&self, context: &mut GameBookKeeping, game: &Game, player_index: ids::PlayerIndex,
 	) -> Choices {
 		let default_choice = context.id_generator.generate();
 		Choices {
@@ -98,9 +103,38 @@ impl ShowDown for OfferChallengesState {
 	}
 
 	fn finish(
-		&mut self, context: &mut crate::slay::game_context::GameBookKeeping,
-		game: &mut crate::slay::state::Game,
+		&mut self, context: &mut GameBookKeeping,
+		game: &mut Game,
 	) {
-		self.consequences.proceed(context, game);
+		self.consequences.proceed(context, game, self.player_index);
+	}
+}
+
+
+
+#[derive(Debug, PartialEq, Clone)]
+pub struct OfferChallengesPerspective {
+	pub initiator: String,
+	pub completions: Vec<PlayerCompletionPerspective>,
+	pub reason: ChallengeReason,
+	pub choices: Vec<ChoicePerspective>,
+	pub timeline: Timeline,
+}
+
+impl OfferChallengesState {
+	pub fn to_perspective(
+		&self, game: &Game, choices: &Option<ChoicesPerspective>,
+	) -> OfferChallengesPerspective {
+		OfferChallengesPerspective {
+			initiator: game.players[self.player_index].name.to_owned(),
+			completions: self.tracker().to_perspective(game),
+			reason: self.reason.to_owned(),
+			choices: choices
+				.iter()
+				.map(|choices| choices.actions.clone())
+				.flatten()
+				.collect(),
+			timeline: self.tracker().timeline.to_owned(),
+		}
 	}
 }
