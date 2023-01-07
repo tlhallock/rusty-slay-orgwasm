@@ -1,19 +1,19 @@
-use crate::slay::abilities::discard::Discard;
+
 use crate::slay::abilities::heros::do_hero_ability;
 use crate::slay::abilities::heros::Ability;
-use crate::slay::abilities::sacrifice::Sacrifice;
-use crate::slay::actions::DrawTask;
-use crate::slay::choices;
-use crate::slay::deadlines;
+
+
+
+
 use crate::slay::errors;
 use crate::slay::errors::SlayError;
 use crate::slay::errors::SlayResult;
-use crate::slay::game_context;
+
 use crate::slay::game_context::GameBookKeeping;
 use crate::slay::ids;
-use crate::slay::modifiers;
+
 use crate::slay::modifiers::PlayerModifier;
-use crate::slay::state;
+
 use crate::slay::state::game::Game;
 
 use core::fmt::Debug;
@@ -129,7 +129,7 @@ impl Summarizable for PlayerTasks {
 		for task in self.upcoming.iter() {
 			write!(f, "{}, ", task.label())?;
 		}
-		write!(f, "\n")?;
+		writeln!(f)?;
 		Ok(())
 	}
 }
@@ -149,7 +149,7 @@ impl PlayerTasks {
 	}
 	pub fn prepend_from(&mut self, to_take: &mut Vec<Box<dyn PlayerTask>>) {
 		// Should this have been a stack all along?
-		self.prepend.extend(to_take.drain(..));
+		self.prepend.append(to_take);
 		// log::info!("About to prepend {:?} to {:?}")
 		// while !to_take.is_empty() {
 		// 	let task = to_take.remove(0);
@@ -327,7 +327,7 @@ pub struct MoveCardTask {
 
 impl PlayerTask for MoveCardTask {
 	fn make_progress(
-		&mut self, _context: &mut GameBookKeeping, game: &mut Game, player_index: ids::PlayerIndex,
+		&mut self, _context: &mut GameBookKeeping, game: &mut Game, _player_index: ids::PlayerIndex,
 	) -> SlayResult<TaskProgressResult> {
 		game.move_card(self.source, self.destination, self.card_id)?;
 		Ok(TaskProgressResult::TaskComplete)

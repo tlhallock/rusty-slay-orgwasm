@@ -1,8 +1,7 @@
-use crate::slay::choices;
+
 use crate::slay::choices::ChoicesPerspective;
 use crate::slay::choices::DisplayPath;
 use crate::slay::errors;
-use crate::slay::game_context;
 use crate::slay::game_context::GameBookKeeping;
 use crate::slay::ids;
 use crate::slay::modifiers;
@@ -15,30 +14,20 @@ use crate::slay::specification::DeckSpec;
 use crate::slay::tasks::PlayerTask;
 use crate::slay::visibility::Perspective;
 use crate::slay::visibility::VisibilitySpec;
+use crate::slay::state::deck::Deck;
+use crate::slay::state::deck::DeckPath;
+use crate::slay::state::deck::DeckPerspective;
+use crate::slay::state::player::Player;
+use crate::slay::state::player::PlayerPerspective;
+use crate::slay::state::stack::Card;
+use crate::slay::state::summarizable::Summarizable;
+use crate::slay::errors::SlayResult;
+
+
 use std::io::Write;
-
-use crate::slay::specification::HeroType;
-use crate::slay::tasks;
-
-use errors::SlayResult;
-
-use std::collections::HashSet;
-use std::collections::VecDeque;
-
 use std::fmt::Debug;
-
 use std::io::BufWriter;
-use std::ops::RangeBounds;
-
 use std::iter::Iterator;
-
-use super::deck::Deck;
-use super::deck::DeckPath;
-use super::deck::DeckPerspective;
-use super::player::Player;
-use super::player::PlayerPerspective;
-use super::stack::Card;
-use super::summarizable::Summarizable;
 
 #[derive(Debug, Default, Clone, PartialEq)]
 pub struct Turn {
@@ -99,13 +88,12 @@ impl Game {
 	pub fn get_element_id(&self, display_path: &Option<DisplayPath>) -> Option<ids::ElementId> {
 		display_path
 			.as_ref()
-			.map(|p| match p {
+			.and_then(|p| match p {
 				DisplayPath::DeckAt(d) => Some(self.deck(*d).id),
 				DisplayPath::CardIn(_, id) => Some(*id),
 				DisplayPath::Player(player_index) => Some(self.players[*player_index].id),
 				DisplayPath::Roll(_) => None,
 			})
-			.flatten()
 	}
 
 	pub fn clear_expired_modifiers(&mut self) {
@@ -192,7 +180,7 @@ impl Game {
 	pub fn card(&self, card_id: ids::CardId) -> Option<&Card> {
 		for deck in self.decks().iter() {
 			if let Some(card) = deck.card(card_id) {
-				return Some(&card);
+				return Some(card);
 			}
 		}
 		for player in self.players.iter() {
@@ -201,7 +189,7 @@ impl Game {
 			}
 			for deck in player.decks().iter() {
 				if let Some(card) = deck.card(card_id) {
-					return Some(&card);
+					return Some(card);
 				}
 			}
 		}
@@ -366,9 +354,8 @@ impl Game {
 			.players
 			.iter()
 			.find(|p| p.id == player_id)
-			.map(|p| p.choices.as_ref())
-			.flatten()
-			.map(|c| c.to_perspective(&self));
+			.and_then(|p| p.choices.as_ref())
+			.map(|c| c.to_perspective(self));
 		let players = self
 			.players
 			.iter()
@@ -423,7 +410,7 @@ impl GamePerspective {
 	pub fn rotated_players(&self) -> Vec<&PlayerPerspective> {
 		let mut ret: Vec<&PlayerPerspective> = self.players.iter().collect();
 		let position = ret.iter().position(|p| p.me);
-		position.map(|index| ret.rotate_left(index));
+		if let Some(index) = position { ret.rotate_left(index) }
 		ret
 	}
 }

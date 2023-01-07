@@ -3,7 +3,7 @@ use crate::slay::choices::{ChoicePerspective, Choices, ChoicesPerspective, Displ
 use crate::slay::deadlines::Timeline;
 use crate::slay::game_context::GameBookKeeping;
 use crate::slay::state::game::Game;
-use crate::slay::{deadlines, game_context, ids};
+use crate::slay::{deadlines, ids};
 
 use crate::slay::showdown::common::Roll;
 

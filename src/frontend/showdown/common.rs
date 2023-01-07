@@ -15,7 +15,7 @@ use crate::slay::showdown::completion::PlayerCompletionPerspective;
 use crate::slay::showdown::completion::RollCompletion;
 
 use crate::frontend::icons::DoNot;
-use crate::slay::state::stack::CardSpecPerspective;
+
 
 #[derive(Properties, PartialEq)]
 pub struct CompletionsProps {

@@ -1,5 +1,5 @@
-use crate::slay::modifiers;
-use crate::slay::tasks;
+
+
 
 use std::vec;
 
@@ -12,7 +12,7 @@ use super::actions::DrawTask;
 use super::choices::TasksChoice;
 use super::ids;
 use super::modifiers::PlayerModifier;
-use super::showdown::common::Roll;
+
 use super::showdown::consequences::Condition;
 use super::showdown::consequences::RollConsequence;
 use super::showdown::consequences::RollConsequences;

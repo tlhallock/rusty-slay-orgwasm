@@ -6,14 +6,14 @@ use crate::slay::choices::TasksChoice;
 use crate::slay::deadlines;
 use crate::slay::errors::SlayError;
 use crate::slay::errors::SlayResult;
-use crate::slay::game_context;
+
 use crate::slay::game_context::GameBookKeeping;
 use crate::slay::ids;
 use crate::slay::showdown::common::ChallengeReason;
 use crate::slay::showdown::common::Roll;
 use crate::slay::showdown::completion::CompletionTracker;
 use crate::slay::showdown::completion::RollCompletion;
-use crate::slay::showdown::consequences;
+
 use crate::slay::showdown::consequences::Condition;
 use crate::slay::showdown::consequences::RollConsequence;
 use crate::slay::showdown::consequences::RollConsequences;
@@ -44,7 +44,7 @@ pub struct AddTasks {
 
 impl PlayerTask for AddTasks {
 	fn make_progress(
-		&mut self, context: &mut GameBookKeeping, game: &mut Game, player_index: ids::PlayerIndex,
+		&mut self, _context: &mut GameBookKeeping, game: &mut Game, player_index: ids::PlayerIndex,
 	) -> SlayResult<TaskProgressResult> {
 		game.players[player_index]
 			.tasks
@@ -58,7 +58,7 @@ impl PlayerTask for AddTasks {
 }
 
 fn create_roll_for_ability_task(
-	context: &mut GameBookKeeping, game: &Game, player_index: ids::PlayerIndex, card: &Card,
+	_context: &mut GameBookKeeping, _game: &Game, _player_index: ids::PlayerIndex, _card: &Card,
 ) -> DoRollTask {
 	todo!();
 	// let condition = card
@@ -141,7 +141,7 @@ fn create_place_hero_choice(
 }
 
 fn create_place_item_choice(locator: choices::ChoiceLocator, card: &Card) -> TasksChoice {
-	let player_index = locator.player_index;
+	let _player_index = locator.player_index;
 	TasksChoice::new(
 		choices::ChoiceInformation::new(
 			locator.to_owned(),
@@ -170,7 +170,7 @@ struct PlaceItemTask {
 
 impl PlayerTask for PlaceItemTask {
 	fn make_progress(
-		&mut self, _context: &mut GameBookKeeping, _game: &mut Game, player_index: ids::PlayerIndex,
+		&mut self, _context: &mut GameBookKeeping, _game: &mut Game, _player_index: ids::PlayerIndex,
 	) -> SlayResult<TaskProgressResult> {
 		log::info!("TODO: Implement placing an item card...");
 		Ok(TaskProgressResult::TaskComplete)
@@ -182,7 +182,7 @@ impl PlayerTask for PlaceItemTask {
 }
 
 fn create_cast_magic_choice(locator: choices::ChoiceLocator, card: &Card) -> TasksChoice {
-	let player_index = locator.player_index;
+	let _player_index = locator.player_index;
 	TasksChoice::new(
 		choices::ChoiceInformation::new(
 			locator.to_owned(),
@@ -214,7 +214,7 @@ struct CastMagicTask {
 
 impl PlayerTask for CastMagicTask {
 	fn make_progress(
-		&mut self, _context: &mut GameBookKeeping, _game: &mut Game, player_index: ids::PlayerIndex,
+		&mut self, _context: &mut GameBookKeeping, _game: &mut Game, _player_index: ids::PlayerIndex,
 	) -> SlayResult<TaskProgressResult> {
 		log::info!("TODO: Implement casting a magic card...");
 		Ok(TaskProgressResult::TaskComplete)
@@ -307,7 +307,7 @@ impl PlayerTask for DrawTask {
 }
 
 fn create_replace_hand_choice(locator: ChoiceLocator) -> TasksChoice {
-	let player_index = locator.player_index;
+	let _player_index = locator.player_index;
 	TasksChoice::new(
 		ChoiceInformation::new(
 			locator.to_owned(),
@@ -380,7 +380,7 @@ fn create_use_ability_task(
 }
 
 fn create_roll_for_ability_choice(
-	context: &mut GameBookKeeping, game: &Game, locator: choices::ChoiceLocator, card: &Card,
+	_context: &mut GameBookKeeping, _game: &Game, _locator: choices::ChoiceLocator, _card: &Card,
 ) -> TasksChoice {
 	todo!();
 	// let player_index = locator.player_index;
@@ -576,7 +576,7 @@ impl UseAbility {
 }
 impl PlayerTask for UseAbility {
 	fn make_progress(
-		&mut self, _context: &mut GameBookKeeping, _game: &mut Game, player_index: ids::PlayerIndex,
+		&mut self, _context: &mut GameBookKeeping, _game: &mut Game, _player_index: ids::PlayerIndex,
 	) -> SlayResult<TaskProgressResult> {
 		log::info!("TODO: Implement using a hero ability.");
 		Ok(TaskProgressResult::TaskComplete)
@@ -621,7 +621,7 @@ impl OfferChallengesTask {
 }
 impl PlayerTask for OfferChallengesTask {
 	fn make_progress(
-		&mut self, context: &mut GameBookKeeping, game: &mut Game, player_index: ids::PlayerIndex,
+		&mut self, context: &mut GameBookKeeping, game: &mut Game, _player_index: ids::PlayerIndex,
 	) -> SlayResult<tasks::TaskProgressResult> {
 		log::info!("making progress");
 		if let Some(mut offer) = self.offer.take() {
@@ -657,7 +657,7 @@ impl DoRollTask {
 }
 impl PlayerTask for DoRollTask {
 	fn make_progress(
-		&mut self, context: &mut GameBookKeeping, game: &mut Game, player_index: ids::PlayerIndex,
+		&mut self, context: &mut GameBookKeeping, game: &mut Game, _player_index: ids::PlayerIndex,
 	) -> SlayResult<tasks::TaskProgressResult> {
 		if let Some(mut roll) = self.roll.take() {
 			roll.completion_tracker = Some(CompletionTracker::new(
@@ -682,7 +682,7 @@ pub struct CardUsedTask {
 }
 
 impl CardUsedTask {
-	pub fn new(player_index: ids::PlayerIndex, card_id: ids::CardId) -> Self {
+	pub fn new(_player_index: ids::PlayerIndex, card_id: ids::CardId) -> Self {
 		Self { card_id }
 	}
 }

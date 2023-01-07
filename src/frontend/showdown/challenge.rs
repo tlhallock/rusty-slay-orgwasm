@@ -14,7 +14,7 @@ use crate::frontend::stack::ExtraSpecProps;
 use crate::slay::showdown::challenge::ChallengePerspective;
 use crate::slay::showdown::challenge::ChallengeRollPerspective;
 use crate::slay::showdown::common::ChallengeReason;
-use crate::slay::state::stack::CardSpecPerspective;
+
 
 #[function_component(ChallengeDescription)]
 pub fn view_challenge_description(props: &ChallengeModalProps) -> Html {

@@ -36,10 +36,7 @@ pub fn initialize_empty_game(context: &mut GameBookKeeping, game: &mut Game) {
 fn find_hero_card(deck: &Deck) -> Option<ids::CardId> {
 	deck
 		.iter()
-		.filter(|stack| match stack.top.spec.card_type {
-			CardType::Hero(_) => true,
-			_ => false,
-		})
+		.filter(|stack| matches!(stack.top.spec.card_type, CardType::Hero(_)))
 		.map(|stack| stack.top.id)
 		.next()
 }

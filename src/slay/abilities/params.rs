@@ -192,7 +192,7 @@ pub struct ClearParamsTask {}
 
 impl PlayerTask for ClearParamsTask {
 	fn make_progress(
-		&mut self, context: &mut GameBookKeeping, game: &mut Game, player_index: ids::PlayerIndex,
+		&mut self, _context: &mut GameBookKeeping, game: &mut Game, player_index: ids::PlayerIndex,
 	) -> SlayResult<TaskProgressResult> {
 		game.players[player_index].tasks.clear_params();
 		Ok(TaskProgressResult::TaskComplete)

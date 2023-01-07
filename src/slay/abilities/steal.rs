@@ -1,10 +1,10 @@
-use crate::slay::choices::ChoiceDisplay;
-use crate::slay::choices::ChoiceInformation;
-use crate::slay::choices::ChoiceLocator;
-use crate::slay::choices::Choices;
+
+
+
+
 use crate::slay::choices::DisplayPath;
-use crate::slay::choices::TasksChoice;
-use crate::slay::deadlines;
+
+
 use crate::slay::errors::SlayError;
 use crate::slay::errors::SlayResult;
 use crate::slay::game_context::GameBookKeeping;
@@ -27,7 +27,7 @@ pub struct StealTask {
 
 impl PlayerTask for StealTask {
 	fn make_progress(
-		&mut self, _context: &mut GameBookKeeping, game: &mut Game, player_index: ids::PlayerIndex,
+		&mut self, _context: &mut GameBookKeeping, game: &mut Game, _player_index: ids::PlayerIndex,
 	) -> SlayResult<TaskProgressResult> {
 		game.players[self.thief_index].tasks.prepend_from(&mut vec![
 			Box::new(ChoosePlayerParameterTask {
@@ -62,7 +62,7 @@ pub struct StealFromTask {
 
 impl PlayerTask for StealFromTask {
 	fn make_progress(
-		&mut self, context: &mut GameBookKeeping, game: &mut Game, stealer_index: ids::PlayerIndex,
+		&mut self, _context: &mut GameBookKeeping, game: &mut Game, stealer_index: ids::PlayerIndex,
 	) -> SlayResult<TaskProgressResult> {
 		if let Some(victim_player_index) = game.players[stealer_index]
 			.tasks
@@ -111,7 +111,7 @@ pub struct StealCardFromTask {
 
 impl PlayerTask for StealCardFromTask {
 	fn make_progress(
-		&mut self, context: &mut GameBookKeeping, game: &mut Game, stealer_index: ids::PlayerIndex,
+		&mut self, _context: &mut GameBookKeeping, game: &mut Game, stealer_index: ids::PlayerIndex,
 	) -> SlayResult<TaskProgressResult> {
 		let victim_player_index = game.players[stealer_index]
 			.tasks

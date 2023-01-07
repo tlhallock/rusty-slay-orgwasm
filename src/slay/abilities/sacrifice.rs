@@ -6,7 +6,7 @@ use crate::slay::choices::DisplayArrow;
 use crate::slay::choices::DisplayPath;
 use crate::slay::choices::TasksChoice;
 use crate::slay::deadlines;
-use crate::slay::errors::SlayError;
+
 use crate::slay::errors::SlayResult;
 use crate::slay::game_context::GameBookKeeping;
 use crate::slay::ids;
@@ -14,7 +14,7 @@ use crate::slay::state::deck::DeckPath;
 use crate::slay::state::game::Game;
 use crate::slay::tasks::MoveCardTask;
 use crate::slay::tasks::PlayerTask;
-use crate::slay::tasks::TaskParamName;
+
 use crate::slay::tasks::TaskProgressResult;
 
 #[derive(Debug, Clone)]

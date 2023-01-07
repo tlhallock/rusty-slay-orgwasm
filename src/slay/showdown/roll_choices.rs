@@ -8,7 +8,7 @@ use crate::slay::state::deck::DeckPath;
 use crate::slay::state::game::Game;
 use crate::slay::state::stack::Card;
 use crate::slay::tasks::{MoveCardTask, PlayerTask, TaskProgressResult};
-use crate::slay::{deadlines, game_context};
+use crate::slay::{deadlines};
 
 use super::common::{
 	ModificationPath, RollModification, RollModificationChoice, RollModificationChoiceType,

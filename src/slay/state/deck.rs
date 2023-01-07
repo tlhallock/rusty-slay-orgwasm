@@ -1,28 +1,24 @@
-use crate::slay::choices::DisplayPath;
+
 // use super::ids::{CardId, ChallengeId, ChoiceId, DeckId, ElementId, IdGenerator, PlayerId, RollId};
-use crate::slay::choices;
+
 use crate::slay::choices::ChoiceAssociation;
 use crate::slay::choices::ChoicesPerspective;
 use crate::slay::errors;
-use crate::slay::game_context;
 use crate::slay::ids;
-use crate::slay::modifiers;
-use crate::slay::modifiers::PlayerBuffs;
-use crate::slay::showdown::current_showdown::CurrentShowdown;
 use crate::slay::specification;
-use crate::slay::specification::CardSpec;
 use crate::slay::specification::CardType;
 use crate::slay::state::player::Player;
-use crate::slay::tasks::PlayerTask;
-use crate::slay::tasks::PlayerTasks;
 use crate::slay::visibility::Perspective;
 use crate::slay::visibility::Visibility;
-use std::io::Write;
-
 use crate::slay::specification::HeroType;
-use crate::slay::tasks;
+use crate::slay::errors::SlayResult;
+use crate::slay::state::stack::Card;
+use crate::slay::state::stack::Stack;
+use crate::slay::state::stack::StackPerspective;
+use crate::slay::state::summarizable::Summarizable;
 
-use errors::SlayResult;
+
+use std::io::Write;
 
 use std::collections::HashSet;
 use std::collections::VecDeque;
@@ -33,11 +29,6 @@ use std::io::BufWriter;
 use std::ops::RangeBounds;
 
 use std::iter::Iterator;
-
-use super::stack::Card;
-use super::stack::Stack;
-use super::stack::StackPerspective;
-use super::summarizable::Summarizable;
 
 // Lol, tried of looking for the deck by id...
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
@@ -228,7 +219,7 @@ impl Summarizable for Deck {
 				stack.summarize(f, indentation_level + 1)?;
 			}
 		}
-		write!(f, "\n")?;
+		writeln!(f)?;
 		Ok(())
 	}
 }

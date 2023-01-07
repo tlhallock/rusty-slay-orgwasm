@@ -15,7 +15,7 @@ use crate::slay::showdown::consequences::Comparison;
 use crate::slay::showdown::consequences::Condition;
 use crate::slay::showdown::roll_state::RollPerspective;
 use crate::slay::showdown::roll_state::RollReason;
-use crate::slay::state::stack::CardSpecPerspective;
+
 
 #[derive(Properties, PartialEq)]
 pub struct SimplerRollModalProps {

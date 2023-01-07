@@ -1,18 +1,18 @@
-use rand::Rng;
 
-use crate::slay::choices::ChoiceDisplay;
-use crate::slay::choices::ChoiceInformation;
-use crate::slay::choices::ChoiceLocator;
-use crate::slay::choices::Choices;
-use crate::slay::choices::DisplayPath;
-use crate::slay::choices::TasksChoice;
-use crate::slay::deadlines;
-use crate::slay::errors::SlayError;
+
+
+
+
+
+
+
+
+
 use crate::slay::errors::SlayResult;
 use crate::slay::game_context::GameBookKeeping;
 use crate::slay::ids;
 use crate::slay::state::game::Game;
-use crate::slay::tasks::MoveCardTask;
+
 use crate::slay::tasks::PlayerTask;
 use crate::slay::tasks::TaskParamName;
 use crate::slay::tasks::TaskProgressResult;
@@ -26,7 +26,7 @@ pub enum Ability {
 }
 
 pub fn do_hero_ability(
-	context: &mut GameBookKeeping, game: &mut Game, player_index: ids::PlayerIndex, ability: Ability,
+	_context: &mut GameBookKeeping, _game: &mut Game, _player_index: ids::PlayerIndex, ability: Ability,
 ) -> Vec<Box<dyn PlayerTask>> {
 	match ability {
 		// Plundering Puma
@@ -202,7 +202,7 @@ impl PlayerTask for VictimDraws {
 		let victim_index = game.players[player_index]
 			.tasks
 			.get_player_value(&self.param_name);
-		if let Some(victim_index) = victim_index {
+		if let Some(_victim_index) = victim_index {
 			game.replentish_for(self.number_to_draw);
 			game.players[player_index]
 				.hand
