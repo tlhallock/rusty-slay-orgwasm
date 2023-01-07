@@ -39,7 +39,6 @@
 // 	Index,
 // }
 
-
 // // Split into choice type?
 // // #[derive(Debug, Clone)]
 // // pub enum Action {
@@ -52,5 +51,3 @@
 // //     CastMagic(ids::CardId),
 // //     UseHero(ids::CardId),
 // // }
-
-

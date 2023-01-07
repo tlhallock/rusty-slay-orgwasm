@@ -20,8 +20,6 @@ use super::params::ChooseCardParameterTask;
 use super::params::ChoosePlayerParameterTask;
 use super::params::ClearParamsTask;
 
-
-
 #[derive(Clone, Debug)]
 pub struct StealTask {
 	pub thief_index: ids::PlayerIndex,
@@ -29,8 +27,7 @@ pub struct StealTask {
 
 impl PlayerTask for StealTask {
 	fn make_progress(
-		&mut self, _context: &mut GameBookKeeping, 
-		game: &mut Game, player_index: ids::PlayerIndex
+		&mut self, _context: &mut GameBookKeeping, game: &mut Game, player_index: ids::PlayerIndex,
 	) -> SlayResult<TaskProgressResult> {
 		game.players[self.thief_index].tasks.prepend_from(&mut vec![
 			Box::new(ChoosePlayerParameterTask {
@@ -42,14 +39,13 @@ impl PlayerTask for StealTask {
 			// I guess it should just be renamed to 'choose card from player's party' or smh...
 			// Could be from DeckPath...
 			Box::new(StealFromTask {
-        victim_param: TaskParamName::PlayerToStealFrom,
+				victim_param: TaskParamName::PlayerToStealFrom,
 			}) as Box<dyn PlayerTask>,
 			Box::new(StealCardFromTask {
-        victim_param: TaskParamName::PlayerToStealFrom,
-        card_param: TaskParamName::CardToSteal,
+				victim_param: TaskParamName::PlayerToStealFrom,
+				card_param: TaskParamName::CardToSteal,
 			}) as Box<dyn PlayerTask>,
-			Box::new(ClearParamsTask {
-			}) as Box<dyn PlayerTask>,
+			Box::new(ClearParamsTask {}) as Box<dyn PlayerTask>,
 		]);
 		Ok(TaskProgressResult::TaskComplete)
 	}
@@ -61,13 +57,12 @@ impl PlayerTask for StealTask {
 
 #[derive(Clone, Debug)]
 pub struct StealFromTask {
-  victim_param: TaskParamName,
+	victim_param: TaskParamName,
 }
 
 impl PlayerTask for StealFromTask {
 	fn make_progress(
-		&mut self, context: &mut GameBookKeeping, game: &mut Game,
-		stealer_index: ids::PlayerIndex
+		&mut self, context: &mut GameBookKeeping, game: &mut Game, stealer_index: ids::PlayerIndex,
 	) -> SlayResult<TaskProgressResult> {
 		if let Some(victim_player_index) = game.players[stealer_index]
 			.tasks
@@ -104,23 +99,19 @@ impl PlayerTask for StealFromTask {
 	}
 
 	fn label(&self) -> String {
-		format!(
-			"Player is stealing a card from a specific individual.",
-		)
+		format!("Player is stealing a card from a specific individual.",)
 	}
 }
 
-
 #[derive(Clone, Debug)]
 pub struct StealCardFromTask {
-  victim_param: TaskParamName,
-  card_param: TaskParamName,
+	victim_param: TaskParamName,
+	card_param: TaskParamName,
 }
 
 impl PlayerTask for StealCardFromTask {
 	fn make_progress(
-		&mut self, context: &mut GameBookKeeping, game: &mut Game,
-		stealer_index: ids::PlayerIndex,
+		&mut self, context: &mut GameBookKeeping, game: &mut Game, stealer_index: ids::PlayerIndex,
 	) -> SlayResult<TaskProgressResult> {
 		let victim_player_index = game.players[stealer_index]
 			.tasks
@@ -149,9 +140,6 @@ impl PlayerTask for StealCardFromTask {
 	}
 
 	fn label(&self) -> String {
-		format!(
-			"Player is stealing a card from a specific individual.",
-		)
+		format!("Player is stealing a card from a specific individual.",)
 	}
 }
-

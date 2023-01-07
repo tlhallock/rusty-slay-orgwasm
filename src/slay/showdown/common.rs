@@ -1,4 +1,8 @@
-use crate::slay::{ids, specification::CardSpec, state::{game::Game, stack::CardSpecPerspective}};
+use crate::slay::{
+	ids,
+	specification::CardSpec,
+	state::{game::Game, stack::CardSpecPerspective},
+};
 use rand::Rng;
 
 use super::completion::RollCompletion;
@@ -41,7 +45,6 @@ pub struct RollModification {
 	pub modification_amount: i32,
 }
 
-
 impl RollModification {
 	pub fn to_perspective(&self, game: &Game) -> ModificationPerspective {
 		let modifying_card = game.card(self.card_id).unwrap();
@@ -53,8 +56,6 @@ impl RollModification {
 		}
 	}
 }
-
-
 
 #[derive(Debug, PartialEq, Clone)]
 pub enum RollModificationChoiceType {
@@ -79,9 +80,6 @@ pub struct RollModificationChoice {
 	pub choice_id: ids::ChoiceId,
 	pub choice_type: RollModificationChoiceType,
 }
-
-
-
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct ModificationPerspective {

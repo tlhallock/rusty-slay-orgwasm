@@ -56,16 +56,13 @@ impl Condition {
 }
 
 #[derive(Debug, Clone)]
-pub enum ConsequenceName {
-
-}
+pub enum ConsequenceName {}
 
 #[derive(Debug, Clone)]
 pub struct RollConsequence {
 	pub condition: Condition,
 	pub tasks: Vec<Box<dyn PlayerTask>>,
 }
-
 
 #[derive(Debug, Clone)]
 pub struct RollConsequences {
@@ -74,11 +71,8 @@ pub struct RollConsequences {
 }
 
 impl RollConsequences {
-	pub fn new(
-		success: RollConsequence,
-		loss: Option<RollConsequence>,
-	) -> Self {
-		Self { success, loss, }
+	pub fn new(success: RollConsequence, loss: Option<RollConsequence>) -> Self {
+		Self { success, loss }
 	}
 
 	pub fn take_tasks_for(&mut self, roll_sum: i32) -> Vec<Box<dyn PlayerTask>> {
@@ -101,10 +95,7 @@ impl RollConsequences {
 	}
 
 	pub(crate) fn apply_roll_sum(
-		&mut self,
-		game: &mut Game,
-		roll_sum: i32,
-		player_index: ids::PlayerIndex
+		&mut self, game: &mut Game, roll_sum: i32, player_index: ids::PlayerIndex,
 	) {
 		game.players.iter_mut().for_each(|p| p.choices = None);
 		// TODO: An extra copy here...

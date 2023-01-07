@@ -13,5 +13,3 @@
 // use crate::slay::visibility::{Perspective, Visibility};
 
 // use std::fmt::Debug;
-
-

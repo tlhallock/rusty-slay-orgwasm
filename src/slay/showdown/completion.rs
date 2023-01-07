@@ -74,16 +74,11 @@ impl CompletionTracker {
 	}
 }
 
-
-
-
-
 #[derive(Debug, PartialEq, Clone)]
 pub struct PlayerCompletionPerspective {
 	pub player_name: String,
 	pub completion: RollCompletion,
 }
-
 
 impl CompletionTracker {
 	pub fn to_perspective(&self, game: &Game) -> Vec<PlayerCompletionPerspective> {

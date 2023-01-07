@@ -1,32 +1,29 @@
+use crate::slay::abilities::discard::Discard;
 use crate::slay::abilities::heros::do_hero_ability;
+use crate::slay::abilities::heros::Ability;
+use crate::slay::abilities::sacrifice::Sacrifice;
+use crate::slay::actions::DrawTask;
 use crate::slay::choices;
 use crate::slay::deadlines;
 use crate::slay::errors;
+use crate::slay::errors::SlayError;
 use crate::slay::errors::SlayResult;
 use crate::slay::game_context;
+use crate::slay::game_context::GameBookKeeping;
 use crate::slay::ids;
 use crate::slay::modifiers;
-use crate::slay::state;
-use crate::slay::game_context::GameBookKeeping;
 use crate::slay::modifiers::PlayerModifier;
+use crate::slay::state;
 use crate::slay::state::game::Game;
-use crate::slay::abilities::discard::Discard;
-use crate::slay::abilities::sacrifice::Sacrifice;
-use crate::slay::abilities::heros::Ability;
-use crate::slay::actions::DrawTask;
-use crate::slay::errors::SlayError;
 
-use std::io::Write;
-use std::io::BufWriter;
 use core::fmt::Debug;
 use std::collections::HashMap;
 use std::collections::VecDeque;
+use std::io::BufWriter;
+use std::io::Write;
 
 use super::state::deck::DeckPath;
 use super::state::summarizable::Summarizable;
-
-
-
 
 // impl TaskSpec {
 
@@ -89,10 +86,7 @@ dyn_clone::clone_trait_object!(PlayerTask);
 
 pub trait PlayerTask: Debug + dyn_clone::DynClone {
 	fn make_progress(
-		&mut self,
-		context: &mut GameBookKeeping,
-		game: &mut Game,
-		player_index: ids::PlayerIndex,
+		&mut self, context: &mut GameBookKeeping, game: &mut Game, player_index: ids::PlayerIndex,
 	) -> SlayResult<TaskProgressResult>;
 
 	fn label(&self) -> String;
@@ -242,16 +236,13 @@ pub struct ReceiveModifier {
 
 impl ReceiveModifier {
 	pub fn new(modifier: PlayerModifier) -> Self {
-		Self {
-			modifier,
-		}
+		Self { modifier }
 	}
 }
 
 impl PlayerTask for ReceiveModifier {
 	fn make_progress(
-		&mut self, _context: &mut GameBookKeeping, game: &mut Game,
-		player_index: ids::PlayerIndex,
+		&mut self, _context: &mut GameBookKeeping, game: &mut Game, player_index: ids::PlayerIndex,
 	) -> SlayResult<TaskProgressResult> {
 		game.players[player_index]
 			.buffs
@@ -260,10 +251,7 @@ impl PlayerTask for ReceiveModifier {
 	}
 
 	fn label(&self) -> String {
-		format!(
-			"Player is receiving modifier {:?}",
-			self.modifier
-		)
+		format!("Player is receiving modifier {:?}", self.modifier)
 	}
 }
 
@@ -339,8 +327,7 @@ pub struct MoveCardTask {
 
 impl PlayerTask for MoveCardTask {
 	fn make_progress(
-		&mut self, _context: &mut GameBookKeeping, game: &mut Game,
-		player_index: ids::PlayerIndex,
+		&mut self, _context: &mut GameBookKeeping, game: &mut Game, player_index: ids::PlayerIndex,
 	) -> SlayResult<TaskProgressResult> {
 		game.move_card(self.source, self.destination, self.card_id)?;
 		Ok(TaskProgressResult::TaskComplete)
@@ -353,7 +340,6 @@ impl PlayerTask for MoveCardTask {
 	}
 }
 
-
 #[derive(Debug, Clone)]
 pub struct UseAbilityTask {
 	ability: Ability,
@@ -361,11 +347,9 @@ pub struct UseAbilityTask {
 
 impl PlayerTask for UseAbilityTask {
 	fn make_progress(
-		&mut self, context: &mut GameBookKeeping, game: &mut Game,
-		player_index: ids::PlayerIndex,
+		&mut self, context: &mut GameBookKeeping, game: &mut Game, player_index: ids::PlayerIndex,
 	) -> SlayResult<TaskProgressResult> {
-		let hero_tasks = &mut do_hero_ability(
-			context, game, player_index, self.ability);
+		let hero_tasks = &mut do_hero_ability(context, game, player_index, self.ability);
 		game.players[player_index].tasks.prepend_from(hero_tasks);
 		Ok(TaskProgressResult::TaskComplete)
 	}

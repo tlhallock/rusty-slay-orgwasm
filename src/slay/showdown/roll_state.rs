@@ -1,4 +1,6 @@
-use crate::slay::choices::{ChoiceLocator, Choices, TasksChoice, ChoicePerspective, ChoicesPerspective};
+use crate::slay::choices::{
+	ChoiceLocator, ChoicePerspective, Choices, ChoicesPerspective, TasksChoice,
+};
 use crate::slay::deadlines::{self, Timeline};
 
 use crate::slay::game_context::GameBookKeeping;
@@ -9,12 +11,12 @@ use crate::slay::state::stack::CardSpecPerspective;
 
 use super::current_showdown::ShowDown;
 
-use super::common::{ModificationPath, ModificationPerspective};
 use super::common::Roll;
 use super::common::RollModification;
+use super::common::{ModificationPath, ModificationPerspective};
 use super::completion::{CompletionTracker, PlayerCompletionPerspective};
 use super::consequences::RollConsequences;
-use super::roll_choices::{create_modify_roll_choice, self};
+use super::roll_choices::{self, create_modify_roll_choice};
 
 // Only the party needs stacks...
 
@@ -94,7 +96,9 @@ impl ShowDown for RollState {
 
 	fn finish(&mut self, _context: &mut GameBookKeeping, game: &mut Game) {
 		let roll_sum = self.calculate_roll_total();
-		self.consequences.apply_roll_sum(game, roll_sum, self.roller_index);
+		self
+			.consequences
+			.apply_roll_sum(game, roll_sum, self.roller_index);
 		// game.players[roll.roller_index].tasks = Some(roll.consequences.take_tasks(roll_sum));
 	}
 }
@@ -155,9 +159,6 @@ pub fn list_modification_choices(
 	//   );
 	choices
 }
-
-
-
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct RollPerspective {

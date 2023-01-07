@@ -14,7 +14,6 @@ use crate::slay::tasks::MoveCardTask;
 use crate::slay::tasks::PlayerTask;
 use crate::slay::tasks::TaskProgressResult;
 
-
 #[derive(Debug, Clone)]
 pub struct Discard {
 	num: u32,
@@ -28,8 +27,7 @@ impl Discard {
 
 impl PlayerTask for Discard {
 	fn make_progress(
-		&mut self, context: &mut GameBookKeeping, game: &mut Game,
-		player_index: ids::PlayerIndex,
+		&mut self, context: &mut GameBookKeeping, game: &mut Game, player_index: ids::PlayerIndex,
 	) -> SlayResult<TaskProgressResult> {
 		if self.num == 0 {
 			return Ok(TaskProgressResult::TaskComplete);
@@ -78,9 +76,6 @@ impl PlayerTask for Discard {
 		Ok(TaskProgressResult::ProgressMade)
 	}
 	fn label(&self) -> String {
-		format!(
-			"Player must discard {} cards",
-			self.num
-		)
+		format!("Player must discard {} cards", self.num)
 	}
 }

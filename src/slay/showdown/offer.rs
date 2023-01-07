@@ -2,7 +2,9 @@ use crate::slay::deadlines::Timeline;
 use crate::slay::game_context::GameBookKeeping;
 use crate::slay::ids;
 
-use crate::slay::choices::{ChoiceLocator, Choices, TasksChoice, ChoicesPerspective, ChoicePerspective};
+use crate::slay::choices::{
+	ChoiceLocator, ChoicePerspective, Choices, ChoicesPerspective, TasksChoice,
+};
 use crate::slay::errors::SlayResult;
 use crate::slay::specification::CardType;
 
@@ -102,15 +104,10 @@ impl ShowDown for OfferChallengesState {
 		}
 	}
 
-	fn finish(
-		&mut self, context: &mut GameBookKeeping,
-		game: &mut Game,
-	) {
+	fn finish(&mut self, context: &mut GameBookKeeping, game: &mut Game) {
 		self.consequences.proceed(context, game, self.player_index);
 	}
 }
-
-
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct OfferChallengesPerspective {

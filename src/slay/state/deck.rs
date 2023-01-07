@@ -1,21 +1,20 @@
-
 use crate::slay::choices::DisplayPath;
 // use super::ids::{CardId, ChallengeId, ChoiceId, DeckId, ElementId, IdGenerator, PlayerId, RollId};
-use crate::slay::ids;
-use crate::slay::modifiers::PlayerBuffs;
-use crate::slay::state::player::Player;
-use crate::slay::specification;
-use crate::slay::specification::CardSpec;
-use crate::slay::specification::CardType;
-use crate::slay::tasks::PlayerTask;
-use crate::slay::tasks::PlayerTasks;
 use crate::slay::choices;
 use crate::slay::choices::ChoiceAssociation;
 use crate::slay::choices::ChoicesPerspective;
 use crate::slay::errors;
 use crate::slay::game_context;
+use crate::slay::ids;
 use crate::slay::modifiers;
+use crate::slay::modifiers::PlayerBuffs;
 use crate::slay::showdown::current_showdown::CurrentShowdown;
+use crate::slay::specification;
+use crate::slay::specification::CardSpec;
+use crate::slay::specification::CardType;
+use crate::slay::state::player::Player;
+use crate::slay::tasks::PlayerTask;
+use crate::slay::tasks::PlayerTasks;
 use crate::slay::visibility::Perspective;
 use crate::slay::visibility::Visibility;
 use std::io::Write;
@@ -39,8 +38,6 @@ use super::stack::Card;
 use super::stack::Stack;
 use super::stack::StackPerspective;
 use super::summarizable::Summarizable;
-
-
 
 // Lol, tried of looking for the deck by id...
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
@@ -82,7 +79,6 @@ impl Deck {
 			spec,
 		}
 	}
-
 
 	pub fn to_perspective(
 		&self, perspective: &Perspective, player: Option<&Player>, choices: &Option<ChoicesPerspective>,
@@ -210,8 +206,6 @@ impl Deck {
 	}
 }
 
-
-
 impl Summarizable for Deck {
 	fn summarize<W: Write>(
 		&self, f: &mut BufWriter<W>, indentation_level: u32,
@@ -238,10 +232,6 @@ impl Summarizable for Deck {
 		Ok(())
 	}
 }
-
-
-
-
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct DeckPerspective {

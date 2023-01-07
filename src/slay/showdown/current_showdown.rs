@@ -299,9 +299,7 @@ pub trait ShowDown: Debug + dyn_clone::DynClone {
 
 	fn finish(&mut self, _context: &mut GameBookKeeping, game: &mut Game);
 
-	fn assign_all_choices(
-		&self, context: &mut GameBookKeeping, game: &mut Game,
-	) {
+	fn assign_all_choices(&self, context: &mut GameBookKeeping, game: &mut Game) {
 		let nb_players = game.number_of_players();
 		for player_index in 0..nb_players {
 			let choices = Some(self.create_choice_for(context, game, player_index));

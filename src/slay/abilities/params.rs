@@ -14,8 +14,6 @@ use crate::slay::tasks::PlayerTask;
 use crate::slay::tasks::TaskParamName;
 use crate::slay::tasks::TaskProgressResult;
 
-
-
 #[derive(Clone, Debug)]
 pub struct CardChoiceInformation {
 	pub card_id: ids::CardId,
@@ -32,8 +30,7 @@ pub struct ChooseCardParameterTask {
 
 impl PlayerTask for ChooseCardParameterTask {
 	fn make_progress(
-		&mut self, context: &mut GameBookKeeping, game: &mut Game,
-		chooser_index: ids::PlayerIndex
+		&mut self, context: &mut GameBookKeeping, game: &mut Game, chooser_index: ids::PlayerIndex,
 	) -> SlayResult<TaskProgressResult> {
 		game.players[chooser_index].choices = Some(Choices {
 			options: self
@@ -55,9 +52,10 @@ impl PlayerTask for ChooseCardParameterTask {
 								roll_modification_choice: None,
 							},
 						},
-						vec![Box::new(
-							SetParameterTask::set_card(self.param_name, card_choice.card_id)
-					) as Box<dyn PlayerTask>],
+						vec![Box::new(SetParameterTask::set_card(
+							self.param_name,
+							card_choice.card_id,
+						)) as Box<dyn PlayerTask>],
 					)
 				})
 				.collect(),
@@ -69,10 +67,7 @@ impl PlayerTask for ChooseCardParameterTask {
 	}
 
 	fn label(&self) -> String {
-		format!(
-			"Player is choosing a player: '{}'",
-			self.instructions
-		)
+		format!("Player is choosing a player: '{}'", self.instructions)
 	}
 }
 
@@ -85,8 +80,7 @@ pub struct ChoosePlayerParameterTask {
 
 impl PlayerTask for ChoosePlayerParameterTask {
 	fn make_progress(
-		&mut self, context: &mut GameBookKeeping, game: &mut Game,
-		player_index: ids::PlayerIndex,
+		&mut self, context: &mut GameBookKeeping, game: &mut Game, player_index: ids::PlayerIndex,
 	) -> SlayResult<TaskProgressResult> {
 		game.players[player_index].choices = Some(Choices {
 			options: (0..game.number_of_players())
@@ -107,9 +101,10 @@ impl PlayerTask for ChoosePlayerParameterTask {
 								roll_modification_choice: None,
 							},
 						},
-						vec![Box::new(
-							SetParameterTask::set_player(self.param_name, victim_index)
-						) as Box<dyn PlayerTask>],
+						vec![
+							Box::new(SetParameterTask::set_player(self.param_name, victim_index))
+								as Box<dyn PlayerTask>,
+						],
 					)
 				})
 				.collect(),
@@ -121,10 +116,7 @@ impl PlayerTask for ChoosePlayerParameterTask {
 	}
 
 	fn label(&self) -> String {
-		format!(
-			"Player is choosing a player: '{}'",
-			self.instructions
-		)
+		format!("Player is choosing a player: '{}'", self.instructions)
 	}
 }
 
@@ -196,23 +188,17 @@ impl PlayerTask for SetParameterTask {
 }
 
 #[derive(Clone, Debug)]
-pub struct ClearParamsTask {
-}
+pub struct ClearParamsTask {}
 
 impl PlayerTask for ClearParamsTask {
 	fn make_progress(
-		&mut self, context: &mut GameBookKeeping, game: &mut Game,
-		player_index: ids::PlayerIndex,
+		&mut self, context: &mut GameBookKeeping, game: &mut Game, player_index: ids::PlayerIndex,
 	) -> SlayResult<TaskProgressResult> {
 		game.players[player_index].tasks.clear_params();
 		Ok(TaskProgressResult::TaskComplete)
 	}
 
 	fn label(&self) -> String {
-		format!(
-			"Clearing a players task parameter state.",
-		)
+		format!("Clearing a players task parameter state.",)
 	}
 }
-
-

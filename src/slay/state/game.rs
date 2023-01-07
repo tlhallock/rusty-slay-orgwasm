@@ -1,4 +1,3 @@
-
 use crate::slay::choices;
 use crate::slay::choices::ChoicesPerspective;
 use crate::slay::choices::DisplayPath;
@@ -40,9 +39,6 @@ use super::player::Player;
 use super::player::PlayerPerspective;
 use super::stack::Card;
 use super::summarizable::Summarizable;
-
-
-
 
 #[derive(Debug, Default, Clone, PartialEq)]
 pub struct Turn {
@@ -334,8 +330,6 @@ impl Game {
 	}
 }
 
-
-
 // Summarize the roll...
 impl Summarizable for Game {
 	fn summarize<W: Write>(
@@ -356,11 +350,6 @@ impl Summarizable for Game {
 		Ok(())
 	}
 }
-
-
-
-
-
 
 pub fn get_perspective(owner_id: ids::PlayerId, player_id: ids::PlayerId) -> &'static Perspective {
 	if owner_id == player_id {
@@ -417,9 +406,6 @@ impl Game {
 		}
 	}
 }
-
-
-
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct GamePerspective {

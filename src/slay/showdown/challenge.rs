@@ -1,4 +1,4 @@
-use crate::slay::choices::{Choices, DisplayPath, ChoicesPerspective, ChoicePerspective};
+use crate::slay::choices::{ChoicePerspective, Choices, ChoicesPerspective, DisplayPath};
 
 use crate::slay::deadlines::Timeline;
 use crate::slay::game_context::GameBookKeeping;
@@ -7,9 +7,9 @@ use crate::slay::{deadlines, game_context, ids};
 
 use crate::slay::showdown::common::Roll;
 
-use super::common::{ RollModification, ModificationPerspective};
-use super::common::{ModificationPath };
-use super::common::{ChallengeReason};
+use super::common::ChallengeReason;
+use super::common::ModificationPath;
+use super::common::{ModificationPerspective, RollModification};
 use super::completion::{CompletionTracker, PlayerCompletionPerspective};
 use super::consequences::RollConsequences;
 use super::roll_state::list_modification_choices;
@@ -118,13 +118,11 @@ impl ShowDown for ChallengeState {
 
 	fn finish(&mut self, _context: &mut GameBookKeeping, game: &mut Game) {
 		let roll_sum = self.calculate_roll_total();
-		self.consequences.apply_roll_sum(game, roll_sum, self.initiator.player_index);
+		self
+			.consequences
+			.apply_roll_sum(game, roll_sum, self.initiator.player_index);
 	}
 }
-
-
-
-
 
 impl ChallengeRoll {
 	pub fn to_perspective(
@@ -155,7 +153,6 @@ impl ChallengeRoll {
 		}
 	}
 }
-
 
 impl ChallengeState {
 	pub fn to_perspective(
@@ -193,10 +190,6 @@ impl ChallengeState {
 	}
 }
 
-
-
-
-
 #[derive(Debug, PartialEq, Clone)]
 pub struct ChallengePerspective {
 	pub initiator: ChallengeRollPerspective,
@@ -209,8 +202,6 @@ pub struct ChallengePerspective {
 	pub roll_total: i32,
 }
 
-
-
 #[derive(Debug, PartialEq, Clone)]
 pub struct ChallengeRollPerspective {
 	id: ids::RollId,
@@ -220,4 +211,3 @@ pub struct ChallengeRollPerspective {
 	pub roll_total: i32,
 	pub choices: Vec<ChoicePerspective>,
 }
-

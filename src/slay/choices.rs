@@ -167,8 +167,6 @@ impl TasksChoice {
 // impl Choice for TasksChoice {
 // }
 
-
-
 impl Choices {
 	pub fn to_perspective(&self, game: &Game) -> ChoicesPerspective {
 		ChoicesPerspective {
@@ -193,11 +191,6 @@ impl Choices {
 		}
 	}
 }
-
-
-
-
-
 
 #[derive(Debug, PartialEq, Clone)]
 pub enum ChoiceAssociationType {
@@ -256,7 +249,9 @@ impl ChoiceAssociation {
 		ret
 	}
 
-	pub fn create_from_choices(choices: &Option<ChoicesPerspective>, id: ids::ElementId) -> Vec<Self> {
+	pub fn create_from_choices(
+		choices: &Option<ChoicesPerspective>, id: ids::ElementId,
+	) -> Vec<Self> {
 		if let Some(choices2) = choices {
 			return choices2
 				.actions
@@ -267,9 +262,6 @@ impl ChoiceAssociation {
 		vec![]
 	}
 }
-
-
-
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct ChoicePerspective {

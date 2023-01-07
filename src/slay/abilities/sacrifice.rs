@@ -10,14 +10,12 @@ use crate::slay::errors::SlayError;
 use crate::slay::errors::SlayResult;
 use crate::slay::game_context::GameBookKeeping;
 use crate::slay::ids;
+use crate::slay::state::deck::DeckPath;
 use crate::slay::state::game::Game;
 use crate::slay::tasks::MoveCardTask;
 use crate::slay::tasks::PlayerTask;
 use crate::slay::tasks::TaskParamName;
 use crate::slay::tasks::TaskProgressResult;
-use crate::slay::state::deck::DeckPath;
-
-
 
 #[derive(Debug, Clone)]
 pub struct Sacrifice {
@@ -36,8 +34,7 @@ impl Sacrifice {
 
 impl PlayerTask for Sacrifice {
 	fn make_progress(
-		&mut self, context: &mut GameBookKeeping, game: &mut Game,
-		player_index: ids::PlayerIndex,
+		&mut self, context: &mut GameBookKeeping, game: &mut Game, player_index: ids::PlayerIndex,
 	) -> SlayResult<TaskProgressResult> {
 		if self.num == 0 {
 			return Ok(TaskProgressResult::TaskComplete);
@@ -56,15 +53,9 @@ impl PlayerTask for Sacrifice {
 						},
 						display: ChoiceDisplay {
 							label: format!("Sacrifice {}.", s.top.label()),
-							highlight: Some(DisplayPath::CardIn(
-								DeckPath::Hand(player_index),
-								s.top.id,
-							)),
+							highlight: Some(DisplayPath::CardIn(DeckPath::Hand(player_index), s.top.id)),
 							arrows: vec![DisplayArrow {
-								source: DisplayPath::CardIn(
-									DeckPath::Hand(player_index),
-									s.top.id,
-								),
+								source: DisplayPath::CardIn(DeckPath::Hand(player_index), s.top.id),
 								destination: DisplayPath::DeckAt(DeckPath::Discard),
 							}],
 							roll_modification_choice: None,
@@ -103,8 +94,6 @@ impl PlayerTask for Sacrifice {
 	}
 
 	fn label(&self) -> String {
-		format!(
-			"Player is sacrificing {} heros.", self.num
-		)
+		format!("Player is sacrificing {} heros.", self.num)
 	}
 }

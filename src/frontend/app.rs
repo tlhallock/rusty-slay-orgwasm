@@ -2,11 +2,11 @@ use std::collections::VecDeque;
 
 use yew::Callback;
 
-use crate::slay::state::game::{Game, GamePerspective};
 use crate::slay::driver::AdvanceGameResult;
 use crate::slay::game_context::GameBookKeeping;
 use crate::slay::ids;
 use crate::slay::message::Notification;
+use crate::slay::state::game::{Game, GamePerspective};
 use crate::slay::{driver, strategy};
 
 use super::card_modal::CardModalInfo;

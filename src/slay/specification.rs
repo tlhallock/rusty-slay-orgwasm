@@ -23,7 +23,6 @@ use super::visibility::VisibilitySpec;
 
 pub const MAX_TURNS: u32 = 100;
 
-
 #[derive(Debug, Clone)]
 pub struct DeckSpec {
 	pub visibility: VisibilitySpec,
@@ -33,14 +32,12 @@ pub struct DeckSpec {
 #[derive(Debug, Clone)]
 pub struct HeroAbility {
 	pub condition: Condition,
-  pub tasks: Vec<Box<dyn PlayerTask>>,
+	pub tasks: Vec<Box<dyn PlayerTask>>,
 }
-
-
 
 type ActionsCreator = Box<dyn Fn(ids::PlayerIndex) -> Vec<Box<TasksChoice>>>;
 
-#[derive(Debug, Clone, )]
+#[derive(Debug, Clone)]
 pub struct CardSpec {
 	pub card_type: CardType,
 	pub repeat: u32,
@@ -48,13 +45,12 @@ pub struct CardSpec {
 	pub description: String,
 	pub image_path: String,
 
-  // challenge tasks...
+	// challenge tasks...
 	pub monster: Option<MonsterSpec>,
 	pub modifiers: Vec<i32>,
 	pub hero_ability: Option<HeroAbility>,
-
-  // pub hand_actions: ActionsCreator,
-  // pub party_actions: ActionsCreator,
+	// pub hand_actions: ActionsCreator,
+	// pub party_actions: ActionsCreator,
 }
 
 impl Default for CardSpec {
@@ -115,10 +111,9 @@ pub enum MonsterRequirements {
 
 #[derive(Debug, Clone)]
 pub struct MonsterSpec {
-  pub consequences: RollConsequences,
+	pub consequences: RollConsequences,
 	pub requirements: Vec<MonsterRequirements>,
 }
-
 
 // const spec: MonsterSpec = MonsterSpec {
 //   win_condition: Condition { ge: true, threshold: 11 },

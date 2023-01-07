@@ -4,11 +4,11 @@ use crate::slay::game_context::GameBookKeeping;
 use crate::slay::ids;
 use crate::slay::message::Notification;
 use crate::slay::specification;
-use crate::slay::state::stack::Card;
 use crate::slay::state::game::Game;
-use crate::slay::state::summarizable::Summarizable;
 use crate::slay::state::player::Player;
+use crate::slay::state::stack::Card;
 use crate::slay::state::stack::Stack;
+use crate::slay::state::summarizable::Summarizable;
 use crate::slay::tasks::TaskProgressResult;
 use crate::slay::{strategy, tasks};
 

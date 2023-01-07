@@ -10,7 +10,9 @@ use crate::slay::state::stack::Card;
 use crate::slay::tasks::{MoveCardTask, PlayerTask, TaskProgressResult};
 use crate::slay::{deadlines, game_context};
 
-use super::common::{ModificationPath, RollModification, RollModificationChoice, RollModificationChoiceType};
+use super::common::{
+	ModificationPath, RollModification, RollModificationChoice, RollModificationChoiceType,
+};
 use super::completion::{CompletionTracker, RollCompletion};
 use crate::slay::showdown::current_showdown::ShowDown;
 
@@ -20,10 +22,7 @@ pub struct ModifyRollTask {
 	modification_path: ModificationPath,
 }
 impl ModifyRollTask {
-	pub fn new(
-		modification: RollModification,
-		path: ModificationPath,
-	) -> Self {
+	pub fn new(modification: RollModification, path: ModificationPath) -> Self {
 		Self {
 			modification: Some(modification),
 			modification_path: path,
@@ -33,8 +32,7 @@ impl ModifyRollTask {
 
 impl PlayerTask for ModifyRollTask {
 	fn make_progress(
-		&mut self, context: &mut GameBookKeeping, game: &mut Game,
-		player_index: ids::PlayerIndex
+		&mut self, context: &mut GameBookKeeping, game: &mut Game, player_index: ids::PlayerIndex,
 	) -> SlayResult<TaskProgressResult> {
 		let modification = self
 			.modification
@@ -44,10 +42,9 @@ impl PlayerTask for ModifyRollTask {
 		game
 			.showdown
 			.add_modification(self.modification_path, modification)?;
-		let modification_task =
-			game
-				.showdown
-				.get_modification_task(context, game, player_index);
+		let modification_task = game
+			.showdown
+			.get_modification_task(context, game, player_index);
 		modification_task.apply(context, game);
 		Ok(TaskProgressResult::TaskComplete)
 	}
@@ -192,16 +189,13 @@ pub struct SetCompleteTask {
 
 impl SetCompleteTask {
 	pub fn new(persist: RollCompletion) -> Self {
-		Self {
-			persist,
-		}
+		Self { persist }
 	}
 }
 
 impl PlayerTask for SetCompleteTask {
 	fn make_progress(
-		&mut self, _context: &mut GameBookKeeping, game: &mut Game,
-		player_index: ids::PlayerIndex
+		&mut self, _context: &mut GameBookKeeping, game: &mut Game, player_index: ids::PlayerIndex,
 	) -> SlayResult<TaskProgressResult> {
 		game
 			.showdown
@@ -210,9 +204,7 @@ impl PlayerTask for SetCompleteTask {
 		Ok(TaskProgressResult::TaskComplete)
 	}
 	fn label(&self) -> String {
-		format!(
-			"Setting completion to {:?}", self.persist
-		)
+		format!("Setting completion to {:?}", self.persist)
 	}
 }
 
@@ -280,18 +272,16 @@ pub fn create_challenge_choice(
 }
 
 #[derive(Debug, Clone)]
-struct ChallengeTask {
-}
+struct ChallengeTask {}
 impl ChallengeTask {
 	pub fn new() -> Self {
-		Self {
-		}
+		Self {}
 	}
 }
 impl PlayerTask for ChallengeTask {
 	fn make_progress(
 		&mut self, context: &mut GameBookKeeping, game: &mut Game,
-		challenging_player_index: ids::PlayerIndex
+		challenging_player_index: ids::PlayerIndex,
 	) -> SlayResult<TaskProgressResult> {
 		let offer = game.showdown.take_current_offer()?;
 		let mut challenge = offer.to_challenge(&mut context.rng, challenging_player_index)?;

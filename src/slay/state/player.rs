@@ -1,23 +1,22 @@
-
 use crate::slay::choices::ChoiceAssociation;
 use crate::slay::choices::ChoicesPerspective;
 use crate::slay::choices::DisplayPath;
 use crate::slay::specification::DeckSpec;
 use crate::slay::state::deck::Deck;
 // use super::ids::{CardId, ChallengeId, ChoiceId, DeckId, ElementId, IdGenerator, PlayerId, RollId};
+use crate::slay::choices;
+use crate::slay::errors;
+use crate::slay::game_context;
 use crate::slay::ids;
+use crate::slay::modifiers;
 use crate::slay::modifiers::PlayerBuffs;
+use crate::slay::showdown::current_showdown::CurrentShowdown;
 use crate::slay::specification;
 use crate::slay::specification::CardSpec;
 use crate::slay::specification::CardType;
 use crate::slay::state::stack::Card;
 use crate::slay::tasks::PlayerTask;
 use crate::slay::tasks::PlayerTasks;
-use crate::slay::choices;
-use crate::slay::errors;
-use crate::slay::game_context;
-use crate::slay::modifiers;
-use crate::slay::showdown::current_showdown::CurrentShowdown;
 use crate::slay::visibility::Perspective;
 use crate::slay::visibility::VisibilitySpec;
 use std::io::Write;
@@ -41,7 +40,6 @@ use super::deck::DeckPerspective;
 use super::game::Turn;
 use super::stack::CardPerspective;
 use super::summarizable::Summarizable;
-
 
 #[derive(Clone, Debug)]
 pub struct Player {
@@ -155,7 +153,6 @@ impl Player {
 	}
 }
 
-
 impl Summarizable for Player {
 	fn summarize<W: Write>(
 		&self, f: &mut BufWriter<W>, indentation_level: u32,
@@ -176,9 +173,6 @@ impl Summarizable for Player {
 		Ok(())
 	}
 }
-
-
-
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct PlayerPerspective {
