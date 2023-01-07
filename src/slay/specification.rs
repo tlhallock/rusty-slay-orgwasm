@@ -33,14 +33,15 @@ pub struct HeroAbility {
 }
 
 impl HeroAbility {
-  pub fn to_consequences(&self) -> RollConsequences {
-    RollConsequences { 
-      success: RollConsequence {
-        condition: self.condition.to_owned(),
-        tasks: self.tasks.to_vec(),
-      }
-      , loss: None }
-  }
+	pub fn to_consequences(&self) -> RollConsequences {
+		RollConsequences {
+			success: RollConsequence {
+				condition: self.condition.to_owned(),
+				tasks: self.tasks.to_vec(),
+			},
+			loss: None,
+		}
+	}
 }
 
 type ActionsCreator = Box<dyn Fn(ids::PlayerIndex) -> Vec<Box<TasksChoice>>>;

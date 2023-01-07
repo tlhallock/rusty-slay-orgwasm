@@ -62,11 +62,7 @@ fn create_roll_for_ability_task(
 ) -> DoRollTask {
 	DoRollTask::new(RollState::new(
 		player_index,
-		card
-			.hero_ability()
-			.as_ref()
-			.unwrap()
-			.to_consequences(),
+		card.hero_ability().as_ref().unwrap().to_consequences(),
 		Roll::create_from(&mut context.rng),
 		RollReason::UseHeroAbility(CardSpecPerspective::new(&card.spec)),
 	))
@@ -105,11 +101,8 @@ fn create_place_hero_choice(
 								destination: DeckPath::Party(player_index),
 								card_id: card.id,
 							}) as Box<dyn tasks::PlayerTask>,
-							Box::new(create_roll_for_ability_task(
-								context,
-								player_index,
-								card,
-							)) as Box<dyn tasks::PlayerTask>
+							Box::new(create_roll_for_ability_task(context, player_index, card))
+								as Box<dyn tasks::PlayerTask>,
 						],
 					},
 					loss: Some(RollConsequence {
@@ -381,11 +374,7 @@ fn create_roll_for_ability_choice(
 		vec![
 			Box::new(CardUsedTask::new(player_index, card.id)),
 			Box::new(RemoveActionPointsTask::new(1)),
-			Box::new(create_roll_for_ability_task(
-				context,
-				player_index,
-				card,
-			)) as Box<dyn PlayerTask>
+			Box::new(create_roll_for_ability_task(context, player_index, card)) as Box<dyn PlayerTask>,
 		],
 	)
 }
