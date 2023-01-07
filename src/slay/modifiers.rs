@@ -1,5 +1,3 @@
-
-
 use super::state::game::Turn;
 
 #[derive(Debug, Clone, Copy)]

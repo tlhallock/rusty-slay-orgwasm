@@ -16,7 +16,6 @@ use crate::slay::showdown::completion::RollCompletion;
 
 use crate::frontend::icons::DoNot;
 
-
 #[derive(Properties, PartialEq)]
 pub struct CompletionsProps {
 	pub completions: Vec<PlayerCompletionPerspective>,

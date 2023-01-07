@@ -1,6 +1,3 @@
-
-
-
 use std::vec;
 
 use super::abilities::discard::Discard;
@@ -33,6 +30,17 @@ pub struct DeckSpec {
 pub struct HeroAbility {
 	pub condition: Condition,
 	pub tasks: Vec<Box<dyn PlayerTask>>,
+}
+
+impl HeroAbility {
+  pub fn to_consequences(&self) -> RollConsequences {
+    RollConsequences { 
+      success: RollConsequence {
+        condition: self.condition.to_owned(),
+        tasks: self.tasks.to_vec(),
+      }
+      , loss: None }
+  }
 }
 
 type ActionsCreator = Box<dyn Fn(ids::PlayerIndex) -> Vec<Box<TasksChoice>>>;

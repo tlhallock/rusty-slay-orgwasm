@@ -73,7 +73,9 @@ impl CurrentShowdown {
 	// }
 
 	pub fn reset_timer(&mut self) {
-		if let Some(r) = self.current_mut() { r.tracker_mut().reset_timeline() }
+		if let Some(r) = self.current_mut() {
+			r.tracker_mut().reset_timeline()
+		}
 	}
 
 	pub fn get_roll(&self) -> Option<&RollState> {

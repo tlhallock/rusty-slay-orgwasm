@@ -53,7 +53,8 @@ impl OfferChallengesState {
 		ret.extend(
 			game.players[challenging_player_index]
 				.hand
-				.list_top_cards_by_type(&CardType::Challenge).first()
+				.list_top_cards_by_type(&CardType::Challenge)
+				.first()
 				.iter()
 				.map(|card_id| {
 					create_challenge_choice(

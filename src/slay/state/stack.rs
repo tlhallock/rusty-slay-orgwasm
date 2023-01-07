@@ -7,9 +7,9 @@ use crate::slay::specification::CardType;
 use crate::slay::state::player::Player;
 use crate::slay::state::summarizable::Summarizable;
 
-use std::io::Write;
 use std::fmt::Debug;
 use std::io::BufWriter;
+use std::io::Write;
 use std::iter::Iterator;
 
 #[derive(Debug, Clone)]

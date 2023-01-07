@@ -1,30 +1,28 @@
+use crate::slay::choices;
 use crate::slay::choices::ChoiceAssociation;
 use crate::slay::choices::ChoicesPerspective;
-use crate::slay::specification::DeckSpec;
-use crate::slay::state::deck::Deck;
-use crate::slay::choices;
 use crate::slay::errors;
 use crate::slay::ids;
 use crate::slay::modifiers::PlayerBuffs;
 use crate::slay::specification;
+use crate::slay::specification::DeckSpec;
+use crate::slay::specification::HeroType;
+use crate::slay::state::deck::Deck;
+use crate::slay::state::deck::DeckPerspective;
+use crate::slay::state::game::Turn;
 use crate::slay::state::stack::Card;
+use crate::slay::state::stack::CardPerspective;
+use crate::slay::state::summarizable::Summarizable;
+use crate::slay::tasks;
 use crate::slay::tasks::PlayerTasks;
 use crate::slay::visibility::Perspective;
 use crate::slay::visibility::VisibilitySpec;
-use crate::slay::state::deck::DeckPerspective;
-use crate::slay::state::game::Turn;
-use crate::slay::state::stack::CardPerspective;
-use crate::slay::state::summarizable::Summarizable;
-use crate::slay::specification::HeroType;
-use crate::slay::tasks;
-
 
 use std::collections::HashSet;
 use std::fmt::Debug;
-use std::io::Write;
 use std::io::BufWriter;
+use std::io::Write;
 use std::iter::Iterator;
-
 
 #[derive(Clone, Debug)]
 pub struct Player {

@@ -36,10 +36,10 @@ impl Timeline {
 	pub fn completion(&self) -> Option<TimelineCompletion> {
 		let now = chrono::offset::Utc::now();
 		self.compute_deadline().map(|deadline| TimelineCompletion {
-				percent_complete: (now - self.begin_time).num_milliseconds() as f64
-					/ (deadline - self.begin_time).num_milliseconds() as f64,
-				seconds_remaining: (deadline - now).num_milliseconds() as f64 / 1000f64,
-			})
+			percent_complete: (now - self.begin_time).num_milliseconds() as f64
+				/ (deadline - self.begin_time).num_milliseconds() as f64,
+			seconds_remaining: (deadline - now).num_milliseconds() as f64 / 1000f64,
+		})
 	}
 
 	pub(crate) fn reset(&mut self) {

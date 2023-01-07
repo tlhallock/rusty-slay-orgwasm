@@ -1,13 +1,3 @@
-
-
-
-
-
-
-
-
-
-
 use crate::slay::errors::SlayResult;
 use crate::slay::game_context::GameBookKeeping;
 use crate::slay::ids;
@@ -26,7 +16,8 @@ pub enum Ability {
 }
 
 pub fn do_hero_ability(
-	_context: &mut GameBookKeeping, _game: &mut Game, _player_index: ids::PlayerIndex, ability: Ability,
+	_context: &mut GameBookKeeping, _game: &mut Game, _player_index: ids::PlayerIndex,
+	ability: Ability,
 ) -> Vec<Box<dyn PlayerTask>> {
 	match ability {
 		// Plundering Puma

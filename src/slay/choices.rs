@@ -4,7 +4,6 @@ use std::io::Write;
 
 use crate::slay::deadlines::Timeline;
 
-
 use crate::slay::game_context::GameBookKeeping;
 use crate::slay::ids;
 use crate::slay::showdown::common::ModificationPath;

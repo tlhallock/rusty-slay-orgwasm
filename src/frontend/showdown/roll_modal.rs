@@ -16,7 +16,6 @@ use crate::slay::showdown::consequences::Condition;
 use crate::slay::showdown::roll_state::RollPerspective;
 use crate::slay::showdown::roll_state::RollReason;
 
-
 #[derive(Properties, PartialEq)]
 pub struct SimplerRollModalProps {
 	pub roll: RollPerspective,

@@ -58,41 +58,24 @@ impl PlayerTask for AddTasks {
 }
 
 fn create_roll_for_ability_task(
-	_context: &mut GameBookKeeping, _game: &Game, _player_index: ids::PlayerIndex, _card: &Card,
+	context: &mut GameBookKeeping, player_index: ids::PlayerIndex, card: &Card,
 ) -> DoRollTask {
-	todo!();
-	// let condition = card
-	// 	.hero_ability()
-	// 	.as_ref()
-	// 	.unwrap()
-	// 	.success_condition
-	// 	.to_owned();
-	// let use_ability =
-	// 	Box::new(create_use_ability_task(context, game, player_index, card)) as Box<dyn PlayerTask>;
-	// DoRollTask::new(RollState::new(
-	// 	player_index,
-	// 	RollConsequences::new(
-	// 		player_index,
-	// 		vec![RollConsequenceRenameMe {
-	// 			condition,
-	// 			tasks: card.ability.tasks.clone(),
-	// 		}],
-	// 	),
-	// 	Roll::create_from(&mut context.rng),
-	// 	RollReason::UseHeroAbility(card.spec.to_owned()),
-	// ))
+	DoRollTask::new(RollState::new(
+		player_index,
+		card
+			.hero_ability()
+			.as_ref()
+			.unwrap()
+			.to_consequences(),
+		Roll::create_from(&mut context.rng),
+		RollReason::UseHeroAbility(CardSpecPerspective::new(&card.spec)),
+	))
 }
 
 fn create_place_hero_choice(
 	context: &mut GameBookKeeping, game: &Game, locator: choices::ChoiceLocator, card: &Card,
 ) -> TasksChoice {
 	let player_index = locator.player_index;
-	let roll_for_ability = Box::new(create_roll_for_ability_task(
-		context,
-		game,
-		player_index,
-		card,
-	)) as Box<dyn tasks::PlayerTask>;
 	TasksChoice::new(
 		choices::ChoiceInformation::new(
 			locator,
@@ -122,7 +105,11 @@ fn create_place_hero_choice(
 								destination: DeckPath::Party(player_index),
 								card_id: card.id,
 							}) as Box<dyn tasks::PlayerTask>,
-							roll_for_ability,
+							Box::new(create_roll_for_ability_task(
+								context,
+								player_index,
+								card,
+							)) as Box<dyn tasks::PlayerTask>
 						],
 					},
 					loss: Some(RollConsequence {
@@ -380,42 +367,27 @@ fn create_use_ability_task(
 }
 
 fn create_roll_for_ability_choice(
-	_context: &mut GameBookKeeping, _game: &Game, _locator: choices::ChoiceLocator, _card: &Card,
+	context: &mut GameBookKeeping, _game: &Game, locator: ChoiceLocator, card: &Card,
 ) -> TasksChoice {
-	todo!();
-	// let player_index = locator.player_index;
-	// let roll_for_ability = Box::new(create_roll_for_ability_task(
-	// 	context,
-	// 	game,
-	// 	player_index,
-	// 	card,
-	// )) as Box<dyn PlayerTask>;
-	// TasksChoice::new(
-	// 	choices::ChoiceInformation::new(
-	// 		locator.to_owned(),
-	// 		choices::ChoiceDisplay {
-	// 			// TODO
-	// 			..Default::default()
-	// 		},
-	// 	),
-	// 	vec![
-	// 		Box::new(CardUsedTask::new(player_index, card.id)),
-	// 		Box::new(RemoveActionPointsTask::new(1)),
-	// 		Box::new(DoRollTask::new(RollState::new(
-	// 			player_index,
-	// 			card.spec.create_ability_consequences()
-	// 			monster_card
-	// 				.spec
-	// 				.monster
-	// 				.as_ref()
-	// 				.unwrap()
-	// 				.create_consequences(player_index),
-	// 			Roll::create_from(&mut context.rng),
-	// 			RollReason::,
-	// 		))) as Box<dyn PlayerTask>,
-	// 		roll_for_ability,
-	// 	],
-	// )
+	let player_index = locator.player_index;
+	TasksChoice::new(
+		choices::ChoiceInformation::new(
+			locator.to_owned(),
+			choices::ChoiceDisplay {
+				// TODO
+				..Default::default()
+			},
+		),
+		vec![
+			Box::new(CardUsedTask::new(player_index, card.id)),
+			Box::new(RemoveActionPointsTask::new(1)),
+			Box::new(create_roll_for_ability_task(
+				context,
+				player_index,
+				card,
+			)) as Box<dyn PlayerTask>
+		],
+	)
 }
 
 fn create_attack_monster_choice(

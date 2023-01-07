@@ -1,22 +1,20 @@
-
 // use super::ids::{CardId, ChallengeId, ChoiceId, DeckId, ElementId, IdGenerator, PlayerId, RollId};
 
 use crate::slay::choices::ChoiceAssociation;
 use crate::slay::choices::ChoicesPerspective;
 use crate::slay::errors;
+use crate::slay::errors::SlayResult;
 use crate::slay::ids;
 use crate::slay::specification;
 use crate::slay::specification::CardType;
-use crate::slay::state::player::Player;
-use crate::slay::visibility::Perspective;
-use crate::slay::visibility::Visibility;
 use crate::slay::specification::HeroType;
-use crate::slay::errors::SlayResult;
+use crate::slay::state::player::Player;
 use crate::slay::state::stack::Card;
 use crate::slay::state::stack::Stack;
 use crate::slay::state::stack::StackPerspective;
 use crate::slay::state::summarizable::Summarizable;
-
+use crate::slay::visibility::Perspective;
+use crate::slay::visibility::Visibility;
 
 use std::io::Write;
 

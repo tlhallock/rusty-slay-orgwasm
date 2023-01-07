@@ -1,7 +1,7 @@
-
 use crate::slay::choices::ChoicesPerspective;
 use crate::slay::choices::DisplayPath;
 use crate::slay::errors;
+use crate::slay::errors::SlayResult;
 use crate::slay::game_context::GameBookKeeping;
 use crate::slay::ids;
 use crate::slay::modifiers;
@@ -11,9 +11,6 @@ use crate::slay::showdown::offer::OfferChallengesPerspective;
 use crate::slay::showdown::roll_state::RollPerspective;
 use crate::slay::specification;
 use crate::slay::specification::DeckSpec;
-use crate::slay::tasks::PlayerTask;
-use crate::slay::visibility::Perspective;
-use crate::slay::visibility::VisibilitySpec;
 use crate::slay::state::deck::Deck;
 use crate::slay::state::deck::DeckPath;
 use crate::slay::state::deck::DeckPerspective;
@@ -21,12 +18,13 @@ use crate::slay::state::player::Player;
 use crate::slay::state::player::PlayerPerspective;
 use crate::slay::state::stack::Card;
 use crate::slay::state::summarizable::Summarizable;
-use crate::slay::errors::SlayResult;
+use crate::slay::tasks::PlayerTask;
+use crate::slay::visibility::Perspective;
+use crate::slay::visibility::VisibilitySpec;
 
-
-use std::io::Write;
 use std::fmt::Debug;
 use std::io::BufWriter;
+use std::io::Write;
 use std::iter::Iterator;
 
 #[derive(Debug, Default, Clone, PartialEq)]
@@ -86,14 +84,12 @@ pub struct Game {
 
 impl Game {
 	pub fn get_element_id(&self, display_path: &Option<DisplayPath>) -> Option<ids::ElementId> {
-		display_path
-			.as_ref()
-			.and_then(|p| match p {
-				DisplayPath::DeckAt(d) => Some(self.deck(*d).id),
-				DisplayPath::CardIn(_, id) => Some(*id),
-				DisplayPath::Player(player_index) => Some(self.players[*player_index].id),
-				DisplayPath::Roll(_) => None,
-			})
+		display_path.as_ref().and_then(|p| match p {
+			DisplayPath::DeckAt(d) => Some(self.deck(*d).id),
+			DisplayPath::CardIn(_, id) => Some(*id),
+			DisplayPath::Player(player_index) => Some(self.players[*player_index].id),
+			DisplayPath::Roll(_) => None,
+		})
 	}
 
 	pub fn clear_expired_modifiers(&mut self) {
@@ -410,7 +406,9 @@ impl GamePerspective {
 	pub fn rotated_players(&self) -> Vec<&PlayerPerspective> {
 		let mut ret: Vec<&PlayerPerspective> = self.players.iter().collect();
 		let position = ret.iter().position(|p| p.me);
-		if let Some(index) = position { ret.rotate_left(index) }
+		if let Some(index) = position {
+			ret.rotate_left(index)
+		}
 		ret
 	}
 }

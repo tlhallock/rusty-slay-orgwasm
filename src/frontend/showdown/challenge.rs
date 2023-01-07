@@ -15,7 +15,6 @@ use crate::slay::showdown::challenge::ChallengePerspective;
 use crate::slay::showdown::challenge::ChallengeRollPerspective;
 use crate::slay::showdown::common::ChallengeReason;
 
-
 #[function_component(ChallengeDescription)]
 pub fn view_challenge_description(props: &ChallengeModalProps) -> Html {
 	let text = match &props.challenge.reason {

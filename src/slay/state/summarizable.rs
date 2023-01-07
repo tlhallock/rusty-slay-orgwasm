@@ -1,7 +1,5 @@
-
-use std::io::Write;
 use std::io::BufWriter;
-
+use std::io::Write;
 
 pub trait Summarizable {
 	fn summarize<W: Write>(

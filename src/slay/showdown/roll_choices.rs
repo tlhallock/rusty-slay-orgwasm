@@ -1,6 +1,7 @@
 use crate::slay::choices::{
 	self, ChoiceDisplay, ChoiceInformation, ChoiceLocator, DisplayArrow, DisplayPath, TasksChoice,
 };
+use crate::slay::deadlines;
 use crate::slay::errors::{SlayError, SlayResult};
 use crate::slay::game_context::GameBookKeeping;
 use crate::slay::ids;
@@ -8,7 +9,6 @@ use crate::slay::state::deck::DeckPath;
 use crate::slay::state::game::Game;
 use crate::slay::state::stack::Card;
 use crate::slay::tasks::{MoveCardTask, PlayerTask, TaskProgressResult};
-use crate::slay::{deadlines};
 
 use super::common::{
 	ModificationPath, RollModification, RollModificationChoice, RollModificationChoiceType,
