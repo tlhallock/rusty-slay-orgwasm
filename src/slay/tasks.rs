@@ -354,6 +354,6 @@ impl PlayerTask for UseAbilityTask {
 		Ok(TaskProgressResult::TaskComplete)
 	}
 	fn label(&self) -> String {
-		format!("I wish I were this far...")
+		"I wish I were this far...".to_string()
 	}
 }

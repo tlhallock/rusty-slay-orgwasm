@@ -21,7 +21,7 @@ fn app() -> Html {
 	// 	});
 	// };
 
-	let current_game = use_state(|| AppState::new());
+	let current_game = use_state(AppState::new);
 	let _player_index = use_state(|| 0usize);
 
 	let restart = {

@@ -294,6 +294,6 @@ impl PlayerTask for ChallengeTask {
 		Ok(TaskProgressResult::TaskComplete)
 	}
 	fn label(&self) -> String {
-		format!("Player is challenging.")
+		"Player is challenging.".to_string()
 	}
 }

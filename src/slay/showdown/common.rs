@@ -67,9 +67,9 @@ pub enum RollModificationChoiceType {
 impl RollModificationChoiceType {
 	pub fn from_card(spec: &CardSpec, amount: i32) -> Self {
 		if amount < 0 {
-			RollModificationChoiceType::RemoveFromRoll(CardSpecPerspective::new(&spec), amount)
+			RollModificationChoiceType::RemoveFromRoll(CardSpecPerspective::new(spec), amount)
 		} else {
-			RollModificationChoiceType::AddToRoll(CardSpecPerspective::new(&spec), amount)
+			RollModificationChoiceType::AddToRoll(CardSpecPerspective::new(spec), amount)
 		}
 	}
 }

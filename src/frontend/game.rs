@@ -29,7 +29,7 @@ pub fn view_game(props: &GamePerspectiveProps) -> Html {
 		let viewed_card = viewed_card.clone();
 		Callback::from(move |m| viewed_card.set(m))
 	};
-	let choice_state = use_state(|| ChoiceState::default());
+	let choice_state = use_state(ChoiceState::default);
 	let set_selected_choice = {
 		let choice_state = choice_state.clone();
 		Callback::from(move |highlighted_choice| {

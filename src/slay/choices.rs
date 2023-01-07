@@ -49,7 +49,7 @@ impl Summarizable for Choices {
 		for option in self.options.iter() {
 			write!(f, "'{}', ", option.get_choice_information().display.label)?;
 		}
-		write!(f, "\n")?;
+		writeln!(f)?;
 		Ok(())
 	}
 }

@@ -24,7 +24,7 @@ impl Card {
 	}
 
 	pub fn modification_amounts(&self) -> Vec<i32> {
-		self.spec.modifiers.iter().map(|x| *x).collect() // ::<Vec<(ids::CardId, i32)>>()
+		self.spec.modifiers.to_vec() // ::<Vec<(ids::CardId, i32)>>()
 	}
 
 	pub fn label(&self) -> String {

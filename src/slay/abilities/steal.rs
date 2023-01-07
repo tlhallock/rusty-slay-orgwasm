@@ -99,7 +99,7 @@ impl PlayerTask for StealFromTask {
 	}
 
 	fn label(&self) -> String {
-		format!("Player is stealing a card from a specific individual.",)
+		"Player is stealing a card from a specific individual.".to_string()
 	}
 }
 
@@ -140,6 +140,6 @@ impl PlayerTask for StealCardFromTask {
 	}
 
 	fn label(&self) -> String {
-		format!("Player is stealing a card from a specific individual.",)
+		"Player is stealing a card from a specific individual.".to_string()
 	}
 }

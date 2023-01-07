@@ -46,6 +46,6 @@ impl PlayerTask for PullFromTask {
 	}
 
 	fn label(&self) -> String {
-		format!("Clearing a player's task parameter state.",)
+		"Clearing a player's task parameter state.".to_string()
 	}
 }

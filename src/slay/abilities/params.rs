@@ -90,7 +90,7 @@ impl PlayerTask for ChoosePlayerParameterTask {
 						ChoiceInformation {
 							locator: ChoiceLocator {
 								id: context.id_generator.generate(),
-								player_index: player_index,
+								player_index,
 							},
 							display: ChoiceDisplay {
 								highlight: Some(DisplayPath::Player(victim_index)),
@@ -199,6 +199,6 @@ impl PlayerTask for ClearParamsTask {
 	}
 
 	fn label(&self) -> String {
-		format!("Clearing a players task parameter state.",)
+		"Clearing a players task parameter state.".to_string()
 	}
 }

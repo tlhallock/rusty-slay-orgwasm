@@ -268,7 +268,7 @@ fn create_draw_choice(locator: ChoiceLocator) -> TasksChoice {
 					source: choices::DisplayPath::DeckAt(DeckPath::Draw),
 					destination: choices::DisplayPath::DeckAt(DeckPath::Hand(player_index)),
 				}],
-				label: format!("Draw a card."),
+				label: "Draw a card.".to_string(),
 				roll_modification_choice: None,
 			},
 		),
@@ -352,7 +352,7 @@ impl PlayerTask for ReplaceHandTask {
 	}
 
 	fn label(&self) -> String {
-		format!("Replace your hand with 5 new cards.",)
+		"Replace your hand with 5 new cards.".to_string()
 	}
 }
 
@@ -583,7 +583,7 @@ impl PlayerTask for UseAbility {
 	}
 
 	fn label(&self) -> String {
-		format!("Use hero ability")
+		"Use hero ability".to_string()
 	}
 }
 

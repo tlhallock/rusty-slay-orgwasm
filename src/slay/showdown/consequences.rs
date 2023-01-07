@@ -78,11 +78,11 @@ impl RollConsequences {
 	pub fn take_tasks_for(&mut self, roll_sum: i32) -> Vec<Box<dyn PlayerTask>> {
 		let mut ret = Vec::new();
 		if self.success.condition.applies_to(roll_sum) {
-			ret.extend(self.success.tasks.drain(..));
+			ret.append(&mut self.success.tasks);
 		}
 		if let Some(consequence) = self.loss.as_mut() {
 			if consequence.condition.applies_to(roll_sum) {
-				ret.extend(consequence.tasks.drain(..));
+				ret.append(&mut consequence.tasks);
 			}
 		}
 		ret

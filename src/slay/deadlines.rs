@@ -35,15 +35,11 @@ impl Timeline {
 
 	pub fn completion(&self) -> Option<TimelineCompletion> {
 		let now = chrono::offset::Utc::now();
-		if let Some(deadline) = self.compute_deadline() {
-			Some(TimelineCompletion {
+		self.compute_deadline().map(|deadline| TimelineCompletion {
 				percent_complete: (now - self.begin_time).num_milliseconds() as f64
 					/ (deadline - self.begin_time).num_milliseconds() as f64,
 				seconds_remaining: (deadline - now).num_milliseconds() as f64 / 1000f64,
 			})
-		} else {
-			None
-		}
 	}
 
 	pub(crate) fn reset(&mut self) {

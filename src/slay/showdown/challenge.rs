@@ -140,7 +140,7 @@ impl ChallengeRoll {
 			roll_total: self.calculate_roll_total(),
 			choices: choices
 				.iter()
-				.map(|choices| {
+				.flat_map(|choices| {
 					choices
 						.actions
 						.iter()
@@ -148,7 +148,6 @@ impl ChallengeRoll {
 						.map(|o| o.to_owned())
 						.collect::<Vec<ChoicePerspective>>()
 				})
-				.flatten()
 				.collect(),
 		}
 	}
@@ -176,7 +175,7 @@ impl ChallengeState {
 			roll_total: self.calculate_roll_total(),
 			choices: choices
 				.iter()
-				.map(|choices| {
+				.flat_map(|choices| {
 					choices
 						.actions
 						.iter()
@@ -184,7 +183,6 @@ impl ChallengeState {
 						.map(|o| o.to_owned())
 						.collect::<Vec<ChoicePerspective>>()
 				})
-				.flatten()
 				.collect(),
 		}
 	}

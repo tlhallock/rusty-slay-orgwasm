@@ -152,7 +152,7 @@ pub fn advance_game(
 
 pub fn make_selection(
 	context: &mut GameBookKeeping, game: &mut Game, player_id: ids::ElementId,
-	choice_id: ids::ElementId, notify: &mut dyn FnMut(Notification) -> (),
+	choice_id: ids::ElementId, notify: &mut dyn FnMut(Notification),
 ) -> SlayResult<()> {
 	let player_index = game
 		.player_index(player_id)

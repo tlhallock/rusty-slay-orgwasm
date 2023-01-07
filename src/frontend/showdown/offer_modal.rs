@@ -15,10 +15,8 @@ pub struct OfferModalProps {
 }
 
 #[function_component(OfferDescriptionView)]
-pub fn view_offer_context(props: &OfferModalProps) -> Html {
-	let text = match &props.offer.reason {
-		_ => html! {<div></div>},
-	};
+pub fn view_offer_context(_props: &OfferModalProps) -> Html {
+	let text = html! {<div></div>};
 	html! {
 		<label>{"The instructions go here."}<br/>{text}</label>
 	}

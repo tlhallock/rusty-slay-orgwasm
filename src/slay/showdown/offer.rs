@@ -53,9 +53,7 @@ impl OfferChallengesState {
 		ret.extend(
 			game.players[challenging_player_index]
 				.hand
-				.list_top_cards_by_type(&CardType::Challenge)
-				.iter()
-				.next()
+				.list_top_cards_by_type(&CardType::Challenge).first()
 				.iter()
 				.map(|card_id| {
 					create_challenge_choice(
@@ -85,7 +83,7 @@ impl OfferChallengesState {
 
 impl ShowDown for OfferChallengesState {
 	fn tracker(&self) -> &CompletionTracker {
-		&self.completion_tracker.as_ref().unwrap()
+		self.completion_tracker.as_ref().unwrap()
 	}
 
 	fn tracker_mut(&mut self) -> &mut CompletionTracker {
@@ -128,8 +126,7 @@ impl OfferChallengesState {
 			reason: self.reason.to_owned(),
 			choices: choices
 				.iter()
-				.map(|choices| choices.actions.clone())
-				.flatten()
+				.flat_map(|choices| choices.actions.clone())
 				.collect(),
 			timeline: self.tracker().timeline.to_owned(),
 		}

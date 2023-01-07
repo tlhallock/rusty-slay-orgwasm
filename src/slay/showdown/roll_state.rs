@@ -69,7 +69,7 @@ impl RollState {
 
 impl ShowDown for RollState {
 	fn tracker(&self) -> &CompletionTracker {
-		&self.completion_tracker.as_ref().unwrap()
+		self.completion_tracker.as_ref().unwrap()
 	}
 
 	fn tracker_mut(&mut self) -> &mut CompletionTracker {
@@ -194,14 +194,13 @@ impl RollState {
 			reason: self.reason.to_owned(),
 			choices: choices
 				.iter()
-				.map(|choices| {
+				.flat_map(|choices| {
 					choices
 						.actions
 						.iter()
 						.map(|o| o.to_owned())
 						.collect::<Vec<ChoicePerspective>>()
 				})
-				.flatten()
 				.collect(),
 		}
 	}

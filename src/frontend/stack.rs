@@ -20,10 +20,10 @@ pub struct ExtraSpecProps {
 
 impl ExtraSpecProps {
 	fn get_css_class(&self) -> Option<&'static str> {
-		if self.represented_choices.len() > 0 {
+		if !self.represented_choices.is_empty() {
 			return Some("is-choice");
 		}
-		return Some("is-part-of-choice");
+		Some("is-part-of-choice")
 	}
 }
 
