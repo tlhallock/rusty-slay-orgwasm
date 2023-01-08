@@ -13,8 +13,8 @@ use std::fmt::Debug;
 use crate::slay::showdown::challenge::ChallengeState;
 use crate::slay::showdown::common::ModificationPath;
 use crate::slay::showdown::common::RollModification;
+use crate::slay::showdown::completion::Completion;
 use crate::slay::showdown::completion::CompletionTracker;
-use crate::slay::showdown::completion::RollCompletion;
 use crate::slay::showdown::offer::OfferChallengesState;
 use crate::slay::showdown::roll_state::RollState;
 
@@ -260,7 +260,7 @@ impl CurrentShowdown {
 	}
 
 	pub(crate) fn set_player_completion(
-		&mut self, player_index: ids::PlayerIndex, persist: RollCompletion,
+		&mut self, player_index: ids::PlayerIndex, persist: Completion,
 	) -> SlayResult<()> {
 		log::info!(
 			"Updating the player completion for {} to {:?}",

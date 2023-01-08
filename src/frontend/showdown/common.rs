@@ -8,11 +8,12 @@ use crate::frontend::icons::Done;
 
 use crate::frontend::stack::CardSpecView;
 use crate::frontend::stack::ExtraSpecProps;
+use crate::slay::choices::ChoiceDisplayType;
 use crate::slay::choices::ChoicePerspective;
 use crate::slay::showdown::common::ModificationPerspective;
 use crate::slay::showdown::common::RollModificationChoiceType;
+use crate::slay::showdown::completion::Completion;
 use crate::slay::showdown::completion::PlayerCompletionPerspective;
-use crate::slay::showdown::completion::RollCompletion;
 
 use crate::frontend::icons::DoNot;
 
@@ -29,9 +30,9 @@ pub fn view_roll_completions(props: &CompletionsProps) -> Html {
 				{ c.player_name.to_owned() }
 				{
 					match c.completion {
-						RollCompletion::Thinking => html! { <Continue/> },
-						RollCompletion::DoneUntilModification => html! { <Done/> },
-						RollCompletion::AllDone => html! { <DoNot/> },
+						Completion::Thinking => html! { <Continue/> },
+						Completion::DoneUntilModification => html! { <Done/> },
+						Completion::AllDone => html! { <DoNot/> },
 					}
 				}
 			</div>
@@ -55,7 +56,7 @@ pub fn view_roll_history(props: &RollHistoryProps) -> Html {
 		html! {
 			 <label>
 				 { format!("Player {} used {} to modify by {}.",
-					 m.modifyer_name,
+					 m.modifier_name,
 					 "<implement this>",
 					 m.modification_amount,
 		) }
@@ -88,22 +89,14 @@ pub struct RollChoicesProps {
 
 #[function_component(RollChoices)]
 pub fn view_roll_choices(props: &RollChoicesProps) -> Html {
-	let choices = props
-		.choices
-		.iter()
-		.filter(|choice| choice.roll_modification_choice.is_some())
-		.map(|choice| {
-			let choose_this = {
-				let choose = props.callbacks.choose.clone();
-				let choice_id = choice.choice_id;
-				move |_| choose.iter().for_each(|c| c.emit(choice_id))
-			};
-			match &choice
-				.roll_modification_choice
-				.as_ref()
-				.unwrap()
-				.choice_type
-			{
+	let choices = props.choices.iter().map(|choice| {
+		let choose_this = {
+			let choose = props.callbacks.choose.clone();
+			let choice_id = choice.choice_id;
+			move |_| choose.iter().for_each(|c| c.emit(choice_id))
+		};
+		match &choice.display_type {
+			ChoiceDisplayType::Modify(modi) => match modi {
 				RollModificationChoiceType::AddToRoll(spec, amount) => html! {
 					<div
 						onclick={choose_this}
@@ -141,43 +134,43 @@ pub fn view_roll_choices(props: &RollChoicesProps) -> Html {
 						<div class={classes!("roll-choice-minus")}>{ format!("{}", amount) } </div>
 					</div>
 				},
-				RollModificationChoiceType::Nothing(persist) => match persist {
-					RollCompletion::AllDone => html! {
-						<div
-							onclick={choose_this}
-							title={"Do not modify this roll."}
-						>
-							<div  class={classes!("roll-choice-plus")}>
-								<DoNot/>
-								// <img
-								// 	src={"imgs/icons/no.jpeg"}
-								// 	alt={"Do not modify this roll"}
-								// 	width={70}
-								// />
-							</div>
+			},
+			ChoiceDisplayType::SetCompletion(comp) => match comp {
+				Completion::Thinking => todo!(),
+				Completion::AllDone => html! {
+					<div
+						onclick={choose_this}
+						title={"Do not modify this roll."}
+					>
+						<div  class={classes!("roll-choice-plus")}>
+							<DoNot/>
+							// <img
+							// 	src={"imgs/icons/no.jpeg"}
+							// 	alt={"Do not modify this roll"}
+							// 	width={70}
+							// />
 						</div>
-					},
-					RollCompletion::DoneUntilModification => html! {
-						<div
-							onclick={choose_this}
-							title={"Do not modify this roll, unless someone else does."}
-						>
-							<div  class={classes!("roll-choice-plus")}>
-								// <img
-								// 	src={"imgs/icons/no.jpeg"}
-								// 	alt={"Do not modify this roll, unless someone else does."}
-								// 	width={50}
-								// />
-								<Done/>
-							</div>
-						</div>
-					},
-					_ => {
-						unreachable!();
-					}
+					</div>
 				},
-			}
-		});
+				Completion::DoneUntilModification => html! {
+					<div
+						onclick={choose_this}
+						title={"Do not modify this roll, unless someone else does."}
+					>
+						<div  class={classes!("roll-choice-plus")}>
+							// <img
+							// 	src={"imgs/icons/no.jpeg"}
+							// 	alt={"Do not modify this roll, unless someone else does."}
+							// 	width={50}
+							// />
+							<Done/>
+						</div>
+					</div>
+				},
+			},
+			_ => unreachable!(),
+		}
+	});
 	html! {
 		<div class={classes!("roll-choices")}>
 			{for choices}

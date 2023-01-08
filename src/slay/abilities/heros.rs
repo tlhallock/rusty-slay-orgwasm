@@ -1,41 +1,116 @@
+use std::collections::HashSet;
+
 use crate::slay::errors::SlayResult;
 use crate::slay::game_context::GameBookKeeping;
 use crate::slay::ids;
+use crate::slay::specification::HeroType;
+use crate::slay::state::deck::DeckPath;
 use crate::slay::state::game::Game;
-
 use crate::slay::tasks::PlayerTask;
 use crate::slay::tasks::TaskParamName;
 use crate::slay::tasks::TaskProgressResult;
 
-use super::params::ChoosePlayerParameterTask;
-use super::pull::PullFromTask;
+use super::discard::Discard;
+use super::pull;
 
-#[derive(Debug, Clone, PartialEq, Eq, Copy)]
-pub enum Ability {
-	PlunderingPuma,
-}
+#[derive(Clone, Debug)]
+pub struct SlipperyPaws {}
 
-pub fn do_hero_ability(
-	_context: &mut GameBookKeeping, _game: &mut Game, _player_index: ids::PlayerIndex,
-	ability: Ability,
-) -> Vec<Box<dyn PlayerTask>> {
-	match ability {
-		// Plundering Puma
-		Ability::PlunderingPuma => vec![
-			Box::new(ChoosePlayerParameterTask {
-				param_name: TaskParamName::PlayerToPullFrom,
-				instructions: "Choose a player to pull from.".to_owned(),
-			}) as Box<dyn PlayerTask>,
-			Box::new(PullFromTask {
-				pulled_index_param_name: TaskParamName::PlayerToPullFrom,
-			}) as Box<dyn PlayerTask>,
-			Box::new(PullFromTask {
-				pulled_index_param_name: TaskParamName::PlayerToPullFrom,
-			}) as Box<dyn PlayerTask>,
-		],
-		_ => todo!(),
+impl SlipperyPaws {
+	pub fn create() -> Box<dyn PlayerTask> {
+		Box::new(Self {}) as Box<dyn PlayerTask>
 	}
 }
+
+impl PlayerTask for SlipperyPaws {
+	fn make_progress(
+		&mut self, _context: &mut GameBookKeeping, game: &mut Game, player_index: ids::PlayerIndex,
+	) -> SlayResult<TaskProgressResult> {
+		let first_card =
+			game.card_param(player_index, &TaskParamName::SlipperyPawsVictimPulledCard1)?;
+		let second_card =
+			game.card_param(player_index, &TaskParamName::SlipperyPawsVictimPulledCard2)?;
+		if first_card.is_none() || second_card.is_none() {
+			return Ok(TaskProgressResult::TaskComplete);
+		}
+		let mut include = HashSet::new();
+		include.insert(first_card.unwrap());
+		include.insert(second_card.unwrap());
+		// include = std::iter::once(first_card.unwrap()).chain(std::iter::once(second_card.unwrap())).collect();
+		// let exclude = game
+		// 	.deck(DeckPath::Hand(player_index))
+		// 	.other_cards(&include);
+		game.players[player_index]
+			.tasks
+			.prepend(Box::new(Discard::discard_one_of(include)));
+		Ok(TaskProgressResult::TaskComplete)
+	}
+
+	fn label(&self) -> String {
+		"do slippery paws".to_owned()
+	}
+}
+
+#[derive(Clone, Debug)]
+pub struct Mimimeow {}
+
+impl Mimimeow {
+	pub fn create() -> Box<dyn PlayerTask> {
+		Box::new(Self {}) as Box<dyn PlayerTask>
+	}
+}
+
+impl PlayerTask for Mimimeow {
+	fn make_progress(
+		&mut self, context: &mut GameBookKeeping, game: &mut Game, player_index: ids::PlayerIndex,
+	) -> SlayResult<TaskProgressResult> {
+		for victim_index in 0..game.number_of_players() {
+			if player_index == victim_index {
+				continue;
+			}
+			if !game.players[player_index]
+				.party
+				.hero_types()
+				.contains(&HeroType::Thief)
+			{
+				continue;
+			}
+			pull::pull_a_random_card(context, game, player_index, victim_index);
+		}
+		Ok(TaskProgressResult::TaskComplete)
+	}
+
+	fn label(&self) -> String {
+		"do slippery paws".to_owned()
+	}
+}
+
+// #[derive(Debug, Clone, PartialEq, Eq, Copy)]
+// pub enum Ability {
+// 	PlunderingPuma,
+// }
+
+// pub fn do_hero_ability(
+// 	_context: &mut GameBookKeeping, _game: &mut Game, _player_index: ids::PlayerIndex,
+// 	ability: Ability,
+// ) -> Vec<Box<dyn PlayerTask>> {
+// 	match ability {
+// 		// Plundering Puma
+// 		Ability::PlunderingPuma => vec![
+// 			Box::new(ChoosePlayerParameterTask {
+// 				param_name: TaskParamName::PlayerToPullFrom,
+// 				instructions: "Choose a player to pull from.".to_owned(),
+// 			}) as Box<dyn PlayerTask>,
+// 			Box::new(PullFromTask {
+// 				pulled_index_param_name: TaskParamName::PlayerToPullFrom,
+// 			}) as Box<dyn PlayerTask>,
+// 			Box::new(PullFromTask {
+// 				pulled_index_param_name: TaskParamName::PlayerToPullFrom,
+// 			}) as Box<dyn PlayerTask>,
+// 		],
+// 		_ => todo!(),
+// 	}
+// }
 
 // card_type: CardType::Hero(HeroType::Thief),
 // label: "Plundering Puma".to_string(),
@@ -184,6 +259,15 @@ pub fn do_hero_ability(
 pub struct VictimDraws {
 	pub param_name: TaskParamName,
 	pub number_to_draw: usize,
+}
+
+impl VictimDraws {
+	pub fn create(param_name: TaskParamName) -> Box<dyn PlayerTask> {
+		Box::new(Self {
+			param_name,
+			number_to_draw: 1,
+		}) as Box<dyn PlayerTask>
+	}
 }
 
 impl PlayerTask for VictimDraws {

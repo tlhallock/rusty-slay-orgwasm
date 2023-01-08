@@ -1,6 +1,4 @@
-use crate::slay::choices::{
-	ChoiceLocator, ChoicePerspective, Choices, ChoicesPerspective, TasksChoice,
-};
+use crate::slay::choices::{ChoicePerspective, Choices, ChoicesPerspective, TasksChoice};
 use crate::slay::deadlines::{self, Timeline};
 
 use crate::slay::game_context::GameBookKeeping;
@@ -108,18 +106,11 @@ pub fn list_modification_choices(
 	default_choice: ids::ChoiceId, rolls: Vec<ModificationPath>,
 ) -> Vec<TasksChoice> {
 	let mut choices: Vec<TasksChoice> = vec![
-		roll_choices::create_set_completion_done(ChoiceLocator {
-			id: default_choice,
-			player_index,
-		}),
-		roll_choices::create_set_completion_until_modification(ChoiceLocator {
-			id: context.id_generator.generate(),
-			player_index,
-		}),
+		roll_choices::create_set_completion_done(default_choice),
+		roll_choices::create_set_completion_until_modification(context.id_generator.generate()),
 	];
 
-	for stack in game.players[player_index].hand.iter() {
-		let card = &stack.top;
+	for card in game.players[player_index].hand.tops() {
 		for modification_amount in card.spec.modifiers.iter() {
 			for modification_path in rolls.iter() {
 				choices.push(create_modify_roll_choice(
@@ -162,7 +153,6 @@ pub fn list_modification_choices(
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct RollPerspective {
-	id: ids::RollId,
 	pub roller_name: String,
 	pub initial: Roll,
 	pub history: Vec<ModificationPerspective>,
@@ -175,12 +165,9 @@ pub struct RollPerspective {
 }
 
 impl RollState {
-	pub fn to_perspective(
-		&self, game: &Game, choices: &Option<ChoicesPerspective>,
-	) -> RollPerspective {
+	pub fn to_perspective(&self, game: &Game, choices: &Option<&Choices>) -> RollPerspective {
 		RollPerspective {
-			id: 0, // Need to fill this in again?
-			roller_name: game.players[self.roller_index].name.to_owned(),
+			roller_name: game.get_player_name(self.roller_index),
 			initial: self.initial.to_owned(),
 			history: self
 				.history
@@ -192,16 +179,11 @@ impl RollState {
 			success: false,
 			timeline: self.tracker().timeline.to_owned(),
 			reason: self.reason.to_owned(),
-			choices: choices
-				.iter()
-				.flat_map(|choices| {
-					choices
-						.actions
-						.iter()
-						.map(|o| o.to_owned())
-						.collect::<Vec<ChoicePerspective>>()
-				})
-				.collect(),
+			choices: if let Some(choices) = choices {
+				choices.choice_perspetives(game)
+			} else {
+				Vec::new()
+			},
 		}
 	}
 }

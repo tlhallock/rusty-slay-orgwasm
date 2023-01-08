@@ -1,10 +1,6 @@
 pub type ElementId = u32;
 pub type CardId = ElementId;
-pub type PlayerId = ElementId;
 pub type ChoiceId = ElementId;
-pub type RollId = ElementId;
-pub type ChallengeId = ElementId;
-pub type DeckId = ElementId;
 
 pub type PlayerIndex = usize;
 

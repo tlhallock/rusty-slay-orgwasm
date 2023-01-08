@@ -2,9 +2,7 @@ use crate::slay::deadlines::Timeline;
 use crate::slay::game_context::GameBookKeeping;
 use crate::slay::ids;
 
-use crate::slay::choices::{
-	ChoiceLocator, ChoicePerspective, Choices, ChoicesPerspective, TasksChoice,
-};
+use crate::slay::choices::{ChoicePerspective, Choices, ChoicesPerspective, TasksChoice};
 use crate::slay::errors::SlayResult;
 use crate::slay::specification::CardType;
 
@@ -13,6 +11,7 @@ use crate::slay::showdown::completion::CompletionTracker;
 use crate::slay::showdown::consequences::RollConsequences;
 use crate::slay::showdown::current_showdown::ShowDown;
 use crate::slay::state::game::Game;
+use crate::slay::state::stack::Card;
 
 use super::common::ChallengeReason;
 use super::completion::PlayerCompletionPerspective;
@@ -46,26 +45,19 @@ impl OfferChallengesState {
 		// challenging_player: &Player,
 		default_choice: u32,
 	) -> Vec<TasksChoice> {
-		let mut ret = vec![roll_choices::create_set_completion_done(ChoiceLocator {
-			id: default_choice,
-			player_index: challenging_player_index,
-		})];
-		ret.extend(
-			game.players[challenging_player_index]
-				.hand
-				.list_top_cards_by_type(&CardType::Challenge)
-				.first()
-				.iter()
-				.map(|card_id| {
-					create_challenge_choice(
-						ChoiceLocator {
-							id: context.id_generator.generate(),
-							player_index: challenging_player_index,
-						},
-						**card_id,
-					)
-				}),
-		);
+		let mut ret = vec![roll_choices::create_set_completion_done(default_choice)];
+
+		for card in game.players[challenging_player_index].hand.tops() {
+			if card.card_type() != &CardType::Challenge {
+				continue;
+			}
+			ret.push(create_challenge_choice(
+				challenging_player_index,
+				context.id_generator.generate(),
+				card,
+			));
+			break;
+		}
 		ret
 	}
 
@@ -119,16 +111,17 @@ pub struct OfferChallengesPerspective {
 
 impl OfferChallengesState {
 	pub fn to_perspective(
-		&self, game: &Game, choices: &Option<ChoicesPerspective>,
+		&self, game: &Game, choices: &Option<&Choices>,
 	) -> OfferChallengesPerspective {
 		OfferChallengesPerspective {
 			initiator: game.players[self.player_index].name.to_owned(),
 			completions: self.tracker().to_perspective(game),
 			reason: self.reason.to_owned(),
-			choices: choices
-				.iter()
-				.flat_map(|choices| choices.actions.clone())
-				.collect(),
+			choices: if let Some(choices) = choices {
+				choices.choice_perspetives(game)
+			} else {
+				Vec::new()
+			},
 			timeline: self.tracker().timeline.to_owned(),
 		}
 	}

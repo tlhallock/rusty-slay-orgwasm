@@ -12,7 +12,7 @@ use super::state::game::Game;
 
 pub fn pick_a_random_choice(
 	context: &mut GameBookKeeping, game: &mut Game,
-) -> SlayResult<(ids::PlayerId, ids::ChoiceId)> {
+) -> SlayResult<(ids::PlayerIndex, ids::ChoiceId)> {
 	// reservoir sampling
 	let mut count = 0;
 	let mut ret = None;
@@ -21,7 +21,7 @@ pub fn pick_a_random_choice(
 			for choice in choices.options.iter_mut() {
 				count += 1;
 				if context.rng.gen::<f32>() < 1f32 / (count as f32) {
-					ret = Some((player.id, choice.get_choice_information().get_id()));
+					ret = Some((player.player_index, choice.id));
 				}
 			}
 		}

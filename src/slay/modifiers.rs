@@ -55,3 +55,6 @@ pub enum PlayerModifier {
 	PlayMagicOnDraw,
 	ExtraActionPoint,
 }
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ItemModifier {}

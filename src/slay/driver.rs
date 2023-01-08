@@ -79,7 +79,6 @@ pub fn initialize_game(context: &mut GameBookKeeping, game: &mut Game) {
 
 	for player_index in 0..4 {
 		let mut player = Player::new(
-			&mut context.id_generator,
 			format!("Unnamed bot {}", player_index + 1),
 			player_index,
 			game.leaders.deal().top,
@@ -151,13 +150,9 @@ pub fn advance_game(
 }
 
 pub fn make_selection(
-	context: &mut GameBookKeeping, game: &mut Game, player_id: ids::ElementId,
+	context: &mut GameBookKeeping, game: &mut Game, player_index: ids::PlayerIndex,
 	choice_id: ids::ElementId, notify: &mut dyn FnMut(Notification),
 ) -> SlayResult<()> {
-	let player_index = game
-		.player_index(player_id)
-		.ok_or_else(|| SlayError::new("Player not found."))?;
-
 	// TODO: this doesn't copy a Choices on the stack does it?
 	let choices = Some(
 		game.players[player_index]
@@ -171,18 +166,14 @@ pub fn make_selection(
 		// .ok_or_else(|| SlayError::new("No active choices."))?
 		.options
 		.iter_mut()
-		.find(|c| c.get_choice_information().get_id() == choice_id)
+		.find(|c| c.id == choice_id)
 		.ok_or_else(|| SlayError::new("Choice not found."))?;
 
 	/*context.emit*/
 	notify(Notification {
-		message_text: format!(
-			"Player {} chose {}",
-			player_index,
-			choice.get_choice_information().display.label
-		),
+		message_text: format!("Player {} chose {}", player_index, choice.display.label),
 	});
-	choice.select(context, game)?;
+	choice.select(game, player_index)?;
 	Ok(())
 }
 

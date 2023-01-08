@@ -13,4 +13,5 @@ run: build
 
 # BACKTRACK... 
 # CARGO_TARGET_DIR=./wasm-target cargo run
-# rm -f output/* && CARGO_TARGET_DIR=./wasm-target cargo run
+# rm -f output/* && RUST_BACKTRACE=1 CARGO_TARGET_DIR=./wasm-target cargo run
+#

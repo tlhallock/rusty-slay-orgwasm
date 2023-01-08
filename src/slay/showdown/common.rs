@@ -1,11 +1,12 @@
 use crate::slay::{
+	choices::CardPath,
 	ids,
 	specification::CardSpec,
 	state::{game::Game, stack::CardSpecPerspective},
 };
 use rand::Rng;
 
-use super::completion::RollCompletion;
+use super::completion::Completion;
 
 // Only the party needs stacks...
 
@@ -31,7 +32,7 @@ impl Roll {
 	}
 }
 
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum ModificationPath {
 	Roll,
 	Challenger,
@@ -41,17 +42,16 @@ pub enum ModificationPath {
 #[derive(Debug, Clone)]
 pub struct RollModification {
 	pub modifying_player_index: ids::PlayerIndex,
-	pub card_id: ids::CardId,
+	pub card_path: CardPath,
 	pub modification_amount: i32,
 }
 
 impl RollModification {
 	pub fn to_perspective(&self, game: &Game) -> ModificationPerspective {
-		let modifying_card = game.card(self.card_id).unwrap();
-		let modifying_card_spec = CardSpecPerspective::new(&modifying_card.spec);
+		let modifying_card = game.card(self.card_path);
 		ModificationPerspective {
-			modifyer_name: game.players[self.modifying_player_index].name.to_owned(),
-			modifying_card_spec,
+			modifier_name: game.get_player_name(self.modifying_player_index),
+			modifying_card_spec: CardSpecPerspective::new(&modifying_card.spec),
 			modification_amount: self.modification_amount,
 		}
 	}
@@ -61,7 +61,6 @@ impl RollModification {
 pub enum RollModificationChoiceType {
 	AddToRoll(CardSpecPerspective, i32),
 	RemoveFromRoll(CardSpecPerspective, i32),
-	Nothing(RollCompletion),
 }
 
 impl RollModificationChoiceType {
@@ -83,7 +82,7 @@ pub struct RollModificationChoice {
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct ModificationPerspective {
-	pub modifyer_name: String,
+	pub modifier_name: String,
 	pub modifying_card_spec: CardSpecPerspective,
 	pub modification_amount: i32,
 }

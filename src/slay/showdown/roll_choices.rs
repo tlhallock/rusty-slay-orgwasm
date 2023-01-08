@@ -1,5 +1,6 @@
+use crate::frontend::showdown::challenge;
 use crate::slay::choices::{
-	self, ChoiceDisplay, ChoiceInformation, ChoiceLocator, DisplayArrow, DisplayPath, TasksChoice,
+	self, CardPath, ChoiceDisplay, ChoiceDisplayType, DisplayArrow, DisplayPath, TasksChoice,
 };
 use crate::slay::deadlines;
 use crate::slay::errors::{SlayError, SlayResult};
@@ -13,7 +14,7 @@ use crate::slay::tasks::{MoveCardTask, PlayerTask, TaskProgressResult};
 use super::common::{
 	ModificationPath, RollModification, RollModificationChoice, RollModificationChoiceType,
 };
-use super::completion::{CompletionTracker, RollCompletion};
+use super::completion::{Completion, CompletionTracker};
 use crate::slay::showdown::current_showdown::ShowDown;
 
 #[derive(Debug, Clone)]
@@ -61,37 +62,20 @@ pub fn create_modify_roll_choice(
 	modification_amount: i32, modification_path: &ModificationPath,
 ) -> TasksChoice {
 	let choice_id = context.id_generator.generate();
+	let display_path =
+		DisplayPath::CardAt(CardPath::TopCardIn(DeckPath::Hand(player_index), card.id));
 	TasksChoice::new(
-		ChoiceInformation::new(
-			ChoiceLocator {
-				id: choice_id,
-				player_index,
-			},
-			choices::ChoiceDisplay {
-				highlight: Some(choices::DisplayPath::CardIn(
-					DeckPath::Hand(player_index),
-					card.id,
-				)),
-				arrows: vec![
-					choices::DisplayArrow {
-						source: choices::DisplayPath::CardIn(DeckPath::Hand(player_index), card.id),
-						destination: choices::DisplayPath::DeckAt(DeckPath::Discard),
-					},
-					choices::DisplayArrow {
-						source: DisplayPath::CardIn(DeckPath::Hand(player_index), card.id),
-						destination: DisplayPath::Roll(*modification_path),
-					},
-				],
-				label: format!(
-					"Use {} to modify {}'s roll by {}",
-					card.id, "somebody", modification_amount,
-				),
-				roll_modification_choice: Some(RollModificationChoice {
-					choice_id,
-					choice_type: RollModificationChoiceType::from_card(&card.spec, modification_amount),
-				}),
-			},
-		),
+		choice_id,
+		ChoiceDisplay {
+			display_type: ChoiceDisplayType::Modify(RollModificationChoiceType::from_card(
+				&card.spec,
+				modification_amount,
+			)),
+			label: format!(
+				"Use {} to modify {}'s roll by {}",
+				card.id, "somebody", modification_amount,
+			),
+		},
 		vec![
 			Box::new(MoveCardTask {
 				source: DeckPath::Hand(player_index),
@@ -101,7 +85,7 @@ pub fn create_modify_roll_choice(
 			Box::new(ModifyRollTask::new(
 				RollModification {
 					modifying_player_index: player_index,
-					card_id: card.id,
+					card_path: CardPath::TopCardIn(DeckPath::Hand(player_index), card.id),
 					modification_amount,
 				},
 				*modification_path,
@@ -184,11 +168,11 @@ let move_card =  ;
 
 #[derive(Debug, Clone)]
 pub struct SetCompleteTask {
-	persist: RollCompletion,
+	persist: Completion,
 }
 
 impl SetCompleteTask {
-	pub fn new(persist: RollCompletion) -> Self {
+	pub fn new(persist: Completion) -> Self {
 		Self { persist }
 	}
 }
@@ -209,62 +193,44 @@ impl PlayerTask for SetCompleteTask {
 }
 
 fn create_set_complete_choice(
-	locator: ChoiceLocator, persist: RollCompletion, label: String,
+	id: ids::ChoiceId, persist: Completion, label: String,
 ) -> TasksChoice {
-	let choice_id = locator.id;
 	TasksChoice::new(
-		choices::ChoiceInformation {
-			locator,
-			display: choices::ChoiceDisplay {
-				label,
-				roll_modification_choice: Some(RollModificationChoice {
-					choice_id,
-					choice_type: RollModificationChoiceType::Nothing(persist),
-				}),
-				..Default::default()
-			},
+		id,
+		ChoiceDisplay {
+			label,
+			display_type: ChoiceDisplayType::SetCompletion(persist),
 		},
 		vec![Box::new(SetCompleteTask::new(persist)) as Box<dyn PlayerTask>],
 	)
 }
 
-pub fn create_set_completion_done(locator: ChoiceLocator) -> TasksChoice {
-	create_set_complete_choice(locator, RollCompletion::AllDone, "Do nothing.".to_string())
+pub fn create_set_completion_done(id: ids::ChoiceId) -> TasksChoice {
+	create_set_complete_choice(id, Completion::AllDone, "Do nothing.".to_string())
 }
 
-pub fn create_set_completion_until_modification(locator: ChoiceLocator) -> TasksChoice {
+pub fn create_set_completion_until_modification(id: ids::ChoiceId) -> TasksChoice {
 	create_set_complete_choice(
-		locator,
-		RollCompletion::DoneUntilModification,
+		id,
+		Completion::DoneUntilModification,
 		"Don't modify this roll unless someone else does.".to_string(),
 	)
 }
 
 pub fn create_challenge_choice(
-	locator: ChoiceLocator, challenge_card_id: ids::CardId,
+	player_index: ids::PlayerIndex, id: ids::ChoiceId, challenge_card: &Card,
 ) -> TasksChoice {
-	let player_index = locator.player_index;
 	TasksChoice::new(
-		ChoiceInformation {
-			locator,
-			display: ChoiceDisplay {
-				highlight: Some(DisplayPath::CardIn(
-					DeckPath::Hand(player_index),
-					challenge_card_id,
-				)),
-				arrows: vec![DisplayArrow {
-					source: DisplayPath::CardIn(DeckPath::Hand(player_index), challenge_card_id),
-					destination: DisplayPath::DeckAt(DeckPath::Discard),
-				}],
-				label: "Challenge that action...".to_string(),
-				roll_modification_choice: None,
-			},
+		id,
+		ChoiceDisplay {
+			display_type: ChoiceDisplayType::Challenge(challenge_card.as_perspective()),
+			label: "Challenge!".to_string(),
 		},
 		vec![
 			Box::new(MoveCardTask {
 				source: DeckPath::Hand(player_index),
 				destination: DeckPath::Discard,
-				card_id: challenge_card_id,
+				card_id: challenge_card.id,
 			}) as Box<dyn PlayerTask>,
 			Box::new(ChallengeTask::new()) as Box<dyn PlayerTask>,
 		],

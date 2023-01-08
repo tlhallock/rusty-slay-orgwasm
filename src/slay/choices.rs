@@ -3,17 +3,20 @@ use std::io::BufWriter;
 use std::io::Write;
 
 use crate::slay::deadlines::Timeline;
-
 use crate::slay::game_context::GameBookKeeping;
 use crate::slay::ids;
 use crate::slay::showdown::common::ModificationPath;
-
+use crate::slay::showdown::common::RollModificationChoice;
+use crate::slay::state::deck::DeckPath;
 use crate::slay::state::game::Game;
 use crate::slay::state::summarizable::Summarizable;
 use crate::slay::tasks::PlayerTask;
 
-use super::showdown::common::RollModificationChoice;
-use super::state::deck::DeckPath;
+use super::showdown::common::RollModificationChoiceType;
+use super::showdown::completion::Completion;
+use super::state::stack::Card;
+use super::state::stack::CardSpecPerspective;
+use super::tasks::MoveCardTask;
 
 #[derive(Clone, Debug)]
 pub struct Choices {
@@ -35,6 +38,22 @@ impl Choices {
 			instructions,
 		}
 	}
+
+	pub fn choice_perspetives(&self, game: &Game) -> Vec<ChoicePerspective> {
+		self
+			.options
+			.iter()
+			.map(|choice| choice.to_perspective(self.default_choice.iter().any(|dc| *dc == choice.id)))
+			.collect()
+	}
+
+	pub fn to_perspective(&self, game: &Game) -> ChoicesPerspective {
+		ChoicesPerspective {
+			timeline: self.timeline.to_owned(),
+			instructions: self.instructions.to_owned(),
+			actions: self.choice_perspetives(game),
+		}
+	}
 }
 
 impl Summarizable for Choices {
@@ -46,19 +65,82 @@ impl Summarizable for Choices {
 		}
 		write!(f, "choices: ({}): ", self.instructions)?;
 		for option in self.options.iter() {
-			write!(f, "'{}', ", option.get_choice_information().display.label)?;
+			write!(f, "'{}', ", option.display.label)?;
 		}
 		writeln!(f)?;
 		Ok(())
 	}
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
+pub enum CardPath {
+	TopCardIn(DeckPath, ids::CardId),
+	ModifyingCardIn(DeckPath, ids::CardId, ids::CardId),
+	Leader(ids::PlayerIndex),
+}
+
+impl CardPath {
+	pub fn display(&self) -> DisplayPath {
+		DisplayPath::CardAt(*self)
+	}
+
+	pub fn get_deck_path(&self) -> DeckPath {
+		match self {
+			CardPath::TopCardIn(dp, _) => *dp,
+			CardPath::ModifyingCardIn(dp, _, _) => *dp,
+			CardPath::Leader(_) => unreachable!(),
+		}
+	}
+
+	pub fn get_card_id(&self) -> ids::CardId {
+		match self {
+			CardPath::TopCardIn(_, card_id) => *card_id,
+			CardPath::ModifyingCardIn(_, _, card_id) => *card_id,
+			CardPath::Leader(card_id) => todo!(),
+		}
+	}
+
+	pub fn get_place_task(&self) -> Box<dyn PlayerTask> {
+		self.get_move_task(DeckPath::Party(self.get_player_index().unwrap()))
+	}
+
+	pub fn get_player_index(&self) -> Option<ids::PlayerIndex> {
+		self.get_deck_path().get_player_index()
+	}
+
+	pub fn get_move_task(&self, destination: DeckPath) -> Box<dyn PlayerTask> {
+		match self {
+			CardPath::TopCardIn(deck_path, card_id) => Box::new(MoveCardTask {
+				source: *deck_path,
+				destination,
+				card_id: *card_id,
+			}),
+			CardPath::ModifyingCardIn(deck_path, _, card_id) => Box::new(MoveCardTask {
+				source: *deck_path,
+				destination,
+				card_id: *card_id,
+			}),
+			CardPath::Leader(_) => unreachable!(),
+		}
+	}
+
+	pub fn get_discard_task(&self) -> Box<dyn PlayerTask> {
+		self.get_move_task(DeckPath::Discard)
+	}
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
 pub enum DisplayPath {
 	DeckAt(DeckPath),
-	CardIn(DeckPath, ids::CardId),
+	CardAt(CardPath),
 	Player(ids::PlayerIndex),
 	Roll(ModificationPath),
+}
+
+impl DisplayPath {
+	pub fn to_highlight(&self) -> ChoiceDisplayType {
+		ChoiceDisplayType::HighlightPath(*self)
+	}
 }
 
 #[derive(Debug, Clone)]
@@ -67,42 +149,56 @@ pub struct DisplayArrow {
 	pub destination: DisplayPath,
 }
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone)]
 pub struct ChoiceDisplay {
-	pub highlight: Option<DisplayPath>,
-	pub arrows: Vec<DisplayArrow>,
+	// pub arrows: Vec<DisplayArrow>,
+	pub display_type: ChoiceDisplayType,
+	pub label: String,
+	// pub highlight: Option<DisplayPath>,
 	// pub references_id: Option<ids::ElementId>,
 
-	// Replace the following string with some useful enum...
-	pub label: String,
-
-	pub roll_modification_choice: Option<RollModificationChoice>,
+	// TODO: Replace the following string with some useful enum...
+	// pub label: String,
+	// TODO: get rid of this...
+	// pub roll_modification_choice: Option<RollModificationChoice>,
 }
 
-#[derive(Debug, Clone)]
-pub struct ChoiceLocator {
-	pub id: ids::ChoiceId,
-	pub player_index: ids::PlayerIndex,
-}
+// impl Default for ChoiceDisplay {
+//     fn default() -> Self {
+//         Self {
+// 					highlight: Default::default(),
+// 					arrows: Default::default(),
+// 					display_type: ChoiceDisplayType::Text("Please fill in the text for this choice"),
+// 					label: Default::default(),
+// 					roll_modification_choice: Default::default()
+// 				}
+//     }
+// }
 
-#[derive(Debug, Clone)]
-pub struct ChoiceInformation {
-	pub locator: ChoiceLocator,
-	pub display: ChoiceDisplay,
-}
+// #[derive(Debug, Clone)]
+// pub struct ChoiceLocator {
+// 	pub id: ids::ChoiceId,
+// 	pub player_index: ids::PlayerIndex,
+// }
 
-impl ChoiceInformation {
-	pub fn new(locator: ChoiceLocator, display: ChoiceDisplay) -> Self {
-		Self { locator, display }
-	}
+// #[derive(Debug, Clone)]
+// pub struct ChoiceInformation {
+// 	pub locator: ChoiceLocator,
+// 	pub display: ChoiceDisplay,
+// }
 
-	pub fn get_id(&self) -> ids::ChoiceId {
-		self.locator.id
-	}
-	pub fn player_index(&self) -> usize {
-		self.locator.player_index
-	}
-}
+// impl ChoiceInformation {
+// 	pub fn new(locator: ChoiceLocator, display: ChoiceDisplay) -> Self {
+// 		Self { locator, display }
+// 	}
+
+// 	pub fn get_id(&self) -> ids::ChoiceId {
+// 		self.locator.id
+// 	}
+// 	pub fn player_index(&self) -> usize {
+// 		self.locator.player_index
+// 	}
+// }
 
 // dyn_clone::clone_trait_object!(Choice);
 
@@ -122,32 +218,38 @@ impl ChoiceInformation {
 //     }
 // }
 
+// Rename this to Choice
 #[derive(Debug, Clone)]
 pub struct TasksChoice {
-	choice_information: ChoiceInformation,
+	pub id: ids::ChoiceId,
+	pub display: ChoiceDisplay,
 	tasks: Vec<Box<dyn PlayerTask>>,
 	prepend: bool,
 }
 
 impl TasksChoice {
-	pub fn new(choice_information: ChoiceInformation, tasks: Vec<Box<dyn PlayerTask>>) -> Self {
+	pub fn new(id: ids::ChoiceId, display: ChoiceDisplay, tasks: Vec<Box<dyn PlayerTask>>) -> Self {
 		Self {
-			choice_information,
+			id,
+			display,
 			tasks,
 			prepend: false,
 		}
 	}
-	pub fn prepend(choice_information: ChoiceInformation, tasks: Vec<Box<dyn PlayerTask>>) -> Self {
+	pub fn prepend(
+		id: ids::ChoiceId, display: ChoiceDisplay, tasks: Vec<Box<dyn PlayerTask>>,
+	) -> Self {
 		Self {
-			choice_information,
+			id,
+			display,
 			tasks,
 			prepend: true,
 		}
 	}
+
 	pub fn select(
-		&mut self, _context: &mut GameBookKeeping, game: &mut Game,
+		&mut self, game: &mut Game, player_index: ids::PlayerIndex,
 	) -> super::errors::SlayResult<()> {
-		let player_index = self.choice_information.player_index();
 		if self.prepend {
 			game.players[player_index]
 				.tasks
@@ -158,38 +260,18 @@ impl TasksChoice {
 		Ok(())
 	}
 
-	pub fn get_choice_information(&self) -> &ChoiceInformation {
-		&self.choice_information
+	pub fn to_perspective(&self, is_default: bool) -> ChoicePerspective {
+		ChoicePerspective {
+			is_default,
+			choice_id: self.id,
+			display_type: self.display.display_type.to_owned(),
+			label: self.display.label.to_owned(),
+		}
 	}
 }
 
 // impl Choice for TasksChoice {
 // }
-
-impl Choices {
-	pub fn to_perspective(&self, game: &Game) -> ChoicesPerspective {
-		ChoicesPerspective {
-			timeline: self.timeline.to_owned(),
-			instructions: self.instructions.to_owned(),
-			actions: self
-				.options
-				.iter()
-				.map(|o| {
-					let info = o.get_choice_information();
-					ChoicePerspective {
-						is_default: self.default_choice.iter().any(|dc| *dc == info.get_id()),
-						choice_id: info.get_id(),
-						label: info.display.label.to_owned(),
-						highlight: game.get_element_id(&info.display.highlight),
-						highlight_path: info.display.highlight.to_owned(),
-						arrows: vec![],
-						roll_modification_choice: info.display.roll_modification_choice.to_owned(),
-					}
-				})
-				.collect(),
-		}
-	}
-}
 
 #[derive(Debug, PartialEq, Clone)]
 pub enum ChoiceAssociationType {
@@ -207,73 +289,76 @@ pub struct ChoiceAssociation {
 }
 
 impl ChoiceAssociation {
-	fn new(association_type: ChoiceAssociationType, choice_info: &ChoicePerspective) -> Self {
+	fn new(choices: &Choices, choice: &TasksChoice, association_type: ChoiceAssociationType) -> Self {
 		Self {
-			choice_id: choice_info.choice_id,
+			choice_id: choice.id,
 			association_type,
-			label: choice_info.label.to_owned(),
-			is_default: choice_info.is_default,
+			label: choice.display.label.to_owned(),
+			is_default: choices.default_choice.iter().any(|id| *id == choice.id),
 		}
 	}
 
-	fn create_from_choice(choice_info: &ChoicePerspective, id: ids::ElementId) -> Vec<Self> {
+	fn create_from_choice(choices: &Choices, choice: &TasksChoice, path: DisplayPath) -> Vec<Self> {
 		let mut ret = Vec::new();
-		ret.extend(
-			choice_info
-				.highlight
-				.iter()
-				.filter(|highlight_id| **highlight_id == id)
-				.map(|_| ChoiceAssociation::new(ChoiceAssociationType::Representer, choice_info)),
-		);
-		ret.extend(choice_info.arrows.iter().flat_map(|a| {
-			let mut ret: Vec<ChoiceAssociation> = Vec::new();
-			if let Some(source_id) = a.0 {
-				if source_id == id {
-					ret.push(ChoiceAssociation::new(
-						ChoiceAssociationType::Source,
-						choice_info,
-					))
-				}
+		if let ChoiceDisplayType::HighlightPath(display_path) = choice.display.display_type {
+			if path == display_path {
+				ret.push(ChoiceAssociation::new(
+					choices,
+					choice,
+					ChoiceAssociationType::Representer,
+				));
 			}
-			if let Some(source_id) = a.1 {
-				if source_id == id {
-					ret.push(ChoiceAssociation::new(
-						ChoiceAssociationType::Destination,
-						choice_info,
-					))
-				}
-			}
-			ret
-		}));
+		}
+		//  lol
+		// // Not even sure if this will be used...
+		// let (already_source, already_destination) = (false, false);
+		// for arrow in choice.display.arrows.iter() {
+		// 	if arrow.source == path && !already_source {
+		// 			ret.push(ChoiceAssociation::new(
+		// 					choices, choice, ChoiceAssociationType::Source));
+		// 	}
+		// 	if arrow.destination == path && !already_destination {
+		// 			ret.push(ChoiceAssociation::new(
+		// 					choices, choice, ChoiceAssociationType::Destination));
+		// 	}
+		// }
 		ret
 	}
 
-	pub fn create_from_choices(
-		choices: &Option<ChoicesPerspective>, id: ids::ElementId,
-	) -> Vec<Self> {
-		if let Some(choices2) = choices {
-			return choices2
-				.actions
+	pub fn create_from_choices(choices: &Option<&Choices>, path: DisplayPath) -> Vec<Self> {
+		if let Some(choices) = choices {
+			choices
+				.options
 				.iter()
-				.flat_map(|a| ChoiceAssociation::create_from_choice(a, id))
-				.collect();
+				.flat_map(|choice| ChoiceAssociation::create_from_choice(choices, choice, path))
+				.collect()
+		} else {
+			Vec::new()
 		}
-		vec![]
 	}
+}
+
+// Defines how this choice should be viewed.
+#[derive(Debug, PartialEq, Clone)]
+pub enum ChoiceDisplayType {
+	HighlightPath(DisplayPath),
+	Modify(RollModificationChoiceType),
+	Challenge(CardSpecPerspective),
+	SetCompletion(Completion),
+	Text(&'static str),
+	Card(CardSpecPerspective),
+	Yes,
+	No,
+	Forfeit,
 }
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct ChoicePerspective {
 	pub is_default: bool,
 	pub choice_id: ids::ChoiceId,
+	pub display_type: ChoiceDisplayType,
 	pub label: String,
-	// Which one is better...
-	pub highlight: Option<ids::ElementId>,
-	pub highlight_path: Option<DisplayPath>,
-	// This will probably need an arrow id...
-	pub arrows: Vec<(Option<ids::ElementId>, Option<ids::ElementId>)>,
-
-	pub roll_modification_choice: Option<RollModificationChoice>,
+	// pub roll_modification_choice: Option<RollModificationChoice>,
 	// Should we add another one of these for card actions? ^^
 }
 

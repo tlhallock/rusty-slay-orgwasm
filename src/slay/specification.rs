@@ -1,29 +1,64 @@
+use std::collections::HashSet;
 use std::vec;
 
-use super::abilities::discard::Discard;
-use super::abilities::heros::VictimDraws;
-use super::abilities::params::ChoosePlayerParameterTask;
-use super::abilities::pull::PullFromTask;
-use super::abilities::sacrifice::Sacrifice;
-use super::actions::DrawTask;
-use super::choices::TasksChoice;
-use super::ids;
-use super::modifiers::PlayerModifier;
+use crate::slay::abilities::discard::Discard;
+use crate::slay::abilities::heros::VictimDraws;
+use crate::slay::abilities::params::ChoosePlayerParameterTask;
+use crate::slay::abilities::pull::PullFromTask;
+use crate::slay::abilities::sacrifice::Sacrifice;
+use crate::slay::actions::DrawTask;
+use crate::slay::choices::ChoiceDisplay;
+use crate::slay::choices::Choices;
+use crate::slay::choices::TasksChoice;
+use crate::slay::deadlines;
+use crate::slay::errors::SlayError;
+use crate::slay::errors::SlayResult;
+use crate::slay::game_context::GameBookKeeping;
+use crate::slay::ids;
+use crate::slay::modifiers::PlayerModifier;
+use crate::slay::showdown::consequences::Condition;
+use crate::slay::showdown::consequences::RollConsequence;
+use crate::slay::showdown::consequences::RollConsequences;
+use crate::slay::state::deck::DeckPath;
+use crate::slay::state::game::Game;
+use crate::slay::tasks::PlayerTask;
+use crate::slay::tasks::ReceiveModifier;
+use crate::slay::tasks::TaskParamName;
+use crate::slay::tasks::TaskProgressResult;
+use crate::slay::visibility::VisibilitySpec;
 
-use super::showdown::consequences::Condition;
-use super::showdown::consequences::RollConsequence;
-use super::showdown::consequences::RollConsequences;
-use super::tasks::PlayerTask;
-use super::tasks::ReceiveModifier;
-use super::tasks::TaskParamName;
-use super::visibility::VisibilitySpec;
+use super::abilities::destroy::DestroyCardTask;
+use super::abilities::destroy::DestroyModifiersDestination;
+use super::abilities::heros;
+use super::abilities::immediate::OfferPlayImmediately;
+use super::abilities::params::ChooseCardFromPlayerParameterTask;
+use super::abilities::params::ClearParamsTask;
+use super::abilities::steal;
+use super::abilities::steal::StealTask;
+use super::modifiers::ItemModifier;
 
 pub const MAX_TURNS: u32 = 100;
 
+// Move this to the decks file?
 #[derive(Debug, Clone)]
 pub struct DeckSpec {
 	pub visibility: VisibilitySpec,
-	pub label: String,
+	pub path: DeckPath,
+}
+
+impl DeckSpec {
+	pub fn get_label(&self) -> String {
+		match self.path {
+			DeckPath::Draw => "Draw pile".to_string(),
+			DeckPath::Discard => "Discard pile".to_string(),
+			DeckPath::PartyLeaders => "Unused Party leaders".to_string(),
+			DeckPath::ActiveMonsters => "Monsters".to_string(),
+			DeckPath::NextMonsters => "Next monsters".to_string(),
+			DeckPath::Hand(player_index) => format!("Player {}'s hand", player_index),
+			DeckPath::Party(player_index) => format!("Player {}'s party", player_index),
+			DeckPath::SlainMonsters(player_index) => format!("Player {}'s monsters", player_index),
+		}
+	}
 }
 
 #[derive(Debug, Clone)]
@@ -44,7 +79,10 @@ impl HeroAbility {
 	}
 }
 
-type ActionsCreator = Box<dyn Fn(ids::PlayerIndex) -> Vec<Box<TasksChoice>>>;
+#[derive(Debug, Clone, Copy)]
+pub enum MagicSpell {}
+
+// type ActionsCreator = Box<dyn Fn(ids::PlayerIndex) -> Vec<Box<TasksChoice>>>;
 
 #[derive(Debug, Clone)]
 pub struct CardSpec {
@@ -58,8 +96,9 @@ pub struct CardSpec {
 	pub monster: Option<MonsterSpec>,
 	pub modifiers: Vec<i32>,
 	pub hero_ability: Option<HeroAbility>,
-	// pub hand_actions: ActionsCreator,
-	// pub party_actions: ActionsCreator,
+	pub spell: Option<MagicSpell>,
+	pub item_modifier: Option<ItemModifier>, // pub hand_actions: ActionsCreator,
+	                                         // pub party_actions: ActionsCreator,
 }
 
 impl Default for CardSpec {
@@ -73,11 +112,13 @@ impl Default for CardSpec {
 			monster: None,
 			modifiers: Vec::new(),
 			hero_ability: None,
+			spell: None,
+			item_modifier: None,
 		}
 	}
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum CardType {
 	Blank,
 
@@ -90,6 +131,15 @@ pub enum CardType {
 	Magic,
 }
 
+impl CardType {
+	pub fn item_types() -> HashSet<CardType> {
+		HashSet::from([
+			CardType::Item(ItemType::Blessed),
+			CardType::Item(ItemType::Cursed),
+		])
+	}
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
 pub enum HeroType {
 	Bard,
@@ -100,7 +150,7 @@ pub enum HeroType {
 	Thief,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum ItemType {
 	Cursed,
 	Blessed,
@@ -204,21 +254,14 @@ pub fn get_card_specs() -> [CardSpec; 33] {
           HeroAbility {
             condition: Condition::ge(6),
             tasks: vec![
-
-      Box::new(ChoosePlayerParameterTask {
-        param_name: TaskParamName::PlayerToPullFrom,
-        instructions: "Choose a player to pull from.".to_owned(),
-      }) as Box<dyn PlayerTask>,
-      Box::new(PullFromTask {
-        pulled_index_param_name: TaskParamName::PlayerToPullFrom,
-      }) as Box<dyn PlayerTask>,
-      Box::new(PullFromTask {
-        pulled_index_param_name: TaskParamName::PlayerToPullFrom,
-      }) as Box<dyn PlayerTask>,
-      Box::new(VictimDraws {
-        param_name: TaskParamName::PlayerToPullFrom,
-        number_to_draw: 1,
-      })
+              ChoosePlayerParameterTask::create(
+                TaskParamName::PlayerToPullFrom,
+                "Choose a player to pull from.",
+              ),
+              PullFromTask::create(TaskParamName::PlayerToPullFrom),
+              PullFromTask::create(TaskParamName::PlayerToPullFrom),
+              VictimDraws::create(TaskParamName::PlayerToPullFrom),
+              ClearParamsTask::create(),
             ],
           }
         ),
@@ -233,6 +276,20 @@ pub fn get_card_specs() -> [CardSpec; 33] {
           HeroAbility {
             condition: Condition::ge(6),
             tasks: vec![
+              ChoosePlayerParameterTask::create(
+                TaskParamName::SlipperyPawsVictim,
+                "Choose a player to pull 2 cards from, you will have to discard one of them.",
+              ),
+              PullFromTask::record_pulled(
+                TaskParamName::SlipperyPawsVictim,
+                Some(TaskParamName::SlipperyPawsVictimPulledCard1),
+              ),
+              PullFromTask::record_pulled(
+                TaskParamName::SlipperyPawsVictim,
+                Some(TaskParamName::SlipperyPawsVictimPulledCard2),
+              ),
+              heros::SlipperyPaws::create(),
+              ClearParamsTask::create(),
             ],
           }
         ),
@@ -247,6 +304,8 @@ pub fn get_card_specs() -> [CardSpec; 33] {
           HeroAbility {
             condition: Condition::ge(7),
             tasks: vec![
+              heros::Mimimeow::create(),
+              ClearParamsTask::create(),
             ],
           }
         ),
@@ -261,6 +320,18 @@ pub fn get_card_specs() -> [CardSpec; 33] {
           HeroAbility {
             condition: Condition::ge(10),
             tasks: vec![
+              ChoosePlayerParameterTask::create(
+                TaskParamName::MeowzioVictim,
+                "Choose a player to steal and pull from.",
+              ),
+              PullFromTask::create(TaskParamName::MeowzioVictim),
+        			ChooseCardFromPlayerParameterTask::from_party(
+                TaskParamName::MeowzioVictim,
+                TaskParamName::MeowzioCard,
+                "Which hero card would you like to steal?"
+              ),
+              steal::StealCardFromTask::create(TaskParamName::MeowzioVictim, TaskParamName::MeowzioCard),
+              ClearParamsTask::create(),
             ],
           }
         ),
@@ -275,6 +346,21 @@ pub fn get_card_specs() -> [CardSpec; 33] {
           HeroAbility {
             condition: Condition::ge(9),
             tasks: vec![
+              ChoosePlayerParameterTask::create(
+                TaskParamName::PlayerToDestroy,
+                "to destroy a hero card",
+              ),
+              ChooseCardFromPlayerParameterTask::from_party(
+                TaskParamName::PlayerToDestroy,
+                TaskParamName::CardToSteal,
+                "Which hero card would you like to destroy?"
+              ),
+              DestroyCardTask::create(
+                TaskParamName::PlayerToStealFrom,
+                TaskParamName::CardToSteal,
+                DestroyModifiersDestination::Myself,
+              ),
+              ClearParamsTask::create(),
             ],
           }
         ),
@@ -289,6 +375,7 @@ pub fn get_card_specs() -> [CardSpec; 33] {
           HeroAbility {
             condition: Condition::ge(9),
             tasks: vec![
+              StealTask::create(),
             ],
           }
         ),
@@ -303,6 +390,17 @@ pub fn get_card_specs() -> [CardSpec; 33] {
           HeroAbility {
             condition: Condition::ge(8),
             tasks: vec![
+              ChoosePlayerParameterTask::create(
+                TaskParamName::SilentShadowVictim,
+                "Who's hand do you want to see?",
+              ),
+              ChooseCardFromPlayerParameterTask::from_party(
+                TaskParamName::SilentShadowVictim,
+                TaskParamName::SilentShadowCard,
+                "Which hero card would you like to take?"
+              ),
+              // TODO
+              ClearParamsTask::create(),
             ],
           }
         ),
@@ -317,6 +415,18 @@ pub fn get_card_specs() -> [CardSpec; 33] {
           HeroAbility {
             condition: Condition::ge(6),
             tasks: vec![
+              ChoosePlayerParameterTask::create(
+                TaskParamName::SlyPickinsVictim,
+                "Who do you want to steal from?",
+              ),
+              PullFromTask::record_pulled(
+                TaskParamName::SlyPickinsVictim,
+                Some(TaskParamName::SlyPickinsCard),
+              ),
+              OfferPlayImmediately::create(
+                TaskParamName::SlyPickinsCard,
+                Some(CardType::item_types()),
+              )
             ],
           }
         ),
@@ -326,11 +436,29 @@ pub fn get_card_specs() -> [CardSpec; 33] {
         card_type: CardType::Hero(HeroType::Gaurdian),
         label: "Holy Curselifter".to_string(),
         image_path: "cards/heros/guardian/holy_curse_lifter.jpg".to_string(),
-        description: "Return a Cursed Item card equipped to a Hero card in your Part to your hand.".to_string(),
+        description: "Return a Cursed Item card equipped to a Hero card in your Party to your hand.".to_string(),
         hero_ability: Some(
           HeroAbility {
             condition: Condition::ge(5),
             tasks: vec![
+              (||{
+                #[derive(Clone, Debug)]
+                struct Anonymous {}
+                impl PlayerTask for Anonymous {
+                  fn make_progress(
+                     &mut self, context: &mut GameBookKeeping, game: &mut Game, player_index: ids::PlayerIndex,
+                  ) -> SlayResult<TaskProgressResult> {
+                    /////////////////
+
+                    /////////////////
+                    Ok(TaskProgressResult::TaskComplete)
+                  }
+                  fn label(&self) -> String {
+                    "anonymous task".to_owned()
+                  }
+                }
+                Box::new(Anonymous {}) as Box<dyn PlayerTask>
+              })(),
             ],
           }
         ),

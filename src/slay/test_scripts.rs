@@ -21,7 +21,6 @@ pub fn initialize_empty_game(context: &mut GameBookKeeping, game: &mut Game) {
 
 	for player_index in 0..4 {
 		let player = Player::new(
-			&mut context.id_generator,
 			format!("Unnamed bot {}", player_index + 1),
 			player_index,
 			game.leaders.deal().top,
@@ -35,9 +34,9 @@ pub fn initialize_empty_game(context: &mut GameBookKeeping, game: &mut Game) {
 
 fn find_hero_card(deck: &Deck) -> Option<ids::CardId> {
 	deck
-		.iter()
-		.filter(|stack| matches!(stack.top.spec.card_type, CardType::Hero(_)))
-		.map(|stack| stack.top.id)
+		.tops()
+		.filter(|card| matches!(card.spec.card_type, CardType::Hero(_)))
+		.map(|card| card.id)
 		.next()
 }
 

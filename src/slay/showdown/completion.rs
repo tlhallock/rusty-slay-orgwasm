@@ -11,14 +11,15 @@ use crate::slay::state::game::Game;
 //     Challege,
 // }
 
+// Rename this to ShowdownCompletion
 #[derive(Debug, Clone, PartialEq, Eq, Copy)]
-pub enum RollCompletion {
+pub enum Completion {
 	Thinking,
 	DoneUntilModification,
 	AllDone,
 }
 
-impl RollCompletion {
+impl Completion {
 	pub fn done(&self) -> bool {
 		match self {
 			Self::Thinking => false,
@@ -30,7 +31,7 @@ impl RollCompletion {
 
 #[derive(Debug, Clone)]
 pub struct CompletionTracker {
-	pub player_completions: HashMap<ids::PlayerIndex, RollCompletion>,
+	pub player_completions: HashMap<ids::PlayerIndex, Completion>,
 	pub timeline: Timeline,
 }
 
@@ -39,7 +40,7 @@ impl CompletionTracker {
 		Self {
 			timeline,
 			player_completions: (0..num_players)
-				.map(|index| (index, RollCompletion::Thinking))
+				.map(|index| (index, Completion::Thinking))
 				.collect(),
 		}
 	}
@@ -50,23 +51,19 @@ impl CompletionTracker {
 
 	pub fn is_complete(&self) -> bool {
 		// Check the deadline!?
-		log::info!("Looking at the completions...");
-		for v in self.player_completions.values() {
-			log::info!("{:?} {:?}", v, v.done());
-		}
-		self.player_completions.values().all(|rc| rc.done())
+		let all_done = self.player_completions.values().all(|rc| rc.done());
+		log::info!("showdown completion: {}", all_done);
+		all_done
 	}
 
-	pub fn set_player_completion(
-		&mut self, player_index: ids::PlayerIndex, completion: RollCompletion,
-	) {
+	pub fn set_player_completion(&mut self, player_index: ids::PlayerIndex, completion: Completion) {
 		self.player_completions.insert(player_index, completion);
 	}
 
 	pub fn should_offer_modifications_again(&self, player_index: ids::PlayerIndex) -> bool {
 		let result = self.player_completions.get(&player_index).unwrap();
-		*result == RollCompletion::DoneUntilModification
-		// self.player_completions.get(&player_index).as_deref().contains(&RollCompletion::DoneUntilModification)
+		*result == Completion::DoneUntilModification
+		// self.player_completions.get(&player_index).as_deref().contains(&Completion::DoneUntilModification)
 	}
 
 	pub(crate) fn reset_timeline(&mut self) {
@@ -77,7 +74,7 @@ impl CompletionTracker {
 #[derive(Debug, PartialEq, Clone)]
 pub struct PlayerCompletionPerspective {
 	pub player_name: String,
-	pub completion: RollCompletion,
+	pub completion: Completion,
 }
 
 impl CompletionTracker {

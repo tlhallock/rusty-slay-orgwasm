@@ -1,6 +1,8 @@
+use crate::slay::choices::CardPath;
 use crate::slay::choices::ChoicesPerspective;
 use crate::slay::choices::DisplayPath;
 use crate::slay::errors;
+use crate::slay::errors::SlayError;
 use crate::slay::errors::SlayResult;
 use crate::slay::game_context::GameBookKeeping;
 use crate::slay::ids;
@@ -19,6 +21,7 @@ use crate::slay::state::player::PlayerPerspective;
 use crate::slay::state::stack::Card;
 use crate::slay::state::summarizable::Summarizable;
 use crate::slay::tasks::PlayerTask;
+use crate::slay::tasks::TaskParamName;
 use crate::slay::visibility::Perspective;
 use crate::slay::visibility::VisibilitySpec;
 
@@ -83,14 +86,14 @@ pub struct Game {
 }
 
 impl Game {
-	pub fn get_element_id(&self, display_path: &Option<DisplayPath>) -> Option<ids::ElementId> {
-		display_path.as_ref().and_then(|p| match p {
-			DisplayPath::DeckAt(d) => Some(self.deck(*d).id),
-			DisplayPath::CardIn(_, id) => Some(*id),
-			DisplayPath::Player(player_index) => Some(self.players[*player_index].id),
-			DisplayPath::Roll(_) => None,
-		})
-	}
+	// pub fn get_element_id(&self, display_path: &Option<DisplayPath>) -> Option<ids::ElementId> {
+	// 	display_path.as_ref().and_then(|p| match p {
+	// 		DisplayPath::DeckAt(d) => Some(self.deck(*d).id),
+	// 		DisplayPath::TopCardIn(_, id) => Some(*id),
+	// 		DisplayPath::Player(player_index) => Some(self.players[*player_index].id),
+	// 		DisplayPath::Roll(_) => None,
+	// 	})
+	// }
 
 	pub fn clear_expired_modifiers(&mut self) {
 		self
@@ -132,48 +135,49 @@ impl Game {
 			// card_specs: specification::get_card_specs(),
 			players: Default::default(),
 			showdown: Default::default(),
-			draw: Deck::new(
-				context.id_generator.generate(),
-				DeckSpec {
-					visibility: VisibilitySpec::summary(),
-					label: "Draw pile".to_string(),
-				},
-			),
-			discard: Deck::new(
-				context.id_generator.generate(),
-				DeckSpec {
-					visibility: VisibilitySpec::summary(),
-					label: "Discard pile".to_string(),
-				},
-			),
-			monsters: Deck::new(
-				context.id_generator.generate(),
-				DeckSpec {
-					visibility: VisibilitySpec::visible(),
-					label: "Active monsters".to_string(),
-				},
-			),
-			leaders: Deck::new(
-				context.id_generator.generate(),
-				DeckSpec {
-					visibility: VisibilitySpec::invisible(),
-					label: "Party leaders".to_string(),
-				},
-			),
-			next_monsters: Deck::new(
-				context.id_generator.generate(),
-				DeckSpec {
-					visibility: VisibilitySpec::summary(),
-					label: "Upcoming monsters".to_string(),
-				},
-			),
+			draw: Deck::new(DeckSpec {
+				visibility: VisibilitySpec::summary(),
+				path: DeckPath::Draw,
+			}),
+			discard: Deck::new(DeckSpec {
+				visibility: VisibilitySpec::summary(),
+				path: DeckPath::Discard,
+			}),
+			monsters: Deck::new(DeckSpec {
+				visibility: VisibilitySpec::visible(),
+				path: DeckPath::ActiveMonsters,
+			}),
+			leaders: Deck::new(DeckSpec {
+				visibility: VisibilitySpec::invisible(),
+				path: DeckPath::PartyLeaders,
+			}),
+			next_monsters: Deck::new(DeckSpec {
+				visibility: VisibilitySpec::summary(),
+				path: DeckPath::NextMonsters,
+			}),
 			turn: Default::default(),
 		}
 	}
 
 	// Maybe cards should have been a top level field on game?
 	// The individual decks could just have card ids in them...
-	pub fn card(&self, card_id: ids::CardId) -> Option<&Card> {
+	pub fn maybe_card(&self, card_path: CardPath) -> Option<&Card> {
+		match card_path {
+			CardPath::TopCardIn(deck_path, card_id) => self.deck(deck_path).card(card_id),
+			CardPath::ModifyingCardIn(deck_path, top_card_id, modifier_card_id) => {
+				self.deck(deck_path).modifier(top_card_id, modifier_card_id)
+			}
+			CardPath::Leader(player_index) => Some(&self.players[player_index].leader),
+		}
+		// self.deck(card_path.deck_path()).stack(card_path.top_id())
+	}
+	pub fn card(&self, card_path: CardPath) -> &Card {
+		self.maybe_card(card_path).unwrap()
+	}
+
+	// Maybe cards should have been a top level field on game?
+	// The individual decks could just have card ids in them...
+	pub fn find_card(&self, card_id: ids::CardId) -> Option<&Card> {
 		for deck in self.decks().iter() {
 			if let Some(card) = deck.card(card_id) {
 				return Some(card);
@@ -190,18 +194,6 @@ impl Game {
 			}
 		}
 		None
-	}
-
-	pub fn player(&mut self, player_id: ids::PlayerId) -> SlayResult<&mut Player> {
-		self
-			.players
-			.iter_mut()
-			.find(|p| p.id == player_id)
-			.ok_or_else(|| errors::SlayError::new("Could not find player"))
-	}
-	pub fn player_index(&self, player_id: ids::PlayerId) -> Option<ids::PlayerIndex> {
-		// unreachable!()?
-		self.players.iter().position(|p| p.id == player_id)
 	}
 
 	pub fn current_player(&self) -> &Player {
@@ -265,8 +257,8 @@ impl Game {
 	//     }
 	// }
 
-	pub fn deck(&self, path: DeckPath) -> &Deck {
-		match path {
+	pub fn deck(&self, deck_path: DeckPath) -> &Deck {
+		match deck_path {
 			DeckPath::Draw => &self.draw,
 			DeckPath::Discard => &self.discard,
 			DeckPath::PartyLeaders => &self.leaders,
@@ -277,8 +269,8 @@ impl Game {
 			DeckPath::SlainMonsters(index) => &self.players[index].slain_monsters,
 		}
 	}
-	pub fn deck_mut(&mut self, path: DeckPath) -> &mut Deck {
-		match path {
+	pub fn deck_mut(&mut self, deck_path: DeckPath) -> &mut Deck {
+		match deck_path {
 			DeckPath::Draw => &mut self.draw,
 			DeckPath::Discard => &mut self.discard,
 			DeckPath::PartyLeaders => &mut self.leaders,
@@ -298,6 +290,10 @@ impl Game {
 		Ok(())
 	}
 
+	pub(crate) fn get_player_name(&self, player_index: ids::PlayerIndex) -> String {
+		self.players[player_index].name.to_owned()
+	}
+
 	pub(crate) fn set_active_player(&mut self, player_index: ids::PlayerIndex) {
 		self.turn.set_active_player(player_index);
 	}
@@ -311,6 +307,40 @@ impl Game {
 			return;
 		}
 		self.draw.extend(self.discard.drain(..));
+	}
+
+	pub(crate) fn player_param(
+		&self, player_index: ids::PlayerIndex, param: &TaskParamName,
+	) -> SlayResult<ids::PlayerIndex> {
+		self.players[player_index]
+			.tasks
+			.get_player_value(param)
+			.ok_or_else(|| SlayError::new("Missing required player parameter"))
+	}
+	pub(crate) fn card_param(
+		&self, player_index: ids::PlayerIndex, param: &TaskParamName,
+	) -> SlayResult<Option<ids::CardId>> {
+		self.players[player_index]
+			.tasks
+			.get_card_value(param)
+			.ok_or_else(|| SlayError::new("Missing required card parameter"))
+	}
+
+	pub(crate) fn players_with_stacks(&self) -> Vec<ids::PlayerIndex> {
+		self
+			.players
+			.iter()
+			.filter(|player| player.party.num_top_cards() > 0)
+			.map(|player| player.player_index)
+			.collect()
+	}
+
+	pub(crate) fn was_card_played(&self, player_index: Option<usize>, card_id: ids::CardId) -> bool {
+		if let Some(player_index) = player_index {
+			self.players[player_index].was_card_played(&card_id)
+		} else {
+			false
+		}
 	}
 }
 
@@ -335,45 +365,48 @@ impl Summarizable for Game {
 	}
 }
 
-pub fn get_perspective(owner_id: ids::PlayerId, player_id: ids::PlayerId) -> &'static Perspective {
-	if owner_id == player_id {
-		&Perspective::Owner
+pub fn get_perspective(
+	owner_id: ids::PlayerIndex, viewer_id: Option<ids::PlayerIndex>,
+) -> &'static Perspective {
+	if let Some(player_id) = viewer_id {
+		if owner_id == player_id {
+			&Perspective::Owner
+		} else {
+			&Perspective::Spectator
+		}
 	} else {
 		&Perspective::Spectator
 	}
 }
 
 impl Game {
-	pub fn to_player_perspective(&self, player_id: ids::PlayerId) -> GamePerspective {
-		let perspective = &Perspective::Spectator;
-		let choices = &self
-			.players
-			.iter()
-			.find(|p| p.id == player_id)
-			.and_then(|p| p.choices.as_ref())
-			.map(|c| c.to_perspective(self));
-		let players = self
-			.players
-			.iter()
-			.map(|p| {
-				p.to_perspective(
-					get_perspective(p.id, player_id),
-					choices,
-					p.player_index == self.active_player_index(),
-				)
-			})
-			.collect();
-		let decks = self
-			.decks()
-			.iter()
-			.filter(|d| d.is_visible(perspective))
-			.map(|d| d.to_perspective(perspective, None, choices))
-			.collect();
+	pub fn to_player_perspective(&self, viewing_player: Option<ids::PlayerIndex>) -> GamePerspective {
+		let choices = &if let Some(player_index) = viewing_player {
+			self.players[player_index].choices.as_ref()
+		} else {
+			None
+		};
 		GamePerspective {
-			players,
-			decks,
+			players: self
+				.players
+				.iter()
+				.map(|p| {
+					p.to_perspective(
+						&self,
+						choices,
+						p.player_index == self.active_player_index(),
+						get_perspective(p.player_index, viewing_player),
+					)
+				})
+				.collect(),
+			decks: self
+				.decks()
+				.iter()
+				.filter(|d| d.visible_to_spectator())
+				.map(|d| d.to_spectator_perspective(self, choices, None))
+				.collect(),
 			turn: self.get_turn(),
-			choices: choices.to_owned(), // TODO
+			choices: choices.map(|c| c.to_perspective(self)),
 			roll: self
 				.showdown
 				.get_roll()

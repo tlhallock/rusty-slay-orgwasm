@@ -37,20 +37,17 @@ impl AppState {
 	}
 
 	pub fn perspective(&self) -> GamePerspective {
-		let player_id = self.game.players[self.my_player_index].id;
-		self.game.to_player_perspective(player_id)
+		self.game.to_player_perspective(Some(self.my_player_index))
 	}
 
 	fn make_selection(&mut self, choice_id: ids::ChoiceId) -> bool {
-		let player_id = self.game.players[self.my_player_index].id;
-
 		let new_notifications = &mut Vec::new();
 		{
 			let mut notify = |n| new_notifications.push(n);
 			driver::make_selection(
 				&mut self.context,
 				&mut self.game,
-				player_id,
+				self.my_player_index,
 				choice_id,
 				&mut notify,
 			)
@@ -69,17 +66,11 @@ impl AppState {
 		let mut new_state = self.clone();
 		new_state.make_selection(choice_id);
 
-		let (player_id, _choice_id) =
+		let (player_index, _choice_id) =
 			strategy::pick_a_random_choice(&mut new_state.context, &mut new_state.game)
 				.expect("I knew it.");
 
-		new_state.my_player_index = new_state
-			.game
-			.players
-			.iter()
-			.position(|p| p.id == player_id)
-			.unwrap();
-
+		new_state.my_player_index = player_index;
 		new_state
 	}
 }

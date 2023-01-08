@@ -3,7 +3,7 @@
 // use crate::slay::ids;
 // use crate::slay::showdown::challenge::{ChallengeRoll, ChallengeState};
 // use crate::slay::showdown::common::{ChallengeReason, ModificationPath, Roll, RollModification};
-// use crate::slay::showdown::completion::{CompletionTracker, RollCompletion};
+// use crate::slay::showdown::completion::{CompletionTracker, Completion};
 // use crate::slay::showdown::current_showdown::ShowDown;
 // use crate::slay::showdown::offer::OfferChallengesState;
 // use crate::slay::showdown::roll_state::{RollReason, RollState};

@@ -1,9 +1,16 @@
+use crate::slay::choices::CardPath;
 use crate::slay::choices::ChoiceAssociation;
+use crate::slay::choices::ChoiceDisplayType;
+use crate::slay::choices::Choices;
 use crate::slay::choices::ChoicesPerspective;
+use crate::slay::choices::DisplayPath;
 use crate::slay::ids;
 use crate::slay::specification;
 use crate::slay::specification::CardSpec;
 use crate::slay::specification::CardType;
+use crate::slay::specification::HeroAbility;
+use crate::slay::specification::HeroType;
+use crate::slay::specification::MonsterSpec;
 use crate::slay::state::player::Player;
 use crate::slay::state::summarizable::Summarizable;
 
@@ -11,6 +18,9 @@ use std::fmt::Debug;
 use std::io::BufWriter;
 use std::io::Write;
 use std::iter::Iterator;
+
+use super::deck::DeckPath;
+use super::game::Game;
 
 #[derive(Debug, Clone)]
 pub struct Card {
@@ -31,24 +41,32 @@ impl Card {
 		self.spec.label.to_string()
 	}
 
-	pub fn monster_spec(&self) -> &Option<specification::MonsterSpec> {
+	pub fn monster_spec(&self) -> &Option<MonsterSpec> {
 		&self.spec.monster
 	}
 
-	pub fn hero_ability(&self) -> &Option<specification::HeroAbility> {
+	pub fn hero_ability(&self) -> &Option<HeroAbility> {
 		&self.spec.hero_ability
 	}
 
-	pub fn card_type(&self) -> &specification::CardType {
+	pub fn card_type(&self) -> &CardType {
 		&self.spec.card_type
 	}
 
-	pub fn get_hero_type(&self) -> Option<specification::HeroType> {
+	pub fn get_hero_type(&self) -> Option<HeroType> {
 		match &self.spec.card_type {
-			specification::CardType::Hero(hero_type)
-			| specification::CardType::PartyLeader(hero_type) => Some(*hero_type),
+			CardType::Hero(hero_type) | CardType::PartyLeader(hero_type) => Some(*hero_type),
 			_ => None,
 		}
+	}
+
+	// Should be part of the spec...
+	pub fn as_perspective(&self) -> CardSpecPerspective {
+		CardSpecPerspective::new(&self.spec)
+	}
+
+	pub fn as_choice(&self) -> ChoiceDisplayType {
+		ChoiceDisplayType::Card(self.as_perspective())
 	}
 }
 
@@ -101,27 +119,41 @@ impl Summarizable for Stack {
 
 impl Card {
 	pub fn to_perspective(
-		&self, player: Option<&Player>, choices: &Option<ChoicesPerspective>,
+		&self, game: &Game, choices: &Option<&Choices>, player_index: Option<ids::PlayerIndex>,
+		card_path: DisplayPath,
 	) -> CardPerspective {
 		CardPerspective {
 			id: self.id,
-			played_this_turn: player.iter().any(|p| p.was_card_played(&self.id)),
+			played_this_turn: game.was_card_played(player_index, self.id),
 			spec: CardSpecPerspective::new(&self.spec),
-			choice_associations: ChoiceAssociation::create_from_choices(choices, self.id),
+			choice_associations: ChoiceAssociation::create_from_choices(choices, card_path),
 		}
 	}
 }
 
 impl Stack {
 	pub fn to_perspective(
-		&self, player: Option<&Player>, choices: &Option<ChoicesPerspective>,
+		&self, game: &Game, choices: &Option<&Choices>, player_index: Option<ids::PlayerIndex>,
+		deck_path: DeckPath,
 	) -> StackPerspective {
 		StackPerspective {
-			top: self.top.to_perspective(player, choices),
+			top: self.top.to_perspective(
+				game,
+				choices,
+				player_index,
+				DisplayPath::CardAt(CardPath::TopCardIn(deck_path, self.top.id)),
+			),
 			modifiers: self
 				.modifiers
 				.iter()
-				.map(|s| s.to_perspective(player, choices))
+				.map(|s| {
+					s.to_perspective(
+						game,
+						choices,
+						player_index,
+						DisplayPath::CardAt(CardPath::ModifyingCardIn(deck_path, self.top.id, s.id)),
+					)
+				})
 				.collect(),
 		}
 	}

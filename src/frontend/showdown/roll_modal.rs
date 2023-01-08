@@ -11,8 +11,6 @@ use crate::frontend::showdown::common::RollHistory;
 use crate::frontend::showdown::common::RollTotal;
 use crate::frontend::stack::CardSpecView;
 use crate::frontend::stack::ExtraSpecProps;
-use crate::slay::showdown::consequences::Comparison;
-use crate::slay::showdown::consequences::Condition;
 use crate::slay::showdown::roll_state::RollPerspective;
 use crate::slay::showdown::roll_state::RollReason;
 
@@ -27,12 +25,12 @@ pub struct RollModalProps {
 	pub callbacks: GameCallbacks,
 }
 
-fn format_condition(condition: &Condition) -> String {
-	match condition.cmp {
-		Comparison::LE => format!("<= {}", condition.threshold),
-		Comparison::GE => format!(">= {}", condition.threshold),
-	}
-}
+// fn format_condition(condition: &Condition) -> String {
+// 	match condition.cmp {
+// 		Comparison::LE => format!("<= {}", condition.threshold),
+// 		Comparison::GE => format!(">= {}", condition.threshold),
+// 	}
+// }
 
 // fn format_consequences(consequences: &Vec<TaskSpec>) -> String {
 // 	return "".to_owned();

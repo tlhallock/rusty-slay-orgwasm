@@ -126,10 +126,9 @@ impl ShowDown for ChallengeState {
 
 impl ChallengeRoll {
 	pub fn to_perspective(
-		&self, game: &Game, choices: &Option<ChoicesPerspective>, display_path: DisplayPath,
+		&self, game: &Game, choices: &Option<&Choices>, display_path: DisplayPath,
 	) -> ChallengeRollPerspective {
 		ChallengeRollPerspective {
-			id: 0, // Need to fill this in again?
 			roller_name: game.players[self.player_index].name.to_owned(),
 			initial: self.initial.to_owned(),
 			history: self
@@ -138,25 +137,17 @@ impl ChallengeRoll {
 				.map(|m| m.to_perspective(game))
 				.collect(),
 			roll_total: self.calculate_roll_total(),
-			choices: choices
-				.iter()
-				.flat_map(|choices| {
-					choices
-						.actions
-						.iter()
-						.filter(|choice| choice.highlight_path.iter().any(|dp| *dp == display_path))
-						.map(|o| o.to_owned())
-						.collect::<Vec<ChoicePerspective>>()
-				})
-				.collect(),
+			choices: if let Some(choices) = choices {
+				choices.choice_perspetives(game)
+			} else {
+				Vec::new()
+			},
 		}
 	}
 }
 
 impl ChallengeState {
-	pub fn to_perspective(
-		&self, game: &Game, choices: &Option<ChoicesPerspective>,
-	) -> ChallengePerspective {
+	pub fn to_perspective(&self, game: &Game, choices: &Option<&Choices>) -> ChallengePerspective {
 		ChallengePerspective {
 			completions: self.tracker().to_perspective(game),
 			success: false,
@@ -173,17 +164,11 @@ impl ChallengeState {
 				DisplayPath::Roll(ModificationPath::Challenger),
 			),
 			roll_total: self.calculate_roll_total(),
-			choices: choices
-				.iter()
-				.flat_map(|choices| {
-					choices
-						.actions
-						.iter()
-						.filter(|choice| choice.highlight_path.is_none())
-						.map(|o| o.to_owned())
-						.collect::<Vec<ChoicePerspective>>()
-				})
-				.collect(),
+			choices: if let Some(choices) = choices {
+				choices.choice_perspetives(game)
+			} else {
+				Vec::new()
+			},
 		}
 	}
 }
@@ -202,7 +187,6 @@ pub struct ChallengePerspective {
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct ChallengeRollPerspective {
-	id: ids::RollId,
 	pub roller_name: String,
 	pub initial: Roll,
 	pub history: Vec<ModificationPerspective>,

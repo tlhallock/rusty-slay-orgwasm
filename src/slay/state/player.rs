@@ -1,5 +1,7 @@
 use crate::slay::choices;
+use crate::slay::choices::CardPath;
 use crate::slay::choices::ChoiceAssociation;
+use crate::slay::choices::Choices;
 use crate::slay::choices::ChoicesPerspective;
 use crate::slay::errors;
 use crate::slay::ids;
@@ -9,6 +11,7 @@ use crate::slay::specification::DeckSpec;
 use crate::slay::specification::HeroType;
 use crate::slay::state::deck::Deck;
 use crate::slay::state::deck::DeckPerspective;
+use crate::slay::state::game::Game;
 use crate::slay::state::game::Turn;
 use crate::slay::state::stack::Card;
 use crate::slay::state::stack::CardPerspective;
@@ -24,14 +27,15 @@ use std::io::BufWriter;
 use std::io::Write;
 use std::iter::Iterator;
 
+use super::deck::DeckPath;
+
 #[derive(Clone, Debug)]
 pub struct Player {
-	pub id: ids::PlayerId,
 	pub player_index: ids::PlayerIndex,
 	pub name: String,
 
 	pub buffs: PlayerBuffs,
-	pub choices: Option<choices::Choices>,
+	pub choices: Option<Choices>,
 	pub tasks: PlayerTasks,
 
 	pub leader: Card,
@@ -59,11 +63,8 @@ impl Player {
 	pub fn decks_mut(&mut self) -> [&mut Deck; 3] {
 		[&mut self.hand, &mut self.party, &mut self.slain_monsters]
 	}
-	pub fn new(
-		id_gen: &mut ids::IdGenerator, name: String, player_index: ids::PlayerIndex, leader: Card,
-	) -> Self {
+	pub fn new(name: String, player_index: ids::PlayerIndex, leader: Card) -> Self {
 		Player {
-			id: id_gen.generate(),
 			player_index,
 			name,
 			choices: None,
@@ -71,27 +72,18 @@ impl Player {
 			remaining_action_points: 0,
 			leader,
 			buffs: Default::default(),
-			hand: Deck::new(
-				id_gen.generate(),
-				DeckSpec {
-					visibility: VisibilitySpec::summary(),
-					label: "Hand".to_string(),
-				},
-			),
-			party: Deck::new(
-				id_gen.generate(),
-				DeckSpec {
-					visibility: VisibilitySpec::visible(),
-					label: "Party".to_string(),
-				},
-			),
-			slain_monsters: Deck::new(
-				id_gen.generate(),
-				specification::DeckSpec {
-					visibility: VisibilitySpec::visible(),
-					label: "Slain monsters".to_string(),
-				},
-			),
+			hand: Deck::new(DeckSpec {
+				visibility: VisibilitySpec::summary(),
+				path: DeckPath::Hand(player_index),
+			}),
+			party: Deck::new(DeckSpec {
+				visibility: VisibilitySpec::visible(),
+				path: DeckPath::Party(player_index),
+			}),
+			slain_monsters: Deck::new(DeckSpec {
+				visibility: VisibilitySpec::visible(),
+				path: DeckPath::SlainMonsters(player_index),
+			}),
 			played_this_turn: Default::default(),
 		}
 	}
@@ -163,7 +155,6 @@ pub struct PlayerPerspective {
 	// Are they active player?
 	// Is this you?
 	// action points
-	pub id: ids::PlayerId,
 	pub name: String,
 	pub me: bool,
 	pub active: bool,
@@ -179,22 +170,29 @@ pub struct PlayerPerspective {
 
 impl Player {
 	pub fn to_perspective(
-		&self, perspective: &Perspective, choices: &Option<ChoicesPerspective>, active: bool,
+		&self, game: &Game, choices: &Option<&Choices>, active: bool, perspective: &Perspective,
 	) -> PlayerPerspective {
 		PlayerPerspective {
-			id: self.id,
 			name: self.name.to_owned(),
 			remaining_action_points: self.get_remaining_action_points(),
-			leader: self.leader.to_perspective(Some(self), choices),
+			leader: self.leader.to_perspective(
+				game,
+				choices,
+				Some(self.player_index),
+				CardPath::Leader(self.player_index).display(),
+			),
 			decks: self
 				.decks()
 				.iter()
 				.filter(|d| d.is_visible(perspective))
-				.map(|d| d.to_perspective(perspective, Some(self), choices))
+				.map(|d| d.to_perspective(game, choices, Some(self.player_index), perspective))
 				.collect(),
 			me: perspective == &Perspective::Owner,
 			active,
-			choice_associations: ChoiceAssociation::create_from_choices(choices, self.id),
+			choice_associations: ChoiceAssociation::create_from_choices(
+				choices,
+				choices::DisplayPath::Player(self.player_index),
+			),
 			total_action_points: 3,
 		}
 	}
