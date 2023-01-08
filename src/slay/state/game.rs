@@ -1,4 +1,3 @@
-
 use crate::slay::choices::CardPath;
 use crate::slay::choices::ChoicesPerspective;
 use crate::slay::errors::SlayError;

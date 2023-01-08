@@ -11,21 +11,21 @@ use crate::slay::specification;
 use crate::slay::specification::CardType;
 use crate::slay::specification::DeckSpec;
 use crate::slay::specification::HeroType;
+use crate::slay::state::game::Game;
 use crate::slay::state::stack::Card;
 use crate::slay::state::stack::Stack;
 use crate::slay::state::stack::StackPerspective;
 use crate::slay::state::summarizable::Summarizable;
 use crate::slay::visibility::Perspective;
 use crate::slay::visibility::Visibility;
-use crate::slay::state::game::Game;
 
-use std::io::Write;
 use std::collections::HashSet;
 use std::collections::VecDeque;
 use std::fmt::Debug;
 use std::io::BufWriter;
-use std::ops::RangeBounds;
+use std::io::Write;
 use std::iter::Iterator;
+use std::ops::RangeBounds;
 
 // Lol, tried of looking for the deck by id...
 #[derive(Debug, PartialEq, Eq, Clone, Copy, Hash)]

@@ -10,15 +10,14 @@ use crate::slay::specification::CardType;
 use crate::slay::specification::HeroAbility;
 use crate::slay::specification::HeroType;
 use crate::slay::specification::MonsterSpec;
-use crate::slay::state::summarizable::Summarizable;
 use crate::slay::state::deck::DeckPath;
 use crate::slay::state::game::Game;
+use crate::slay::state::summarizable::Summarizable;
 
 use std::fmt::Debug;
 use std::io::BufWriter;
 use std::io::Write;
 use std::iter::Iterator;
-
 
 #[derive(Debug, Clone)]
 pub struct Card {

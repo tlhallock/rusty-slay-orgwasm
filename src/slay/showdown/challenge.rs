@@ -1,18 +1,16 @@
-
-use crate::slay::choices::{ChoicePerspective, Choices};
-use crate::slay::deadlines::Timeline;
-use crate::slay::game_context::GameBookKeeping;
-use crate::slay::state::game::Game;
-use crate::slay::{deadlines, ids};
-use crate::slay::showdown::common::Roll;
 use super::common::ChallengeReason;
 use super::common::ModificationPath;
 use super::common::{ModificationPerspective, RollModification};
 use super::completion::{CompletionTracker, PlayerCompletionPerspective};
 use super::consequences::RollConsequences;
 use super::roll_state::list_modification_choices;
+use crate::slay::choices::{ChoicePerspective, Choices};
+use crate::slay::deadlines::Timeline;
+use crate::slay::game_context::GameBookKeeping;
+use crate::slay::showdown::common::Roll;
 use crate::slay::showdown::current_showdown::ShowDown;
-
+use crate::slay::state::game::Game;
+use crate::slay::{deadlines, ids};
 
 #[derive(Debug, Clone)]
 pub struct ChallengeRoll {
@@ -125,7 +123,7 @@ impl ShowDown for ChallengeState {
 
 impl ChallengeRoll {
 	pub fn to_perspective(
-		&self, game: &Game, choices: &Option<&Choices>
+		&self, game: &Game, choices: &Option<&Choices>,
 	) -> ChallengeRollPerspective {
 		ChallengeRollPerspective {
 			roller_name: game.players[self.player_index].name.to_owned(),
@@ -153,13 +151,11 @@ impl ChallengeState {
 			timeline: self.tracker().timeline.to_owned(),
 			reason: self.reason.to_owned(),
 			initiator: self.initiator.to_perspective(
-				game,
-				choices,
+				game, choices,
 				// DisplayPath::Roll(ModificationPath::Initiator),
 			),
 			challenger: self.challenger.to_perspective(
-				game,
-				choices,
+				game, choices,
 				// DisplayPath::Roll(ModificationPath::Challenger),
 			),
 			roll_total: self.calculate_roll_total(),

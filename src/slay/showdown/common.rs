@@ -1,4 +1,3 @@
-
 use crate::slay::choices::CardPath;
 use crate::slay::ids;
 use crate::slay::specification::CardSpec;
@@ -6,8 +5,6 @@ use crate::slay::state::game::Game;
 use crate::slay::state::stack::CardSpecPerspective;
 
 use rand::Rng;
-
-
 
 // Only the party needs stacks...
 

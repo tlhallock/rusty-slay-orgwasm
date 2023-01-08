@@ -150,8 +150,8 @@ pub fn advance_game(
 }
 
 pub fn make_selection(
-	game: &mut Game, player_index: ids::PlayerIndex,
-	choice_id: ids::ElementId, notify: &mut dyn FnMut(Notification),
+	game: &mut Game, player_index: ids::PlayerIndex, choice_id: ids::ElementId,
+	notify: &mut dyn FnMut(Notification),
 ) -> SlayResult<()> {
 	// TODO: this doesn't copy a Choices on the stack does it?
 	let choices = Some(

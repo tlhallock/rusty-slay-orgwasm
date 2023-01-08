@@ -1,6 +1,6 @@
-use std::collections::HashSet;
 use super::discard::Discard;
 use super::pull;
+use std::collections::HashSet;
 
 use crate::slay::errors::SlayResult;
 use crate::slay::game_context::GameBookKeeping;
@@ -10,7 +10,6 @@ use crate::slay::state::game::Game;
 use crate::slay::tasks::PlayerTask;
 use crate::slay::tasks::TaskParamName;
 use crate::slay::tasks::TaskProgressResult;
-
 
 #[derive(Clone, Debug)]
 pub struct SlipperyPaws {}

@@ -1,13 +1,13 @@
 use std::collections::VecDeque;
 use yew::Callback;
 
+use super::card_modal::CardModalInfo;
 use crate::slay::driver::AdvanceGameResult;
 use crate::slay::game_context::GameBookKeeping;
 use crate::slay::ids;
 use crate::slay::message::Notification;
 use crate::slay::state::game::{Game, GamePerspective};
 use crate::slay::{driver, strategy};
-use super::card_modal::CardModalInfo;
 
 #[derive(Clone)]
 pub struct AppState {
@@ -42,13 +42,8 @@ impl AppState {
 		let new_notifications = &mut Vec::new();
 		{
 			let mut notify = |n| new_notifications.push(n);
-			driver::make_selection(
-				&mut self.game,
-				self.my_player_index,
-				choice_id,
-				&mut notify,
-			)
-			.expect("oops");
+			driver::make_selection(&mut self.game, self.my_player_index, choice_id, &mut notify)
+				.expect("oops");
 		}
 
 		self.notifications.extend(new_notifications.drain(..));

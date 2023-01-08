@@ -1,9 +1,9 @@
 use yew::classes;
 use yew::prelude::*;
 
+use crate::frontend::app::GameCallbacks;
 use crate::slay::choices::ChoiceAssociation;
 use crate::slay::state::stack::CardSpecPerspective;
-use crate::frontend::app::GameCallbacks;
 
 #[derive(Properties, PartialEq)]
 pub struct CardModalProps {

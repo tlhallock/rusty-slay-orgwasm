@@ -1,12 +1,12 @@
 use yew::classes;
 use yew::prelude::*;
 
+use crate::frontend::app::ChoiceState;
+use crate::frontend::card_modal::CardModalInfo;
 use crate::slay::choices::ChoiceAssociation;
 use crate::slay::choices::ChoiceAssociationType;
 use crate::slay::state::stack::CardSpecPerspective;
 use crate::slay::state::stack::StackPerspective;
-use crate::frontend::app::ChoiceState;
-use crate::frontend::card_modal::CardModalInfo;
 
 #[derive(Properties, PartialEq, Default)]
 pub struct ExtraSpecProps {

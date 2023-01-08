@@ -1,4 +1,3 @@
-
 use crate::slay::choices;
 use crate::slay::choices::CardPath;
 use crate::slay::choices::ChoiceAssociation;
@@ -9,6 +8,7 @@ use crate::slay::modifiers::PlayerBuffs;
 use crate::slay::specification::DeckSpec;
 use crate::slay::specification::HeroType;
 use crate::slay::state::deck::Deck;
+use crate::slay::state::deck::DeckPath;
 use crate::slay::state::deck::DeckPerspective;
 use crate::slay::state::game::Game;
 use crate::slay::state::game::Turn;
@@ -19,14 +19,12 @@ use crate::slay::tasks;
 use crate::slay::tasks::PlayerTasks;
 use crate::slay::visibility::Perspective;
 use crate::slay::visibility::VisibilitySpec;
-use crate::slay::state::deck::DeckPath;
 
 use std::collections::HashSet;
 use std::fmt::Debug;
 use std::io::BufWriter;
 use std::io::Write;
 use std::iter::Iterator;
-
 
 #[derive(Clone, Debug)]
 pub struct Player {

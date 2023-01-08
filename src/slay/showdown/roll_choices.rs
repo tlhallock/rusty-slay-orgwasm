@@ -1,4 +1,3 @@
-
 use crate::slay::choices::CardPath;
 use crate::slay::choices::ChoiceDisplay;
 use crate::slay::choices::ChoiceDisplayType;
@@ -8,16 +7,15 @@ use crate::slay::deadlines;
 use crate::slay::errors::{SlayError, SlayResult};
 use crate::slay::game_context::GameBookKeeping;
 use crate::slay::ids;
+use crate::slay::showdown::common::ModificationPath;
+use crate::slay::showdown::common::RollModification;
+use crate::slay::showdown::common::RollModificationChoiceType;
+use crate::slay::showdown::completion::{Completion, CompletionTracker};
+use crate::slay::showdown::current_showdown::ShowDown;
 use crate::slay::state::deck::DeckPath;
 use crate::slay::state::game::Game;
 use crate::slay::state::stack::Card;
 use crate::slay::tasks::{MoveCardTask, PlayerTask, TaskProgressResult};
-use crate::slay::showdown::completion::{Completion, CompletionTracker};
-use crate::slay::showdown::current_showdown::ShowDown;
-use crate::slay::showdown::common::RollModificationChoiceType;
-use crate::slay::showdown::common::RollModification;
-use crate::slay::showdown::common::ModificationPath;
-
 
 #[derive(Debug, Clone)]
 pub struct ModifyRollTask {

@@ -5,14 +5,14 @@ use std::io::Write;
 use crate::slay::deadlines::Timeline;
 use crate::slay::ids;
 use crate::slay::showdown::common::ModificationPath;
-use crate::slay::state::deck::DeckPath;
-use crate::slay::state::game::Game;
-use crate::slay::state::summarizable::Summarizable;
-use crate::slay::tasks::PlayerTask;
 use crate::slay::showdown::common::RollModificationChoiceType;
 use crate::slay::showdown::completion::Completion;
+use crate::slay::state::deck::DeckPath;
+use crate::slay::state::game::Game;
 use crate::slay::state::stack::CardSpecPerspective;
+use crate::slay::state::summarizable::Summarizable;
 use crate::slay::tasks::MoveCardTask;
+use crate::slay::tasks::PlayerTask;
 
 #[derive(Clone, Debug)]
 pub struct Choices {

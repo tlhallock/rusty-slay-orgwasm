@@ -1,4 +1,3 @@
-
 use crate::slay::state::game::Turn;
 
 #[derive(Debug, Clone, Copy)]

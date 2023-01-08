@@ -1,4 +1,4 @@
-
+use super::params::ChooseCardFromPlayerParameterTask;
 use crate::slay::abilities::params::ChoosePlayerParameterTask;
 use crate::slay::abilities::params::ClearParamsTask;
 use crate::slay::errors::SlayResult;
@@ -8,8 +8,6 @@ use crate::slay::state::game::Game;
 use crate::slay::tasks::PlayerTask;
 use crate::slay::tasks::TaskParamName;
 use crate::slay::tasks::TaskProgressResult;
-use super::params::ChooseCardFromPlayerParameterTask;
-
 
 #[derive(Clone, Debug)]
 pub struct StealTask {}

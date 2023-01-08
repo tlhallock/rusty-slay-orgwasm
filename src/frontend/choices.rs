@@ -1,8 +1,8 @@
 use yew::prelude::*;
 
+use crate::frontend::app::GameCallbacks;
 use crate::slay::choices::{ChoicePerspective, ChoicesPerspective};
 use crate::slay::ids;
-use crate::frontend::app::GameCallbacks;
 
 #[derive(Properties, PartialEq)]
 pub struct ChoiceProps {

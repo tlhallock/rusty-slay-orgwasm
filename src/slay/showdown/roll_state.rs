@@ -1,17 +1,16 @@
-
 use crate::slay::choices::{ChoicePerspective, Choices, TasksChoice};
 use crate::slay::deadlines::{self, Timeline};
 use crate::slay::game_context::GameBookKeeping;
 use crate::slay::ids;
-use crate::slay::state::game::Game;
-use crate::slay::state::stack::CardSpecPerspective;
-use crate::slay::showdown::current_showdown::ShowDown;
 use crate::slay::showdown::common::Roll;
 use crate::slay::showdown::common::RollModification;
 use crate::slay::showdown::common::{ModificationPath, ModificationPerspective};
 use crate::slay::showdown::completion::{CompletionTracker, PlayerCompletionPerspective};
 use crate::slay::showdown::consequences::RollConsequences;
+use crate::slay::showdown::current_showdown::ShowDown;
 use crate::slay::showdown::roll_choices::{self, create_modify_roll_choice};
+use crate::slay::state::game::Game;
+use crate::slay::state::stack::CardSpecPerspective;
 
 // Only the party needs stacks...
 

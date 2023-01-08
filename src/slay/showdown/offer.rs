@@ -1,18 +1,17 @@
-
+use crate::slay::choices::{ChoicePerspective, Choices, TasksChoice};
 use crate::slay::deadlines::Timeline;
+use crate::slay::errors::SlayResult;
 use crate::slay::game_context::GameBookKeeping;
 use crate::slay::ids;
-use crate::slay::choices::{ChoicePerspective, Choices, TasksChoice};
-use crate::slay::errors::SlayResult;
-use crate::slay::specification::CardType;
 use crate::slay::showdown::challenge::ChallengeState;
+use crate::slay::showdown::common::ChallengeReason;
 use crate::slay::showdown::completion::CompletionTracker;
+use crate::slay::showdown::completion::PlayerCompletionPerspective;
 use crate::slay::showdown::consequences::RollConsequences;
 use crate::slay::showdown::current_showdown::ShowDown;
-use crate::slay::state::game::Game;
-use crate::slay::showdown::common::ChallengeReason;
-use crate::slay::showdown::completion::PlayerCompletionPerspective;
 use crate::slay::showdown::roll_choices::{self, create_challenge_choice};
+use crate::slay::specification::CardType;
+use crate::slay::state::game::Game;
 
 #[derive(Debug, Clone)]
 pub struct OfferChallengesState {

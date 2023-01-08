@@ -1,6 +1,6 @@
 use chrono::DateTime;
-use chrono::Utc;
 use chrono::Duration;
+use chrono::Utc;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct TimelineCompletion {
