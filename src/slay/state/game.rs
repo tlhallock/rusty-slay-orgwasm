@@ -3,7 +3,6 @@ use crate::slay::choices::CardPath;
 use crate::slay::choices::ChoicesPerspective;
 use crate::slay::errors::SlayError;
 use crate::slay::errors::SlayResult;
-use crate::slay::game_context::GameBookKeeping;
 use crate::slay::ids;
 use crate::slay::modifiers;
 use crate::slay::showdown::challenge::ChallengePerspective;

@@ -1,5 +1,5 @@
 
-use crate::slay::choices::{ChoicePerspective, Choices, DisplayPath};
+use crate::slay::choices::{ChoicePerspective, Choices};
 use crate::slay::deadlines::Timeline;
 use crate::slay::game_context::GameBookKeeping;
 use crate::slay::state::game::Game;
