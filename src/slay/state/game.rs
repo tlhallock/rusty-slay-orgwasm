@@ -1,7 +1,6 @@
+
 use crate::slay::choices::CardPath;
 use crate::slay::choices::ChoicesPerspective;
-use crate::slay::choices::DisplayPath;
-use crate::slay::errors;
 use crate::slay::errors::SlayError;
 use crate::slay::errors::SlayResult;
 use crate::slay::game_context::GameBookKeeping;
@@ -130,7 +129,7 @@ impl Game {
 		self.players.len()
 	}
 
-	pub fn new(context: &mut GameBookKeeping) -> Self {
+	pub fn new() -> Self {
 		Game {
 			// card_specs: specification::get_card_specs(),
 			players: Default::default(),
@@ -406,7 +405,7 @@ impl Game {
 				.map(|d| d.to_spectator_perspective(self, choices, None))
 				.collect(),
 			turn: self.get_turn(),
-			choices: choices.map(|c| c.to_perspective(self)),
+			choices: choices.map(|c| c.to_perspective()),
 			roll: self
 				.showdown
 				.get_roll()

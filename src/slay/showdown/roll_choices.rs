@@ -1,7 +1,9 @@
-use crate::frontend::showdown::challenge;
-use crate::slay::choices::{
-	self, CardPath, ChoiceDisplay, ChoiceDisplayType, DisplayArrow, DisplayPath, TasksChoice,
-};
+
+use crate::slay::choices::CardPath;
+use crate::slay::choices::ChoiceDisplay;
+use crate::slay::choices::ChoiceDisplayType;
+use crate::slay::choices::DisplayPath;
+use crate::slay::choices::TasksChoice;
 use crate::slay::deadlines;
 use crate::slay::errors::{SlayError, SlayResult};
 use crate::slay::game_context::GameBookKeeping;
@@ -10,12 +12,12 @@ use crate::slay::state::deck::DeckPath;
 use crate::slay::state::game::Game;
 use crate::slay::state::stack::Card;
 use crate::slay::tasks::{MoveCardTask, PlayerTask, TaskProgressResult};
-
-use super::common::{
-	ModificationPath, RollModification, RollModificationChoice, RollModificationChoiceType,
-};
-use super::completion::{Completion, CompletionTracker};
+use crate::slay::showdown::completion::{Completion, CompletionTracker};
 use crate::slay::showdown::current_showdown::ShowDown;
+use crate::slay::showdown::common::RollModificationChoiceType;
+use crate::slay::showdown::common::RollModification;
+use crate::slay::showdown::common::ModificationPath;
+
 
 #[derive(Debug, Clone)]
 pub struct ModifyRollTask {
@@ -62,7 +64,7 @@ pub fn create_modify_roll_choice(
 	modification_amount: i32, modification_path: &ModificationPath,
 ) -> TasksChoice {
 	let choice_id = context.id_generator.generate();
-	let display_path =
+	let _display_path =
 		DisplayPath::CardAt(CardPath::TopCardIn(DeckPath::Hand(player_index), card.id));
 	TasksChoice::new(
 		choice_id,

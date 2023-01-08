@@ -150,7 +150,7 @@ pub fn advance_game(
 }
 
 pub fn make_selection(
-	context: &mut GameBookKeeping, game: &mut Game, player_index: ids::PlayerIndex,
+	game: &mut Game, player_index: ids::PlayerIndex,
 	choice_id: ids::ElementId, notify: &mut dyn FnMut(Notification),
 ) -> SlayResult<()> {
 	// TODO: this doesn't copy a Choices on the stack does it?
@@ -181,7 +181,7 @@ pub fn game_loop() -> SlayResult<()> {
 	simple_logging::log_to_file("output/log.txt", LevelFilter::Info).expect("Unable to log.");
 
 	let context = &mut GameBookKeeping::new();
-	let game = &mut Game::new(context);
+	let game = &mut Game::new();
 
 	initialize_game(context, game);
 
@@ -226,7 +226,7 @@ pub fn game_loop() -> SlayResult<()> {
 		// let html = view::show_perspective(perspective);
 
 		let (player_id, choice_id) = strategy::pick_a_random_choice(context, game)?;
-		make_selection(context, game, player_id, choice_id, &mut |notification| {
+		make_selection(game, player_id, choice_id, &mut |notification| {
 			log::info!("Notification: '{}'", notification.message_text);
 		})?;
 		match advance_game(context, game)? {

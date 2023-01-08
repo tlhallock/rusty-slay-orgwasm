@@ -1,15 +1,13 @@
-use crate::slay::choices::Choices;
-
-use crate::slay::errors::SlayError;
-use crate::slay::errors::SlayResult;
-
-use crate::slay::game_context::GameBookKeeping;
-use crate::slay::ids;
-use crate::slay::state::game::Game;
 
 use std::collections::HashMap;
 use std::fmt::Debug;
 
+use crate::slay::choices::Choices;
+use crate::slay::errors::SlayError;
+use crate::slay::errors::SlayResult;
+use crate::slay::game_context::GameBookKeeping;
+use crate::slay::ids;
+use crate::slay::state::game::Game;
 use crate::slay::showdown::challenge::ChallengeState;
 use crate::slay::showdown::common::ModificationPath;
 use crate::slay::showdown::common::RollModification;

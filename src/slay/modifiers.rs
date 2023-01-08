@@ -1,4 +1,5 @@
-use super::state::game::Turn;
+
+use crate::slay::state::game::Turn;
 
 #[derive(Debug, Clone, Copy)]
 pub enum ModifierDuration {

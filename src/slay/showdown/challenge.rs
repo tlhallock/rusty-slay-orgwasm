@@ -1,12 +1,10 @@
-use crate::slay::choices::{ChoicePerspective, Choices, ChoicesPerspective, DisplayPath};
 
+use crate::slay::choices::{ChoicePerspective, Choices, DisplayPath};
 use crate::slay::deadlines::Timeline;
 use crate::slay::game_context::GameBookKeeping;
 use crate::slay::state::game::Game;
 use crate::slay::{deadlines, ids};
-
 use crate::slay::showdown::common::Roll;
-
 use super::common::ChallengeReason;
 use super::common::ModificationPath;
 use super::common::{ModificationPerspective, RollModification};
@@ -14,6 +12,7 @@ use super::completion::{CompletionTracker, PlayerCompletionPerspective};
 use super::consequences::RollConsequences;
 use super::roll_state::list_modification_choices;
 use crate::slay::showdown::current_showdown::ShowDown;
+
 
 #[derive(Debug, Clone)]
 pub struct ChallengeRoll {
@@ -126,7 +125,7 @@ impl ShowDown for ChallengeState {
 
 impl ChallengeRoll {
 	pub fn to_perspective(
-		&self, game: &Game, choices: &Option<&Choices>, display_path: DisplayPath,
+		&self, game: &Game, choices: &Option<&Choices>
 	) -> ChallengeRollPerspective {
 		ChallengeRollPerspective {
 			roller_name: game.players[self.player_index].name.to_owned(),
@@ -138,7 +137,7 @@ impl ChallengeRoll {
 				.collect(),
 			roll_total: self.calculate_roll_total(),
 			choices: if let Some(choices) = choices {
-				choices.choice_perspetives(game)
+				choices.choice_perspetives()
 			} else {
 				Vec::new()
 			},
@@ -156,16 +155,16 @@ impl ChallengeState {
 			initiator: self.initiator.to_perspective(
 				game,
 				choices,
-				DisplayPath::Roll(ModificationPath::Initiator),
+				// DisplayPath::Roll(ModificationPath::Initiator),
 			),
 			challenger: self.challenger.to_perspective(
 				game,
 				choices,
-				DisplayPath::Roll(ModificationPath::Challenger),
+				// DisplayPath::Roll(ModificationPath::Challenger),
 			),
 			roll_total: self.calculate_roll_total(),
 			choices: if let Some(choices) = choices {
-				choices.choice_perspetives(game)
+				choices.choice_perspetives()
 			} else {
 				Vec::new()
 			},

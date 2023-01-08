@@ -1,12 +1,12 @@
-use crate::slay::errors::{SlayError, SlayResult};
 
+use crate::slay::errors::{SlayError, SlayResult};
 use crate::slay::ids;
+use crate::slay::game_context::GameBookKeeping;
+use crate::slay::state::game::Game;
 
 use rand::Rng;
 
-use crate::slay::game_context::GameBookKeeping;
 
-use super::state::game::Game;
 
 // Emit logs like "Waiting for challenges..."
 

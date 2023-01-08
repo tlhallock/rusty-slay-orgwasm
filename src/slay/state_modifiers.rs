@@ -1,4 +1,5 @@
 use crate::slay::state::deck::Deck;
+
 use std::cmp;
 
 pub fn deal(source: &mut Deck, destination: &mut Deck, num: usize) {

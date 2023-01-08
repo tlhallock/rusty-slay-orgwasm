@@ -7,11 +7,6 @@ use crate::slay::abilities::params::ChoosePlayerParameterTask;
 use crate::slay::abilities::pull::PullFromTask;
 use crate::slay::abilities::sacrifice::Sacrifice;
 use crate::slay::actions::DrawTask;
-use crate::slay::choices::ChoiceDisplay;
-use crate::slay::choices::Choices;
-use crate::slay::choices::TasksChoice;
-use crate::slay::deadlines;
-use crate::slay::errors::SlayError;
 use crate::slay::errors::SlayResult;
 use crate::slay::game_context::GameBookKeeping;
 use crate::slay::ids;
@@ -26,7 +21,6 @@ use crate::slay::tasks::ReceiveModifier;
 use crate::slay::tasks::TaskParamName;
 use crate::slay::tasks::TaskProgressResult;
 use crate::slay::visibility::VisibilitySpec;
-
 use super::abilities::destroy::DestroyCardTask;
 use super::abilities::destroy::DestroyModifiersDestination;
 use super::abilities::heros;
@@ -446,7 +440,7 @@ pub fn get_card_specs() -> [CardSpec; 33] {
                 struct Anonymous {}
                 impl PlayerTask for Anonymous {
                   fn make_progress(
-                     &mut self, context: &mut GameBookKeeping, game: &mut Game, player_index: ids::PlayerIndex,
+                     &mut self, _context: &mut GameBookKeeping, _game: &mut Game, _player_index: ids::PlayerIndex,
                   ) -> SlayResult<TaskProgressResult> {
                     /////////////////
 

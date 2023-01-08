@@ -3,7 +3,6 @@
 use crate::slay::choices::CardPath;
 use crate::slay::choices::ChoiceAssociation;
 use crate::slay::choices::Choices;
-use crate::slay::choices::ChoicesPerspective;
 use crate::slay::choices::DisplayPath;
 use crate::slay::errors;
 use crate::slay::errors::SlayResult;
@@ -12,27 +11,21 @@ use crate::slay::specification;
 use crate::slay::specification::CardType;
 use crate::slay::specification::DeckSpec;
 use crate::slay::specification::HeroType;
-use crate::slay::state::player::Player;
 use crate::slay::state::stack::Card;
 use crate::slay::state::stack::Stack;
 use crate::slay::state::stack::StackPerspective;
 use crate::slay::state::summarizable::Summarizable;
 use crate::slay::visibility::Perspective;
 use crate::slay::visibility::Visibility;
+use crate::slay::state::game::Game;
 
 use std::io::Write;
-
 use std::collections::HashSet;
 use std::collections::VecDeque;
-
 use std::fmt::Debug;
-
 use std::io::BufWriter;
 use std::ops::RangeBounds;
-
 use std::iter::Iterator;
-
-use super::game::Game;
 
 // Lol, tried of looking for the deck by id...
 #[derive(Debug, PartialEq, Eq, Clone, Copy, Hash)]

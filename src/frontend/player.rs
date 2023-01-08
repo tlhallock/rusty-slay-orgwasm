@@ -3,9 +3,8 @@ use yew::prelude::*;
 
 use crate::frontend::deck::DeckView;
 use crate::slay::state::player::PlayerPerspective;
-
-use super::app::ChoiceState;
-use super::card_modal::CardModalInfo;
+use crate::frontend::app::ChoiceState;
+use crate::frontend::card_modal::CardModalInfo;
 
 #[derive(Properties, PartialEq)]
 struct ActionPointsProps {

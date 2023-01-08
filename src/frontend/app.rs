@@ -1,5 +1,4 @@
 use std::collections::VecDeque;
-
 use yew::Callback;
 
 use crate::slay::driver::AdvanceGameResult;
@@ -8,7 +7,6 @@ use crate::slay::ids;
 use crate::slay::message::Notification;
 use crate::slay::state::game::{Game, GamePerspective};
 use crate::slay::{driver, strategy};
-
 use super::card_modal::CardModalInfo;
 
 #[derive(Clone)]
@@ -25,7 +23,7 @@ impl AppState {
 		// log::info!("Hello {}", object.as_string().unwrap());
 
 		let mut context = GameBookKeeping::new();
-		let mut game = Game::new(&mut context);
+		let mut game = Game::new();
 		driver::initialize_game(&mut context, &mut game);
 		let player_index = game.active_player_index();
 		Self {
@@ -45,7 +43,6 @@ impl AppState {
 		{
 			let mut notify = |n| new_notifications.push(n);
 			driver::make_selection(
-				&mut self.context,
 				&mut self.game,
 				self.my_player_index,
 				choice_id,

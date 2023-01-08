@@ -1,11 +1,11 @@
-use crate::slay::game_context::GameBookKeeping;
 
-use super::ids;
-use super::specification::{self, CardType};
-use super::state::deck::Deck;
-use super::state::game::Game;
-use super::state::player::Player;
-use super::state::stack::{Card, Stack};
+use crate::slay::game_context::GameBookKeeping;
+use crate::slay::ids;
+use crate::slay::specification::{self, CardType};
+use crate::slay::state::deck::Deck;
+use crate::slay::state::game::Game;
+use crate::slay::state::player::Player;
+use crate::slay::state::stack::{Card, Stack};
 
 pub fn initialize_empty_game(context: &mut GameBookKeeping, game: &mut Game) {
 	specification::get_card_specs().iter().for_each(|spec| {
@@ -50,7 +50,7 @@ mod tests {
 	#[test]
 	pub fn test_add() {
 		let context = &mut GameBookKeeping::new();
-		let game = &mut Game::new(context);
+		let game = &mut Game::new();
 
 		super::initialize_empty_game(context, game);
 		let hero_card_id = super::find_hero_card(&game.draw).unwrap();

@@ -2,7 +2,6 @@ use crate::slay::choices::CardPath;
 use crate::slay::choices::ChoiceAssociation;
 use crate::slay::choices::ChoiceDisplayType;
 use crate::slay::choices::Choices;
-use crate::slay::choices::ChoicesPerspective;
 use crate::slay::choices::DisplayPath;
 use crate::slay::ids;
 use crate::slay::specification;
@@ -11,16 +10,15 @@ use crate::slay::specification::CardType;
 use crate::slay::specification::HeroAbility;
 use crate::slay::specification::HeroType;
 use crate::slay::specification::MonsterSpec;
-use crate::slay::state::player::Player;
 use crate::slay::state::summarizable::Summarizable;
+use crate::slay::state::deck::DeckPath;
+use crate::slay::state::game::Game;
 
 use std::fmt::Debug;
 use std::io::BufWriter;
 use std::io::Write;
 use std::iter::Iterator;
 
-use super::deck::DeckPath;
-use super::game::Game;
 
 #[derive(Debug, Clone)]
 pub struct Card {

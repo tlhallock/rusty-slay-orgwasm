@@ -1,12 +1,13 @@
-use crate::slay::{
-	choices::CardPath,
-	ids,
-	specification::CardSpec,
-	state::{game::Game, stack::CardSpecPerspective},
-};
+
+use crate::slay::choices::CardPath;
+use crate::slay::ids;
+use crate::slay::specification::CardSpec;
+use crate::slay::state::game::Game;
+use crate::slay::state::stack::CardSpecPerspective;
+
 use rand::Rng;
 
-use super::completion::Completion;
+
 
 // Only the party needs stacks...
 

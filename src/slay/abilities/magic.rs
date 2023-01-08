@@ -18,7 +18,7 @@ impl MagicTask {
 
 impl PlayerTask for MagicTask {
 	fn make_progress(
-		&mut self, context: &mut GameBookKeeping, game: &mut Game, player_index: ids::PlayerIndex,
+		&mut self, _context: &mut GameBookKeeping, _game: &mut Game, _player_index: ids::PlayerIndex,
 	) -> SlayResult<TaskProgressResult> {
 		match self.spell {}
 		todo!()

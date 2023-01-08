@@ -5,7 +5,6 @@ use crate::frontend::app::ChoiceState;
 use crate::frontend::app::GameCallbacks;
 use crate::frontend::icons::Continue;
 use crate::frontend::icons::Done;
-
 use crate::frontend::stack::CardSpecView;
 use crate::frontend::stack::ExtraSpecProps;
 use crate::slay::choices::ChoiceDisplayType;
@@ -14,7 +13,6 @@ use crate::slay::showdown::common::ModificationPerspective;
 use crate::slay::showdown::common::RollModificationChoiceType;
 use crate::slay::showdown::completion::Completion;
 use crate::slay::showdown::completion::PlayerCompletionPerspective;
-
 use crate::frontend::icons::DoNot;
 
 #[derive(Properties, PartialEq)]

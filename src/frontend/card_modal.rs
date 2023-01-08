@@ -3,8 +3,7 @@ use yew::prelude::*;
 
 use crate::slay::choices::ChoiceAssociation;
 use crate::slay::state::stack::CardSpecPerspective;
-
-use super::app::GameCallbacks;
+use crate::frontend::app::GameCallbacks;
 
 #[derive(Properties, PartialEq)]
 pub struct CardModalProps {

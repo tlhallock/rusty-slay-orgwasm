@@ -1,20 +1,17 @@
-use crate::slay::choices::{ChoicePerspective, Choices, ChoicesPerspective, TasksChoice};
-use crate::slay::deadlines::{self, Timeline};
 
+use crate::slay::choices::{ChoicePerspective, Choices, TasksChoice};
+use crate::slay::deadlines::{self, Timeline};
 use crate::slay::game_context::GameBookKeeping;
 use crate::slay::ids;
-
 use crate::slay::state::game::Game;
 use crate::slay::state::stack::CardSpecPerspective;
-
-use super::current_showdown::ShowDown;
-
-use super::common::Roll;
-use super::common::RollModification;
-use super::common::{ModificationPath, ModificationPerspective};
-use super::completion::{CompletionTracker, PlayerCompletionPerspective};
-use super::consequences::RollConsequences;
-use super::roll_choices::{self, create_modify_roll_choice};
+use crate::slay::showdown::current_showdown::ShowDown;
+use crate::slay::showdown::common::Roll;
+use crate::slay::showdown::common::RollModification;
+use crate::slay::showdown::common::{ModificationPath, ModificationPerspective};
+use crate::slay::showdown::completion::{CompletionTracker, PlayerCompletionPerspective};
+use crate::slay::showdown::consequences::RollConsequences;
+use crate::slay::showdown::roll_choices::{self, create_modify_roll_choice};
 
 // Only the party needs stacks...
 
@@ -180,7 +177,7 @@ impl RollState {
 			timeline: self.tracker().timeline.to_owned(),
 			reason: self.reason.to_owned(),
 			choices: if let Some(choices) = choices {
-				choices.choice_perspetives(game)
+				choices.choice_perspetives()
 			} else {
 				Vec::new()
 			},

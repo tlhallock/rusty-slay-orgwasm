@@ -1,21 +1,18 @@
+
 use crate::slay::deadlines::Timeline;
 use crate::slay::game_context::GameBookKeeping;
 use crate::slay::ids;
-
-use crate::slay::choices::{ChoicePerspective, Choices, ChoicesPerspective, TasksChoice};
+use crate::slay::choices::{ChoicePerspective, Choices, TasksChoice};
 use crate::slay::errors::SlayResult;
 use crate::slay::specification::CardType;
-
 use crate::slay::showdown::challenge::ChallengeState;
 use crate::slay::showdown::completion::CompletionTracker;
 use crate::slay::showdown::consequences::RollConsequences;
 use crate::slay::showdown::current_showdown::ShowDown;
 use crate::slay::state::game::Game;
-use crate::slay::state::stack::Card;
-
-use super::common::ChallengeReason;
-use super::completion::PlayerCompletionPerspective;
-use super::roll_choices::{self, create_challenge_choice};
+use crate::slay::showdown::common::ChallengeReason;
+use crate::slay::showdown::completion::PlayerCompletionPerspective;
+use crate::slay::showdown::roll_choices::{self, create_challenge_choice};
 
 #[derive(Debug, Clone)]
 pub struct OfferChallengesState {
@@ -118,7 +115,7 @@ impl OfferChallengesState {
 			completions: self.tracker().to_perspective(game),
 			reason: self.reason.to_owned(),
 			choices: if let Some(choices) = choices {
-				choices.choice_perspetives(game)
+				choices.choice_perspetives()
 			} else {
 				Vec::new()
 			},

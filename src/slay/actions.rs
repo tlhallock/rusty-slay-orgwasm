@@ -5,14 +5,12 @@ use crate::slay::choices::TasksChoice;
 use crate::slay::deadlines;
 use crate::slay::errors::SlayError;
 use crate::slay::errors::SlayResult;
-
 use crate::slay::game_context::GameBookKeeping;
 use crate::slay::ids;
 use crate::slay::showdown::common::ChallengeReason;
 use crate::slay::showdown::common::Roll;
 use crate::slay::showdown::completion::Completion;
 use crate::slay::showdown::completion::CompletionTracker;
-
 use crate::slay::showdown::consequences::Condition;
 use crate::slay::showdown::consequences::RollConsequence;
 use crate::slay::showdown::consequences::RollConsequences;
@@ -26,19 +24,17 @@ use crate::slay::tasks;
 use crate::slay::tasks::MoveCardTask;
 use crate::slay::tasks::PlayerTask;
 use crate::slay::tasks::TaskProgressResult;
-
-use super::abilities::magic::MagicTask;
-use super::abilities::params::ChoosePlayerParameterTask;
-use super::choices::CardPath;
-use super::choices::DisplayArrow;
-use super::choices::DisplayPath;
-use super::modifiers::ItemModifier;
-use super::specification::HeroAbility;
-use super::specification::MagicSpell;
-use super::specification::MonsterSpec;
-use super::state::game::Game;
-use super::state::stack::CardSpecPerspective;
-use super::tasks::TaskParamName;
+use crate::slay::abilities::magic::MagicTask;
+use crate::slay::abilities::params::ChoosePlayerParameterTask;
+use crate::slay::choices::CardPath;
+use crate::slay::choices::DisplayPath;
+use crate::slay::modifiers::ItemModifier;
+use crate::slay::specification::HeroAbility;
+use crate::slay::specification::MagicSpell;
+use crate::slay::specification::MonsterSpec;
+use crate::slay::state::game::Game;
+use crate::slay::state::stack::CardSpecPerspective;
+use crate::slay::tasks::TaskParamName;
 
 // Emit logs like "Waiting for challenges..."
 
@@ -112,7 +108,7 @@ fn create_place_hero_choice(
 }
 
 pub fn create_place_item_challenge_offer(
-	player_index: ids::PlayerIndex, card: &Card, item_modifier: &ItemModifier,
+	player_index: ids::PlayerIndex, card: &Card, _item_modifier: &ItemModifier,
 	players_with_stacks: Vec<ids::PlayerIndex>,
 ) -> Box<dyn PlayerTask> {
 	Box::new(OfferChallengesTask::new(OfferChallengesState::new(

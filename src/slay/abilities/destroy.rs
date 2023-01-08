@@ -9,8 +9,7 @@ use crate::slay::state::stack::Stack;
 use crate::slay::tasks::PlayerTask;
 use crate::slay::tasks::TaskParamName;
 use crate::slay::tasks::TaskProgressResult;
-
-use super::params::ChooseCardFromPlayerParameterTask;
+use crate::slay::abilities::params::ChooseCardFromPlayerParameterTask;
 
 #[derive(Clone, Debug)]
 pub struct DestroyTask {

@@ -5,9 +5,8 @@ use crate::slay::choices::ChoiceAssociation;
 use crate::slay::choices::ChoiceAssociationType;
 use crate::slay::state::stack::CardSpecPerspective;
 use crate::slay::state::stack::StackPerspective;
-
-use super::app::ChoiceState;
-use super::card_modal::CardModalInfo;
+use crate::frontend::app::ChoiceState;
+use crate::frontend::card_modal::CardModalInfo;
 
 #[derive(Properties, PartialEq, Default)]
 pub struct ExtraSpecProps {

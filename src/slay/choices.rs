@@ -3,20 +3,16 @@ use std::io::BufWriter;
 use std::io::Write;
 
 use crate::slay::deadlines::Timeline;
-use crate::slay::game_context::GameBookKeeping;
 use crate::slay::ids;
 use crate::slay::showdown::common::ModificationPath;
-use crate::slay::showdown::common::RollModificationChoice;
 use crate::slay::state::deck::DeckPath;
 use crate::slay::state::game::Game;
 use crate::slay::state::summarizable::Summarizable;
 use crate::slay::tasks::PlayerTask;
-
-use super::showdown::common::RollModificationChoiceType;
-use super::showdown::completion::Completion;
-use super::state::stack::Card;
-use super::state::stack::CardSpecPerspective;
-use super::tasks::MoveCardTask;
+use crate::slay::showdown::common::RollModificationChoiceType;
+use crate::slay::showdown::completion::Completion;
+use crate::slay::state::stack::CardSpecPerspective;
+use crate::slay::tasks::MoveCardTask;
 
 #[derive(Clone, Debug)]
 pub struct Choices {
@@ -39,7 +35,7 @@ impl Choices {
 		}
 	}
 
-	pub fn choice_perspetives(&self, game: &Game) -> Vec<ChoicePerspective> {
+	pub fn choice_perspetives(&self) -> Vec<ChoicePerspective> {
 		self
 			.options
 			.iter()
@@ -47,11 +43,11 @@ impl Choices {
 			.collect()
 	}
 
-	pub fn to_perspective(&self, game: &Game) -> ChoicesPerspective {
+	pub fn to_perspective(&self) -> ChoicesPerspective {
 		ChoicesPerspective {
 			timeline: self.timeline.to_owned(),
 			instructions: self.instructions.to_owned(),
-			actions: self.choice_perspetives(game),
+			actions: self.choice_perspetives(),
 		}
 	}
 }
@@ -96,7 +92,7 @@ impl CardPath {
 		match self {
 			CardPath::TopCardIn(_, card_id) => *card_id,
 			CardPath::ModifyingCardIn(_, _, card_id) => *card_id,
-			CardPath::Leader(card_id) => todo!(),
+			CardPath::Leader(_card_id) => todo!(),
 		}
 	}
 
