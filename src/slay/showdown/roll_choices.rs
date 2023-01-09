@@ -33,7 +33,7 @@ impl ModifyRollTask {
 
 impl PlayerTask for ModifyRollTask {
 	fn make_progress(
-		&mut self, context: &mut GameBookKeeping, game: &mut Game, player_index: ids::PlayerIndex,
+		&mut self, context: &mut GameBookKeeping, game: &mut Game, _player_index: ids::PlayerIndex,
 	) -> SlayResult<TaskProgressResult> {
 		let modification = self.modification.to_owned();
 

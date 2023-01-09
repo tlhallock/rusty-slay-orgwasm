@@ -189,7 +189,7 @@ struct MonsterSlainTask {
 
 impl PlayerTask for MonsterSlainTask {
 	fn make_progress(
-		&mut self, context: &mut GameBookKeeping, game: &mut Game, player_index: ids::PlayerIndex,
+		&mut self, _context: &mut GameBookKeeping, game: &mut Game, player_index: ids::PlayerIndex,
 	) -> SlayResult<TaskProgressResult> {
 		game.move_card(
 			DeckPath::ActiveMonsters,
