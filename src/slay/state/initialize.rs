@@ -42,9 +42,9 @@ fn initialize_global_decks(context: &mut GameBookKeeping, game: &mut Game) {
 	game.leaders.extend(leaders.drain(..));
 }
 
-fn initialize_players(context: &mut GameBookKeeping, game: &mut Game) {
+fn initialize_players(_context: &mut GameBookKeeping, game: &mut Game) {
 	for player_index in 0..4 {
-		let mut player = Player::new(
+		let player = Player::new(
 			format!("Unnamed bot {}", player_index + 1),
 			player_index,
 			game.leaders.deal().top,
@@ -88,7 +88,7 @@ fn randomly_initialize_monsters(
 }
 
 fn randomly_initialize_modifiers(
-	context: &mut GameBookKeeping, game: &mut Game, player_index: ids::PlayerIndex,
+	_context: &mut GameBookKeeping, _game: &mut Game, _player_index: ids::PlayerIndex,
 ) {
 	// TODO!
 }
