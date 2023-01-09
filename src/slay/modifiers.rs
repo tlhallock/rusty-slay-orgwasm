@@ -1,6 +1,6 @@
 use crate::slay::state::game::Turn;
 
-use super::{ids, specification::MagicSpell};
+use super::{ids, specification::{MagicSpell, HeroType}};
 
 #[derive(Debug, Clone, Copy)]
 pub enum ModifierDuration {
@@ -89,5 +89,14 @@ pub enum PlayerModifier {
 	AddToAllRolls(i32),
 }
 
+// Rename this to card modifier, or hero modifier
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum ItemModifier {}
+pub enum ItemModifier {
+	Mask(HeroType),
+	AddToRollForAbility(i32),
+	DrawOnUnsuccessfulRollForAbility(u32),
+	DiscardOnSuccessfulRollForAbility(u32),
+	RemoveAbility,
+	SacrificeMeInstead,
+}
+

@@ -142,7 +142,6 @@ impl PlayerTask for ChoosePlayerParameterTask {
 enum TaskParameterType {
 	Player,
 	Card,
-	OneOf,
 }
 
 #[derive(Debug, Clone)]
@@ -195,7 +194,6 @@ impl PlayerTask for SetParameterTask {
 						.ok_or_else(|| SlayError::new("Expected a card value"))?,
 				),
 			),
-			TaskParameterType::OneOf => todo!(),
 		}?;
 		Ok(TaskProgressResult::TaskComplete)
 	}

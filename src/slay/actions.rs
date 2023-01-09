@@ -362,7 +362,7 @@ fn create_hand_action_choice(
 			ability,
 		));
 	}
-	if let Some(modifier) = game.card(card_path).spec.item_modifier.as_ref() {
+	if let Some(modifier) = game.card(card_path).spec.card_modifier.as_ref() {
 		let players_with_stacks = game.players_with_stacks();
 		if !players_with_stacks.is_empty() {
 			return Some(create_place_item_choice(

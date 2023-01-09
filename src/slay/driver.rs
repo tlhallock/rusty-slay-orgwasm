@@ -38,11 +38,6 @@ fn use_action_points(context: &mut GameBookKeeping, game: &mut Game) {
 	actions::assign_action_choices(context, game);
 }
 
-fn check_for_expired_modifiers(game: &mut Game) {
-	for _player in game.players.iter_mut() {}
-	todo!()
-}
-
 pub enum AdvanceGameResult {
 	GameOver,
 	WaitingForPlayers,

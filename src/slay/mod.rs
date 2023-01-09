@@ -6,7 +6,7 @@ pub mod deadlines;
 pub mod driver;
 pub mod errors;
 pub mod game_context;
-pub mod hero_actions;
+pub mod hero_abilities;
 pub mod ids;
 pub mod message;
 pub mod modifiers;
@@ -18,4 +18,6 @@ pub mod state_modifiers;
 pub mod strategy;
 pub mod tasks;
 pub mod visibility;
+pub mod specs;
+
 // pub mod test_scripts;

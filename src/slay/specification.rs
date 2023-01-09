@@ -1,25 +1,15 @@
 use std::collections::HashSet;
 use std::vec;
 
-use super::abilities::destroy::DestroyCardTask;
-use super::abilities::destroy::DestroyModifiersDestination;
-use super::abilities::heros;
-use super::abilities::immediate::OfferPlayImmediately;
-use super::abilities::params::ChooseCardFromPlayerParameterTask;
-use super::abilities::params::ClearParamsTask;
-use super::abilities::steal;
-use super::abilities::steal::StealTask;
 use super::errors::SlayResult;
 use super::game_context::GameBookKeeping;
+use super::hero_abilities::HeroAbilityType;
 use super::ids;
 use super::modifiers::ItemModifier;
 use super::modifiers::ModifierOrigin;
 use super::state::game::Game;
 use super::tasks::TaskProgressResult;
 use crate::slay::abilities::discard::Discard;
-use crate::slay::abilities::heros::VictimDraws;
-use crate::slay::abilities::params::ChoosePlayerParameterTask;
-use crate::slay::abilities::pull::PullFromTask;
 use crate::slay::abilities::sacrifice::Sacrifice;
 use crate::slay::actions::DrawTask;
 use crate::slay::modifiers::PlayerModifier;
@@ -29,7 +19,6 @@ use crate::slay::showdown::consequences::RollConsequences;
 use crate::slay::state::deck::DeckPath;
 use crate::slay::tasks::PlayerTask;
 use crate::slay::tasks::ReceiveModifier;
-use crate::slay::tasks::TaskParamName;
 use crate::slay::visibility::VisibilitySpec;
 
 /*
@@ -84,7 +73,7 @@ impl DeckSpec {
 #[derive(Debug, Clone)]
 pub struct HeroAbility {
 	pub condition: Condition,
-	pub tasks: Vec<Box<dyn PlayerTask>>,
+  pub ability: HeroAbilityType,
 }
 
 impl HeroAbility {
@@ -92,7 +81,7 @@ impl HeroAbility {
 		RollConsequences {
 			success: RollConsequence {
 				condition: self.condition.to_owned(),
-				tasks: self.tasks.to_vec(),
+        tasks: self.ability.create_tasks(),
 			},
 			loss: None,
 		}
@@ -126,7 +115,7 @@ pub struct CardSpec {
 	pub modifiers: Vec<i32>,
 	pub hero_ability: Option<HeroAbility>,
 	pub spell: Option<MagicSpell>,
-	pub item_modifier: Option<ItemModifier>,
+	pub card_modifier: Option<ItemModifier>,
 	// pub hand_actions: ActionsCreator,
 	// pub party_actions: ActionsCreator,
 }
@@ -143,7 +132,7 @@ impl Default for CardSpec {
 			modifiers: Vec::new(),
 			hero_ability: None,
 			spell: None,
-			item_modifier: None,
+			card_modifier: None,
 		}
 	}
 }
@@ -192,6 +181,7 @@ pub enum HeroType {
 pub enum ItemType {
 	Cursed,
 	Blessed,
+  Mask, // Could have a hero type here as well...
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -259,7 +249,7 @@ impl MonsterSpec {
 //   loss_consequence: Sacrifice(1),
 // }
 
-pub fn get_card_specs() -> [CardSpec; 41] {
+pub fn get_card_specs() -> [CardSpec; 83] {
 	[
     ////////////////////////////////////////////////////////////////////////////
     // Challenge
@@ -331,16 +321,7 @@ pub fn get_card_specs() -> [CardSpec; 41] {
         hero_ability: Some(
           HeroAbility {
             condition: Condition::ge(6),
-            tasks: vec![
-              ChoosePlayerParameterTask::exclude_self(
-                TaskParamName::PlayerToPullFrom,
-                "Choose a player to pull from.",
-              ),
-              PullFromTask::create(TaskParamName::PlayerToPullFrom),
-              PullFromTask::create(TaskParamName::PlayerToPullFrom),
-              VictimDraws::create(TaskParamName::PlayerToPullFrom),
-              ClearParamsTask::create(),
-            ],
+            ability: HeroAbilityType::PlunderingPuma,
           }
         ),
         ..Default::default()
@@ -353,22 +334,7 @@ pub fn get_card_specs() -> [CardSpec; 41] {
         hero_ability: Some(
           HeroAbility {
             condition: Condition::ge(6),
-            tasks: vec![
-              ChoosePlayerParameterTask::exclude_self(
-                TaskParamName::SlipperyPawsVictim,
-                "Choose a player to pull 2 cards from, you will have to discard one of them.",
-              ),
-              PullFromTask::record_pulled(
-                TaskParamName::SlipperyPawsVictim,
-                Some(TaskParamName::SlipperyPawsVictimPulledCard1),
-              ),
-              PullFromTask::record_pulled(
-                TaskParamName::SlipperyPawsVictim,
-                Some(TaskParamName::SlipperyPawsVictimPulledCard2),
-              ),
-              heros::SlipperyPaws::create(),
-              ClearParamsTask::create(),
-            ],
+            ability: HeroAbilityType::SlipperyPaws,
           }
         ),
         ..Default::default()
@@ -381,10 +347,7 @@ pub fn get_card_specs() -> [CardSpec; 41] {
         hero_ability: Some(
           HeroAbility {
             condition: Condition::ge(7),
-            tasks: vec![
-              heros::Mimimeow::create(),
-              ClearParamsTask::create(),
-            ],
+            ability: HeroAbilityType::SmoothMimimeow,
           }
         ),
         ..Default::default()
@@ -397,20 +360,7 @@ pub fn get_card_specs() -> [CardSpec; 41] {
         hero_ability: Some(
           HeroAbility {
             condition: Condition::ge(10),
-            tasks: vec![
-              ChoosePlayerParameterTask::exclude_self(
-                TaskParamName::MeowzioVictim,
-                "Choose a player to steal and pull from.",
-              ),
-              PullFromTask::create(TaskParamName::MeowzioVictim),
-        			ChooseCardFromPlayerParameterTask::from_party(
-                TaskParamName::MeowzioVictim,
-                TaskParamName::MeowzioCard,
-                "Which hero card would you like to steal?"
-              ),
-              steal::StealCardFromTask::create(TaskParamName::MeowzioVictim, TaskParamName::MeowzioCard),
-              ClearParamsTask::create(),
-            ],
+            ability: HeroAbilityType::Meowzio,
           }
         ),
         ..Default::default()
@@ -423,23 +373,7 @@ pub fn get_card_specs() -> [CardSpec; 41] {
         hero_ability: Some(
           HeroAbility {
             condition: Condition::ge(9),
-            tasks: vec![
-              ChoosePlayerParameterTask::exclude_self(
-                TaskParamName::PlayerToDestroy,
-                "to destroy a hero card (Shurikitty)",
-              ),
-              ChooseCardFromPlayerParameterTask::from_party(
-                TaskParamName::PlayerToDestroy,
-                TaskParamName::CardToSteal,
-                "Which hero card would you like to destroy?"
-              ),
-              DestroyCardTask::create(
-                TaskParamName::PlayerToDestroy,
-                TaskParamName::CardToSteal,
-                DestroyModifiersDestination::Myself,
-              ),
-              ClearParamsTask::create(),
-            ],
+            ability: HeroAbilityType::Shurikitty,
           }
         ),
         ..Default::default()
@@ -452,9 +386,7 @@ pub fn get_card_specs() -> [CardSpec; 41] {
         hero_ability: Some(
           HeroAbility {
             condition: Condition::ge(9),
-            tasks: vec![
-              StealTask::create(),
-            ],
+            ability: HeroAbilityType::KitNapper,
           }
         ),
         ..Default::default()
@@ -467,19 +399,7 @@ pub fn get_card_specs() -> [CardSpec; 41] {
         hero_ability: Some(
           HeroAbility {
             condition: Condition::ge(8),
-            tasks: vec![
-              ChoosePlayerParameterTask::exclude_self(
-                TaskParamName::SilentShadowVictim,
-                "Who's hand do you want to see?",
-              ),
-              ChooseCardFromPlayerParameterTask::from_party(
-                TaskParamName::SilentShadowVictim,
-                TaskParamName::SilentShadowCard,
-                "Which hero card would you like to take?"
-              ),
-              // TODO
-              ClearParamsTask::create(),
-            ],
+            ability: HeroAbilityType::SilentShadow,
           }
         ),
         ..Default::default()
@@ -492,21 +412,7 @@ pub fn get_card_specs() -> [CardSpec; 41] {
         hero_ability: Some(
           HeroAbility {
             condition: Condition::ge(6),
-            tasks: vec![
-              ChoosePlayerParameterTask::exclude_self(
-                TaskParamName::SlyPickinsVictim,
-                "Sly Pickings: Who do you want to steal from?",
-              ),
-              PullFromTask::record_pulled(
-                TaskParamName::SlyPickinsVictim,
-                Some(TaskParamName::SlyPickinsCard),
-              ),
-              OfferPlayImmediately::create(
-                TaskParamName::SlyPickinsCard,
-                Some(CardType::item_types()),
-              ),
-              ClearParamsTask::create(),
-            ],
+            ability: HeroAbilityType::SlyPickings,
           }
         ),
         ..Default::default()
@@ -519,9 +425,7 @@ pub fn get_card_specs() -> [CardSpec; 41] {
         hero_ability: Some(
           HeroAbility {
             condition: Condition::ge(5),
-            tasks: vec![
-
-            ],
+            ability: HeroAbilityType::HolyCurselifter,
           }
         ),
         ..Default::default()
@@ -534,8 +438,7 @@ pub fn get_card_specs() -> [CardSpec; 41] {
         hero_ability: Some(
           HeroAbility {
             condition: Condition::ge(8),
-            tasks: vec![
-            ],
+            ability: HeroAbilityType::IronResolve,
           }
         ),
         ..Default::default()
@@ -548,8 +451,7 @@ pub fn get_card_specs() -> [CardSpec; 41] {
         hero_ability: Some(
           HeroAbility {
             condition: Condition::ge(9),
-            tasks: vec![
-            ],
+            ability: HeroAbilityType::CalmingVoice,
           }
         ),
         ..Default::default()
@@ -562,8 +464,7 @@ pub fn get_card_specs() -> [CardSpec; 41] {
         hero_ability: Some(
           HeroAbility {
             condition: Condition::ge(9),
-            tasks: vec![
-            ],
+            ability: HeroAbilityType::VibrantGlow,
           }
         ),
         ..Default::default()
@@ -576,8 +477,7 @@ pub fn get_card_specs() -> [CardSpec; 41] {
         hero_ability: Some(
           HeroAbility {
             condition: Condition::ge(8),
-            tasks: vec![
-            ],
+            ability: HeroAbilityType::MightyBlade,
           }
         ),
         ..Default::default()
@@ -590,8 +490,7 @@ pub fn get_card_specs() -> [CardSpec; 41] {
         hero_ability: Some(
           HeroAbility {
             condition: Condition::ge(6),
-            tasks: vec![
-            ],
+            ability: HeroAbilityType::RadiantHorn,
           }
         ),
         ..Default::default()
@@ -604,8 +503,7 @@ pub fn get_card_specs() -> [CardSpec; 41] {
         hero_ability: Some(
           HeroAbility {
             condition: Condition::ge(7),
-            tasks: vec![
-            ],
+            ability: HeroAbilityType::GuidingLight,
           }
         ),
         ..Default::default()
@@ -618,8 +516,7 @@ pub fn get_card_specs() -> [CardSpec; 41] {
         hero_ability: Some(
           HeroAbility {
             condition: Condition::ge(6),
-            tasks: vec![
-            ],
+            ability: HeroAbilityType::WiseShield,
           }
         ),
         ..Default::default()
@@ -632,8 +529,7 @@ pub fn get_card_specs() -> [CardSpec; 41] {
         hero_ability: Some(
           HeroAbility {
             condition: Condition::ge(10),
-            tasks: vec![
-            ],
+            ability: HeroAbilityType::QiBear,
           }
         ),
         ..Default::default()
@@ -646,285 +542,401 @@ pub fn get_card_specs() -> [CardSpec; 41] {
         hero_ability: Some(
           HeroAbility {
             condition: Condition::ge(8),
-            tasks: vec![
-            ],
+            ability: HeroAbilityType::PanChucks,
           }
         ),
         ..Default::default()
     },
-
-    /*
-- label: "Heavy Bear"
-  image: cards/heros/fighter/heavy_bear.jpg
-  deck: draw
-  description: "Choose a player. That player must DISCARD 2 cards."
-  categories:
-    - hero
-  params:
-    hero-type: fighter
-    effect-roll: "5+"
-- label: "Bad Axe"
-  image: cards/heros/fighter/bad_axe.jpg
-  deck: draw
-  description: "DESTROY a Hero card."
-  categories:
-    - hero
-  params:
-    hero-type: fighter
-    effect-roll: "8+"
-- label: "Tough Teddy"
-  image: cards/heros/fighter/tough_teddy.jpg
-  deck: draw
-  description: "Each other player with a Fighter in their Party must DISCARD a card."
-  categories:
-    - hero
-  params:
-    hero-type: fighter
-    effect-roll: "4+"
-- label: "Bear Claw"
-  image: cards/heros/fighter/bear_claw.jpg
-  deck: draw
-  description: "Pull a card from another player's hand. If it is a Hero card, pull a second card from that player's hand."
-  categories:
-    - hero
-  params:
-    hero-type: fighter
-    effect-roll: "7+"
-- label: "Fury Knuckle"
-  image: cards/heros/fighter/fury_knuckle.jpg
-  deck: draw
-  description: "Pull a card from another player's hand. If it is a Challenge card, pull a second card from that player's hand."
-  categories:
-    - hero
-  params:
-    hero-type: fighter
-    effect-roll: "5+"
-- label: "Beary Wise"
-  image: cards/heros/fighter/beary_wise.jpg
-  deck: draw
-  description: "Each other player must DISCARD a card. Choose one of the discarded cards and add it to your hand."
-  categories:
-    - hero
-  params:
-    hero-type: fighter
-    effect-roll: "7+"
-- label: "Hook"
-  image: cards/heros/ranger/hook.jpg
-  deck: draw
-  description: "Play an Item card from your hand immediately and DRAW a card."
-  categories:
-    - hero
-  params:
-    hero-type: ranger
-    effect-roll: "6+"
-- label: "Wildshot"
-  image: cards/heros/ranger/wildshot.jpg
-  deck: draw
-  description: "DRAW 3 cards and DISCARD a card."
-  categories:
-    - hero
-  params:
-    hero-type: ranger
-    effect-roll: "8+"
-- label: "Serious Grey"
-  image: cards/heros/ranger/serious_grey.jpg
-  deck: draw
-  description: "DESTROY a Hero card and DRAW a card."
-  categories:
-    - hero
-  params:
-    hero-type: ranger
-    effect-roll: "9+"
-- label: "Wily Red"
-  image: cards/heros/ranger/wily_red.jpg
-  deck: draw
-  description: "DRAW cards until you have 7 cards in your hand."
-  categories:
-    - hero
-  params:
-    hero-type: ranger
-    effect-roll: "10+"
-- label: "Quick Draw"
-  image: cards/heros/ranger/quick_draw.jpg
-  deck: draw
-  description: "DRAW 2 cards. If at least one of those cards is an item card, you may play one of them immediately."
-  categories:
-    - hero
-  params:
-    hero-type: ranger
-    effect-roll: "8+"
-- label: "Lookie Rookie"
-  image: cards/heros/ranger/lookie_rookie.jpg
-  deck: draw
-  description: "Search the discard pile for an Item card and add it to your hand."
-  categories:
-    - hero
-  params:
-    hero-type: ranger
-    effect-roll: "5+"
-- label: "Bullseye"
-  image: cards/heros/ranger/bullseye.jpg
-  deck: draw
-  description: "Look at the top 3 cards of the deck. Add one to your hand, then return the other two to the top of the deck in any order."
-  categories:
-    - hero
-  params:
-    hero-type: ranger
-    effect-roll: "7+"
-- label: "Sharp Fox"
-  image: cards/heros/ranger/sharp_fox.jpg
-  deck: draw
-  description: "Look at another player's hand."
-  categories:
-    - hero
-  params:
-    hero-type: ranger
-    effect-roll: "5+"
-- label: "Fuzzy Cheeks"
-  image: cards/heros/bards/fuzzy_cheeks.jpg
-  deck: draw
-  description: "DRAW a card and play a Hero card from you hand immediately."
-  categories:
-    - hero
-  params:
-    hero-type: bard
-    effect-roll: "8+"
-- label: "Peanut"
-  image: cards/heros/bards/peanut.jpg
-  deck: draw
-  description: "DRAW 2 cards."
-  categories:
-    - hero
-  params:
-    hero-type: bard
-    effect-roll: "7+"
-- label: "Napping Nibbles"
-  image: cards/heros/bards/napping_nibbles.jpg
-  deck: draw
-  description: "Do nothing."
-  categories:
-    - hero
-  params:
-    hero-type: bard
-    effect-roll: "2+"
-- label: "Tipsy Tootie"
-  image: cards/heros/bards/tipsy_tootie.jpg
-  deck: draw
-  description: "Choose a player. STEAL a Hero card from that player's Party and move this card to that player's Party."
-  categories:
-    - hero
-  params:
-    hero-type: bard
-    effect-roll: "6+"
-- label: "Mellow Dee"
-  image: cards/heros/bards/mellow_dee.jpg
-  deck: draw
-  description: "DRAW a card. If that card is a Hero card, you may play it immediately."
-  categories:
-    - hero
-  params:
-    hero-type: bard
-    effect-roll: "7+"
-- label: "Luck Bucky"
-  image: cards/heros/bards/lucky_bucky.jpg
-  deck: draw
-  description: "Pull a card from another player's hand. If that card is a Hero card, you may play it immediately."
-  categories:
-    - hero
-  params:
-    hero-type: bard
-    effect-roll: "7+"
-- label: "Dodgy Dealer"
-  image: cards/heros/bards/dodgy_dealer.jpg
-  deck: draw
-  description: "Trade hands with another player."
-  categories:
-    - hero
-  params:
-    hero-type: bard
-    effect-roll: "9+"
-- label: "Greedy Cheeks"
-  image: cards/heros/bards/greedy_cheeks.jpg
-  deck: draw
-  description: "Each other player must give you a card from their hand."
-  categories:
-    - hero
-  params:
-    hero-type: bard
-    effect-roll: "8+"
-- label: "Fluffy"
-  image: cards/heros/wizard/fluffy.jpg
-  deck: draw
-  description: "DESTROY 2 Hero cards."
-  categories:
-    - hero
-  params:
-    hero-type: wizard
-    effect-roll: "10+"
-- label: "Wiggles"
-  image: cards/heros/wizard/wiggles.jpg
-  deck: draw
-  description: "STEAL a Hero card and roll to use its effect immediately."
-  categories:
-    - hero
-  params:
-    hero-type: wizard
-    effect-roll: "10+"
-- label: "Spooky"
-  image: cards/heros/wizard/spooky.jpg
-  deck: draw
-  description: "Each other player must SACRIFICE a Hero card."
-  categories:
-    - hero
-  params:
-    hero-type: wizard
-    effect-roll: "10+"
-- label: "Snowball"
-  image: cards/heros/wizard/snowball.jpg
-  deck: draw
-  description: "DRAW a card. If it is a Magic card, you may play it immediately and DRAW a second card."
-  categories:
-    - hero
-  params:
-    hero-type: wizard
-    effect-roll: "6+"
-- label: "Buttons"
-  image: cards/heros/wizard/buttons.jpg
-  deck: draw
-  description: "Pull a card from another player's hand. If it is a Magic card, you may play it immediately."
-  categories:
-    - hero
-  params:
-    hero-type: wizard
-    effect-roll: "6+"
-- label: "Bun Bun"
-  image: cards/heros/wizard/bun_bun.jpg
-  deck: draw
-  description: "Search the discard pile for a Magic card and add it to your hand."
-  categories:
-    - hero
-  params:
-    hero-type: wizard
-    effect-roll: "5+"
-- label: "Hopper"
-  image: cards/heros/wizard/hopper.jpg
-  deck: draw
-  description: "Choose a player. That player must SACRIFICE a Hero card."
-  categories:
-    - hero
-  params:
-    hero-type: wizard
-    effect-roll: "7+"
-- label: "Whiskers"
-  image: cards/heros/wizard/whiskers.jpg
-  deck: draw
-  description: "STEAL a Hero card and DESTROY a Hero card."
-  categories:
-    - hero
-  params:
-    hero-type: wizard
-    effect-roll: "11+"
-     */
+    CardSpec {
+      card_type: CardType::Hero(HeroType::Fighter),
+      label: "Heavy Bear".to_string(),
+      image_path: "cards/heros/fighter/heavy_bear.jpg".to_string(),
+      description: "Choose a player. That player must DISCARD 2 cards.".to_string(),
+      hero_ability: Some(
+        HeroAbility {
+          condition: Condition::ge(5),
+          ability: HeroAbilityType::HeavyBear,
+        }
+      ),
+      ..Default::default()
+  },
+    CardSpec {
+      card_type: CardType::Hero(HeroType::Fighter),
+      label: "Bad Axe".to_string(),
+      image_path: "cards/heros/fighter/bad_axe.jpg".to_string(),
+      description: "DESTROY a Hero card.".to_string(),
+      hero_ability: Some(
+        HeroAbility {
+          condition: Condition::ge(8),
+          ability: HeroAbilityType::BadAxe,
+        }
+      ),
+      ..Default::default()
+  },
+    CardSpec {
+      card_type: CardType::Hero(HeroType::Fighter),
+      label: "Tough Teddy".to_string(),
+      image_path: "cards/heros/fighter/tough_teddy.jpg".to_string(),
+      description: "Each other player with a Fighter in their Party must DISCARD a card.".to_string(),
+      hero_ability: Some(
+        HeroAbility {
+          condition: Condition::ge(4),
+          ability: HeroAbilityType::ToughTeddy,
+        }
+      ),
+      ..Default::default()
+  },
+    CardSpec {
+      card_type: CardType::Hero(HeroType::Fighter),
+      label: "Bear Claw".to_string(),
+      image_path: "cards/heros/fighter/bear_claw.jpg".to_string(),
+      description: "Pull a card from another player's hand. If it is a Hero card, pull a second card from that player's hand.".to_string(),
+      hero_ability: Some(
+        HeroAbility {
+          condition: Condition::ge(7),
+          ability: HeroAbilityType::BearClaw,
+        }
+      ),
+      ..Default::default()
+  },
+    CardSpec {
+      card_type: CardType::Hero(HeroType::Fighter),
+      label: "Fury Knuckle".to_string(),
+      image_path: "cards/heros/fighter/fury_knuckle.jpg".to_string(),
+      description: "Pull a card from another player's hand. If it is a Challenge card, pull a second card from that player's hand.".to_string(),
+      hero_ability: Some(
+        HeroAbility {
+          condition: Condition::ge(5),
+          ability: HeroAbilityType::FuryKnuckle,
+        }
+      ),
+      ..Default::default()
+  },
+    CardSpec {
+      card_type: CardType::Hero(HeroType::Fighter),
+      label: "Beary Wise".to_string(),
+      image_path: "cards/heros/fighter/beary_wise.jpg".to_string(),
+      description: "Each other player must DISCARD a card. Choose one of the discarded cards and add it to your hand.".to_string(),
+      hero_ability: Some(
+        HeroAbility {
+          condition: Condition::ge(7),
+          ability: HeroAbilityType::BearyWise,
+        }
+      ),
+      ..Default::default()
+  },
+    CardSpec {
+      card_type: CardType::Hero(HeroType::Ranger),
+      label: "Hook".to_string(),
+      image_path: "cards/heros/ranger/hook.jpg".to_string(),
+      description: "Play an Item card from your hand immediately and DRAW a card.".to_string(),
+      hero_ability: Some(
+        HeroAbility {
+          condition: Condition::ge(6),
+          ability: HeroAbilityType::Hook,
+        }
+      ),
+      ..Default::default()
+  },
+    CardSpec {
+      card_type: CardType::Hero(HeroType::Ranger),
+      label: "Wildshot".to_string(),
+      image_path: "cards/heros/ranger/wildshot.jpg".to_string(),
+      description: "DRAW 3 cards and DISCARD a card.".to_string(),
+      hero_ability: Some(
+        HeroAbility {
+          condition: Condition::ge(8),
+          ability: HeroAbilityType::Wildshot,
+        }
+      ),
+      ..Default::default()
+  },
+    CardSpec {
+      card_type: CardType::Hero(HeroType::Ranger),
+      label: "Serious Grey".to_string(),
+      image_path: "cards/heros/ranger/serious_grey.jpg".to_string(),
+      description: "DESTROY a Hero card and DRAW a card.".to_string(),
+      hero_ability: Some(
+        HeroAbility {
+          condition: Condition::ge(9),
+          ability: HeroAbilityType::SeriousGrey,
+        }
+      ),
+      ..Default::default()
+  },
+    CardSpec {
+      card_type: CardType::Hero(HeroType::Ranger),
+      label: "Wily Red".to_string(),
+      image_path: "cards/heros/ranger/wily_red.jpg".to_string(),
+      description: "DRAW cards until you have 7 cards in your hand.".to_string(),
+      hero_ability: Some(
+        HeroAbility {
+          condition: Condition::ge(10),
+          ability: HeroAbilityType::WilyRed,
+        }
+      ),
+      ..Default::default()
+  },
+    CardSpec {
+      card_type: CardType::Hero(HeroType::Ranger),
+      label: "Quick Draw".to_string(),
+      image_path: "cards/heros/ranger/quick_draw.jpg".to_string(),
+      description: "DRAW 2 cards. If at least one of those cards is an item card, you may play one of them immediately.".to_string(),
+      hero_ability: Some(
+        HeroAbility {
+          condition: Condition::ge(8),
+          ability: HeroAbilityType::QuickDraw,
+        }
+      ),
+      ..Default::default()
+  },
+    CardSpec {
+      card_type: CardType::Hero(HeroType::Ranger),
+      label: "Lookie Rookie".to_string(),
+      image_path: "cards/heros/ranger/lookie_rookie.jpg".to_string(),
+      description: "Search the discard pile for an Item card and add it to your hand.".to_string(),
+      hero_ability: Some(
+        HeroAbility {
+          condition: Condition::ge(5),
+          ability: HeroAbilityType::LookieRookie,
+        }
+      ),
+      ..Default::default()
+  },
+    CardSpec {
+      card_type: CardType::Hero(HeroType::Ranger),
+      label: "Bullseye".to_string(),
+      image_path: "cards/heros/ranger/bullseye.jpg".to_string(),
+      description: "Look at the top 3 cards of the deck. Add one to your hand, then return the other two to the top of the deck in any order.".to_string(),
+      hero_ability: Some(
+        HeroAbility {
+          condition: Condition::ge(7),
+          ability: HeroAbilityType::Bullseye,
+        }
+      ),
+      ..Default::default()
+  },
+    CardSpec {
+      card_type: CardType::Hero(HeroType::Ranger),
+      label: "Sharp Fox".to_string(),
+      image_path: "cards/heros/ranger/sharp_fox.jpg".to_string(),
+      description: "Look at another player's hand.".to_string(),
+      hero_ability: Some(
+        HeroAbility {
+          condition: Condition::ge(5),
+          ability: HeroAbilityType::SharpFox,
+        }
+      ),
+      ..Default::default()
+  },
+    CardSpec {
+      card_type: CardType::Hero(HeroType::Bard),
+      label: "Fuzzy Cheeks".to_string(),
+      image_path: "cards/heros/bards/fuzzy_cheeks.jpg".to_string(),
+      description: "DRAW a card and play a Hero card from you hand immediately.".to_string(),
+      hero_ability: Some(
+        HeroAbility {
+          condition: Condition::ge(8),
+          ability: HeroAbilityType::FuzzyCheeks,
+        }
+      ),
+      ..Default::default()
+  },
+    CardSpec {
+      card_type: CardType::Hero(HeroType::Bard),
+      label: "Peanut".to_string(),
+      image_path: "cards/heros/bards/peanut.jpg".to_string(),
+      description: "DRAW 2 cards.".to_string(),
+      hero_ability: Some(
+        HeroAbility {
+          condition: Condition::ge(7),
+          ability: HeroAbilityType::Peanut,
+        }
+      ),
+      ..Default::default()
+  },
+    CardSpec {
+      card_type: CardType::Hero(HeroType::Bard),
+      label: "Napping Nibbles".to_string(),
+      image_path: "cards/heros/bards/napping_nibbles.jpg".to_string(),
+      description: "Do nothing.".to_string(),
+      hero_ability: Some(
+        HeroAbility {
+          condition: Condition::ge(2),
+          ability: HeroAbilityType::NappingNibbles,
+        }
+      ),
+      ..Default::default()
+  },
+    CardSpec {
+      card_type: CardType::Hero(HeroType::Bard),
+      label: "Tipsy Tootie".to_string(),
+      image_path: "cards/heros/bards/tipsy_tootie.jpg".to_string(),
+      description: "Choose a player. STEAL a Hero card from that player's Party and move this card to that player's Party.".to_string(),
+      hero_ability: Some(
+        HeroAbility {
+          condition: Condition::ge(6),
+          ability: HeroAbilityType::TipsyTootie,
+        }
+      ),
+      ..Default::default()
+  },
+    CardSpec {
+      card_type: CardType::Hero(HeroType::Bard),
+      label: "Mellow Dee".to_string(),
+      image_path: "cards/heros/bards/mellow_dee.jpg".to_string(),
+      description: "DRAW a card. If that card is a Hero card, you may play it immediately.".to_string(),
+      hero_ability: Some(
+        HeroAbility {
+          condition: Condition::ge(7),
+          ability: HeroAbilityType::MellowDee,
+        }
+      ),
+      ..Default::default()
+  },
+    CardSpec {
+      card_type: CardType::Hero(HeroType::Bard),
+      label: "Luck Bucky".to_string(),
+      image_path: "cards/heros/bards/lucky_bucky.jpg".to_string(),
+      description: "Pull a card from another player's hand. If that card is a Hero card, you may play it immediately.".to_string(),
+      hero_ability: Some(
+        HeroAbility {
+          condition: Condition::ge(7),
+          ability: HeroAbilityType::LuckBucky,
+        }
+      ),
+      ..Default::default()
+  },
+    CardSpec {
+      card_type: CardType::Hero(HeroType::Bard),
+      label: "Dodgy Dealer".to_string(),
+      image_path: "cards/heros/bards/dodgy_dealer.jpg".to_string(),
+      description: "Trade hands with another player.".to_string(),
+      hero_ability: Some(
+        HeroAbility {
+          condition: Condition::ge(9),
+          ability: HeroAbilityType::DodgyDealer,
+        }
+      ),
+      ..Default::default()
+  },
+    CardSpec {
+      card_type: CardType::Hero(HeroType::Bard),
+      label: "Greedy Cheeks".to_string(),
+      image_path: "cards/heros/bards/greedy_cheeks.jpg".to_string(),
+      description: "Each other player must give you a card from their hand.".to_string(),
+      hero_ability: Some(
+        HeroAbility {
+          condition: Condition::ge(8),
+          ability: HeroAbilityType::GreedyCheeks,
+        }
+      ),
+      ..Default::default()
+  },
+    CardSpec {
+      card_type: CardType::Hero(HeroType::Wizard),
+      label: "Fluffy".to_string(),
+      image_path: "cards/heros/wizard/fluffy.jpg".to_string(),
+      description: "DESTROY 2 Hero cards.".to_string(),
+      hero_ability: Some(
+        HeroAbility {
+          condition: Condition::ge(10),
+          ability: HeroAbilityType::Fluffy,
+        }
+      ),
+      ..Default::default()
+  },
+    CardSpec {
+      card_type: CardType::Hero(HeroType::Wizard),
+      label: "Wiggles".to_string(),
+      image_path: "cards/heros/wizard/wiggles.jpg".to_string(),
+      description: "STEAL a Hero card and roll to use its effect immediately.".to_string(),
+      hero_ability: Some(
+        HeroAbility {
+          condition: Condition::ge(10),
+          ability: HeroAbilityType::Wiggles,
+        }
+      ),
+      ..Default::default()
+  },
+    CardSpec {
+      card_type: CardType::Hero(HeroType::Wizard),
+      label: "Spooky".to_string(),
+      image_path: "cards/heros/wizard/spooky.jpg".to_string(),
+      description: "Each other player must SACRIFICE a Hero card.".to_string(),
+      hero_ability: Some(
+        HeroAbility {
+          condition: Condition::ge(10),
+          ability: HeroAbilityType::Spooky,
+        }
+      ),
+      ..Default::default()
+  },
+    CardSpec {
+      card_type: CardType::Hero(HeroType::Wizard),
+      label: "Snowball".to_string(),
+      image_path: "cards/heros/wizard/snowball.jpg".to_string(),
+      description: "DRAW a card. If it is a Magic card, you may play it immediately and DRAW a second card.".to_string(),
+      hero_ability: Some(
+        HeroAbility {
+          condition: Condition::ge(6),
+          ability: HeroAbilityType::Snowball,
+        }
+      ),
+      ..Default::default()
+  },
+    CardSpec {
+      card_type: CardType::Hero(HeroType::Wizard),
+      label: "Buttons".to_string(),
+      image_path: "cards/heros/wizard/buttons.jpg".to_string(),
+      description: "Pull a card from another player's hand. If it is a Magic card, you may play it immediately.".to_string(),
+      hero_ability: Some(
+        HeroAbility {
+          condition: Condition::ge(6),
+          ability: HeroAbilityType::Buttons,
+        }
+      ),
+      ..Default::default()
+  },
+    CardSpec {
+      card_type: CardType::Hero(HeroType::Wizard),
+      label: "Bun Bun".to_string(),
+      image_path: "cards/heros/wizard/bun_bun.jpg".to_string(),
+      description: "Search the discard pile for a Magic card and add it to your hand.".to_string(),
+      hero_ability: Some(
+        HeroAbility {
+          condition: Condition::ge(5),
+          ability: HeroAbilityType::BunBun,
+        }
+      ),
+      ..Default::default()
+  },
+    CardSpec {
+      card_type: CardType::Hero(HeroType::Wizard),
+      label: "Hopper".to_string(),
+      image_path: "cards/heros/wizard/hopper.jpg".to_string(),
+      description: "Choose a player. That player must SACRIFICE a Hero card.".to_string(),
+      hero_ability: Some(
+        HeroAbility {
+          condition: Condition::ge(7),
+          ability: HeroAbilityType::Hopper,
+        }
+      ),
+      ..Default::default()
+  },
+    CardSpec {
+      card_type: CardType::Hero(HeroType::Wizard),
+      label: "Whiskers".to_string(),
+      image_path: "cards/heros/wizard/whiskers.jpg".to_string(),
+      description: "STEAL a Hero card and DESTROY a Hero card.".to_string(),
+      hero_ability: Some(
+        HeroAbility {
+          condition: Condition::ge(11),
+          ability: HeroAbilityType::Whiskers,
+        }
+      ),
+      ..Default::default()
+  },
     ////////////////////////////////////////////////////////////////////////////
     // Magic
     ////////////////////////////////////////////////////////////////////////////
@@ -1002,100 +1014,117 @@ pub fn get_card_specs() -> [CardSpec; 41] {
     ////////////////////////////////////////////////////////////////////////////
     // Items
     ////////////////////////////////////////////////////////////////////////////
-/*
-- label: "Bard Mask"
-  image: cards/items/bard_mask.jpg
-  deck: draw
-  description: "The equipped Hero card is considered a Bard instead of its original class."
-  categories:
-    - item
-    - mask
-  params:
-    mask: bard
-- label: "Ranger Mask"
-  image: cards/items/ranger_mask.jpg
-  deck: draw
-  description: "The equipped Hero card is considered a Ranger instead of its original class."
-  categories:
-    - item
-    - mask
-  params:
-    mask: ranger
-- label: "Fighter Mask"
-  image: cards/items/fighter_mask.jpg
-  deck: draw
-  description: "The equipped Hero card is considered a Fighter instead of its original class."
-  categories:
-    - item
-    - mask
-  params:
-    mask: fighter
-- label: "Thief Mask"
-  image: cards/items/thief_mask.jpg
-  deck: draw
-  description: "The equipped Hero card is considered a Thief instead of its original class."
-  categories:
-    - item
-    - mask
-  params:
-    mask: thief
-- label: "Guardian Mask"
-  image: cards/items/guardian_mask.jpg
-  deck: draw
-  description: "The equipped Hero card is considered a Guardian instead of its original class."
-  categories:
-    - item
-    - mask
-  params:
-    mask: guardian
-- label: "Wizard Mask"
-  image: cards/items/wizard_mask.jpg
-  deck: draw
-  description: "The equipped Hero card is considered a Wizard instead of its original class."
-  categories:
-    - item
-    - mask
-  params:
-    mask: wizard
-- label: "Decoy Doll"
-  image: cards/items/decoy_doll.jpg
-  deck: draw
-  description: "If the equipped Hero card would be sacrificed or destroyed, move Decoy Doll to the discard pile instead."
-  categories:
-    - item
-- label: "Really Big Ring"
-  image: cards/items/really_big_ring.jpg
-  deck: draw
-  description: "Each time you roll to use the equipped Hero card's effect, +2 to your roll."
-  categories:
-    - item
-  repeat: 2
-- label: "Particularly Rusty Coin"
-  image: cards/items/particularly_rusty_coin.jpg
-  deck: draw
-  description: "If you unsuccessfully roll to use the equipped Hero card's effect, DRAW a card."
-  categories:
-    - item
-  repeat: 2
-- label: "Sealing Key"
-  image: cards/cursed_items/sealing_key.jpg
-  deck: draw
-  description: "You cannot use the equipped Hero card's effect."
-  categories:
-    - "cursed item"
-- label: "Suspiciously Shiny Coin"
-  image: cards/cursed_items/suspiciously_shiny_coin.jpg
-  deck: draw
-  description: "If you sucessfully roll to use the equipped Hero card's effect, DISCARD a card."
-  categories:
-    - "cursed item"
-- label: "Curse of the Snake's Eyes"
-  image: cards/cursed_items/curse_of_the_snakes_eyes.jpg
-  deck: draw
-  description: "Each time you roll to use the equipped Hero card's effect, -2 to your roll."
-  categories:
-    - "cursed item"
-  repeat: 2 */
+    CardSpec {
+      card_type: CardType::Item(ItemType::Mask),
+      label: "Bard Mask".to_string(),
+      image_path: "cards/items/bard_mask.jpg".to_string(),
+      description: "The equipped Hero card is considered a Bard instead of its original class.".to_string(),
+      spell: Some(MagicSpell::CallToTheFallen),
+      card_modifier: Some(ItemModifier::Mask(HeroType::Bard)),
+      ..Default::default()
+    },
+    CardSpec {
+      card_type: CardType::Item(ItemType::Mask),
+      label: "Ranger Mask".to_string(),
+      image_path: "cards/items/ranger_mask.jpg".to_string(),
+      description: "The equipped Hero card is considered a Ranger instead of its original class.".to_string(),
+      spell: Some(MagicSpell::CallToTheFallen),
+      card_modifier: Some(ItemModifier::Mask(HeroType::Ranger)),
+      ..Default::default()
+    },
+    CardSpec {
+      card_type: CardType::Item(ItemType::Mask),
+      label: "Fighter Mask".to_string(),
+      image_path: "cards/items/fighter_mask.jpg".to_string(),
+      description: "The equipped Hero card is considered a Fighter instead of its original class.".to_string(),
+      spell: Some(MagicSpell::CallToTheFallen),
+      card_modifier: Some(ItemModifier::Mask(HeroType::Fighter)),
+      ..Default::default()
+    },
+    CardSpec {
+      card_type: CardType::Item(ItemType::Mask),
+      label: "Thief Mask".to_string(),
+      image_path: "cards/items/thief_mask.jpg".to_string(),
+      description: "The equipped Hero card is considered a Thief instead of its original class.".to_string(),
+      spell: Some(MagicSpell::CallToTheFallen),
+      card_modifier: Some(ItemModifier::Mask(HeroType::Thief)),
+      ..Default::default()
+    },
+    CardSpec {
+      card_type: CardType::Item(ItemType::Mask),
+      label: "Guardian Mask".to_string(),
+      image_path: "cards/items/guardian_mask.jpg".to_string(),
+      description: "The equipped Hero card is considered a Guardian instead of its original class.".to_string(),
+      spell: Some(MagicSpell::CallToTheFallen),
+      card_modifier: Some(ItemModifier::Mask(HeroType::Gaurdian)),
+      ..Default::default()
+    },
+    CardSpec {
+      card_type: CardType::Item(ItemType::Mask),
+      label: "Wizard Mask".to_string(),
+      image_path: "cards/items/wizard_mask.jpg".to_string(),
+      description: "The equipped Hero card is considered a Wizard instead of its original class.".to_string(),
+      spell: Some(MagicSpell::CallToTheFallen),
+      card_modifier: Some(ItemModifier::Mask(HeroType::Wizard)),
+      ..Default::default()
+    },
+    CardSpec {
+      card_type: CardType::Item(ItemType::Blessed),
+      label: "Decoy Doll".to_string(),
+      image_path: "cards/items/decoy_doll.jpg".to_string(),
+      description: "If the equipped Hero card would be sacrificed or destroyed, move Decoy Doll to the discard pile instead.".to_string(),
+      spell: Some(MagicSpell::CallToTheFallen),
+      card_modifier: Some(ItemModifier::SacrificeMeInstead),
+      ..Default::default()
+    },
+    CardSpec {
+      card_type: CardType::Item(ItemType::Blessed),
+      label: "Really Big Ring".to_string(),
+      image_path: "cards/items/really_big_ring.jpg".to_string(),
+      description: "Each time you roll to use the equipped Hero card's effect, +2 to your roll.".to_string(),
+      spell: Some(MagicSpell::CallToTheFallen),
+      card_modifier: Some(ItemModifier::AddToRollForAbility(2)),
+      repeat: 2,
+      ..Default::default()
+    },
+    CardSpec {
+      card_type: CardType::Item(ItemType::Blessed),
+      label: "Particularly Rusty Coin".to_string(),
+      image_path: "cards/items/particularly_rusty_coin.jpg".to_string(),
+      description: "If you unsuccessfully roll to use the equipped Hero card's effect, DRAW a card.".to_string(),
+      spell: Some(MagicSpell::CallToTheFallen),
+      card_modifier: Some(ItemModifier::DrawOnUnsuccessfulRollForAbility(1)),
+      repeat: 2,
+      ..Default::default()
+    },
+    CardSpec {
+      card_type: CardType::Item(ItemType::Cursed),
+      label: "Sealing Key".to_string(),
+      image_path: "cards/cursed_items/sealing_key.jpg".to_string(),
+      description: "You cannot use the equipped Hero card's effect.".to_string(),
+      spell: Some(MagicSpell::CallToTheFallen),
+      card_modifier: Some(ItemModifier::RemoveAbility),
+      ..Default::default()
+    },
+    CardSpec {
+      card_type: CardType::Item(ItemType::Cursed),
+      label: "Suspiciously Shiny Coin".to_string(),
+      image_path: "cards/cursed_items/suspiciously_shiny_coin.jpg".to_string(),
+      description: "If you sucessfully roll to use the equipped Hero card's effect, DISCARD a card.".to_string(),
+      spell: Some(MagicSpell::CallToTheFallen),
+      card_modifier: Some(ItemModifier::DiscardOnSuccessfulRollForAbility(1)),
+      ..Default::default()
+    },
+    CardSpec {
+      card_type: CardType::Item(ItemType::Cursed),
+      label: "Curse of the Snake's Eyes".to_string(),
+      image_path: "cards/cursed_items/curse_of_the_snakes_eyes.jpg".to_string(),
+      description: "Each time you roll to use the equipped Hero card's effect, -2 to your roll.".to_string(),
+      spell: Some(MagicSpell::CallToTheFallen),
+      card_modifier: Some(ItemModifier::AddToRollForAbility(-2)),
+      repeat: 2,
+      ..Default::default()
+    },
     ////////////////////////////////////////////////////////////////////////////
     // Leaders
     ////////////////////////////////////////////////////////////////////////////
