@@ -20,6 +20,9 @@ pub struct Discard {
 }
 
 impl Discard {
+	pub fn create(num: u32) -> Box<dyn PlayerTask> {
+		Box::new(Self::new(num))
+	}
 	pub fn new(num: u32) -> Self {
 		Self { num, include: None }
 	}

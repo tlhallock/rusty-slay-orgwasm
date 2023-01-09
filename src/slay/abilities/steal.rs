@@ -68,16 +68,49 @@ impl PlayerTask for StealCardFromTask {
 		&mut self, _context: &mut GameBookKeeping, game: &mut Game, stealer_index: ids::PlayerIndex,
 	) -> SlayResult<TaskProgressResult> {
 		let victim_player_index = game.player_param(stealer_index, &self.victim_param)?;
-		let card_to_steal = game.card_param(stealer_index, &self.card_param)?;
-		if card_to_steal.is_none() {
+		let card_id = game.card_param(stealer_index, &self.card_param)?;
+		if card_id.is_none() {
 			return Ok(TaskProgressResult::TaskComplete);
 		}
-		let card_to_steal = card_to_steal.unwrap();
-		let stolen_stack = game.players[victim_player_index]
-			.party
-			.take_card(card_to_steal)?;
+		let card_id = card_id.unwrap();
+		let stack = game.players[victim_player_index].party.take_card(card_id)?;
+		game.players[stealer_index].party.add(stack);
+		Ok(TaskProgressResult::TaskComplete)
+	}
+
+	fn label(&self) -> String {
+		"Player is stealing a card from a specific individual.".to_string()
+	}
+}
+
+#[derive(Clone, Debug)]
+pub struct UnStealCardFromTask {
+	victim_param: TaskParamName,
+	card_param: TaskParamName,
+}
+
+impl UnStealCardFromTask {
+	pub fn create(victim_param: TaskParamName, card_param: TaskParamName) -> Box<dyn PlayerTask> {
+		Box::new(Self {
+			victim_param,
+			card_param,
+		}) as Box<dyn PlayerTask>
+	}
+}
+
+impl PlayerTask for UnStealCardFromTask {
+	fn make_progress(
+		&mut self, _context: &mut GameBookKeeping, game: &mut Game, stealer_index: ids::PlayerIndex,
+	) -> SlayResult<TaskProgressResult> {
+		let victim_player_index = game.player_param(stealer_index, &self.victim_param)?;
+		let card_id = game.card_param(stealer_index, &self.card_param)?;
+		if card_id.is_none() {
+			return Ok(TaskProgressResult::TaskComplete);
+		}
+		let card_id = card_id.unwrap();
+		let stolen_stack = game.players[stealer_index].party.take_card(card_id)?;
 		// TODO: Check if we are actually supposed to do something else due to buffs...
-		game.players[stealer_index].party.add(stolen_stack);
+		game.players[victim_player_index].party.add(stolen_stack);
 		Ok(TaskProgressResult::TaskComplete)
 	}
 

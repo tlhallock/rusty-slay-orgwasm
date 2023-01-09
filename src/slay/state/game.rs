@@ -4,6 +4,7 @@ use crate::slay::errors::SlayError;
 use crate::slay::errors::SlayResult;
 use crate::slay::ids;
 use crate::slay::modifiers;
+use crate::slay::modifiers::ModifierDuration;
 use crate::slay::showdown::challenge::ChallengePerspective;
 use crate::slay::showdown::current_showdown::CurrentShowdown;
 use crate::slay::showdown::offer::OfferChallengesPerspective;
@@ -31,18 +32,29 @@ use std::iter::Iterator;
 pub struct Turn {
 	turn_number: u32,
 	round_number: u32,
-	player_index: u32,
+	// lol, the one that has to be small is the large one...
+	player_index: usize,
 }
 
 impl Turn {
-	pub(crate) fn set_active_player(&mut self, player_index: ids::PlayerIndex) {
-		self.player_index = player_index as u32;
+	pub(crate) fn for_this_turn(&self) -> ModifierDuration {
+		ModifierDuration::ForThisTurn(self.turn_number)
 	}
-	pub fn still_active(&self, duration: &modifiers::ModifierDuration) -> bool {
+	pub(crate) fn until_next_turn(&self) -> ModifierDuration {
+		ModifierDuration::UntilNextTurn(self.round_number + 1, self.player_index)
+	}
+
+	pub(crate) fn set_active_player(&mut self, player_index: ids::PlayerIndex) {
+		self.player_index = player_index;
+	}
+
+	pub fn still_active(&self, duration: &ModifierDuration) -> bool {
 		match duration {
-			modifiers::ModifierDuration::Forever => true,
-			modifiers::ModifierDuration::UntilTurn(t, p) => {
-				self.round_number <= *t && self.player_index <= *p
+			ModifierDuration::Forever => true,
+			ModifierDuration::ForThisTurn(turn_number) => *turn_number == self.turn_number,
+			ModifierDuration::UntilNextTurn(round_number, player_index) => {
+				self.round_number <= *round_number
+					|| (self.round_number == round_number + 1 && self.player_index < *player_index)
 			}
 		}
 	}
@@ -50,7 +62,7 @@ impl Turn {
 	fn increment(&mut self, number_of_players: usize) {
 		self.player_index += 1;
 		self.turn_number += 1;
-		if self.player_index < number_of_players as u32 {
+		if self.player_index < number_of_players {
 			log::info!("Incremented turn to {:?}", &self);
 			return;
 		}

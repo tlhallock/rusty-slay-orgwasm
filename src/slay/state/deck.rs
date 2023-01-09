@@ -172,6 +172,9 @@ impl Deck {
 	pub fn stacks(&self) -> impl Iterator<Item = &Stack> {
 		self.stacks.iter()
 	}
+	pub fn stacks_mut(&mut self) -> impl Iterator<Item = &mut Stack> {
+		self.stacks.iter_mut()
+	}
 	// pub fn iter(&self) -> impl Iterator<Item = &Stack> {
 	// 	self.stacks.iter()
 	// }
@@ -225,12 +228,31 @@ impl Deck {
 	}
 
 	pub fn take(&mut self, card_id: ids::CardId) -> Option<Stack> {
-		// Should be able to take modifiers!!
-		self
-			.stacks
-			.iter()
-			.position(|s| s.contains(card_id))
-			.and_then(|i| self.stacks.remove(i))
+		if let Some(position) = self.stacks.iter().position(|s| s.top.id == card_id) {
+			// Take the whole stack
+			return self.stacks.remove(position);
+		}
+
+		for stack in self.stacks.iter_mut() {
+			if let Some(position) = stack.modifiers.iter().position(|c| c.id == card_id) {
+				// Just the modifier
+				return Some(Stack::new(stack.modifiers.remove(position)));
+			}
+		}
+		None
+
+		// #[derive(Debug, Clone)]
+		// pub enum OnIsModifier {
+		// 	TakeTheModifier,
+		// 	TakeTheWholeStack,
+		// }
+
+		// The other implementation:
+		// self
+		// 	.stacks
+		// 	.iter()
+		// 	.position(|s| s.contains(card_id))
+		// 	.and_then(|i| self.stacks.remove(i))
 	}
 
 	pub fn take_at_index(&mut self, index: usize) -> Stack {

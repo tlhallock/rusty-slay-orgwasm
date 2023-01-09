@@ -12,15 +12,19 @@ use crate::slay::tasks::TaskParamName;
 use crate::slay::tasks::TaskProgressResult;
 
 #[derive(Clone, Debug)]
-pub struct DestroyTask {
-	pub thief_index: ids::PlayerIndex,
+pub struct DestroyTask {}
+
+impl DestroyTask {
+	pub fn create() -> Box<dyn PlayerTask> {
+		Box::new(Self {})
+	}
 }
 
 impl PlayerTask for DestroyTask {
 	fn make_progress(
-		&mut self, _context: &mut GameBookKeeping, game: &mut Game, _player_index: ids::PlayerIndex,
+		&mut self, _context: &mut GameBookKeeping, game: &mut Game, thief_index: ids::PlayerIndex,
 	) -> SlayResult<TaskProgressResult> {
-		game.players[self.thief_index].tasks.prepend_from(&mut vec![
+		game.players[thief_index].tasks.prepend_from(&mut vec![
 			ChoosePlayerParameterTask::exclude_self(
 				TaskParamName::PlayerToDestroy,
 				"to destroy a hero card",
@@ -41,10 +45,7 @@ impl PlayerTask for DestroyTask {
 	}
 
 	fn label(&self) -> String {
-		format!(
-			"Player {} is preparing to destroy a card.",
-			self.thief_index
-		)
+		format!("Player is preparing to destroy a card.",)
 	}
 }
 

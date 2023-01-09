@@ -14,6 +14,8 @@ use std::collections::VecDeque;
 use std::io::BufWriter;
 use std::io::Write;
 
+use super::modifiers::ModifierOrigin;
+
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
 pub enum TaskParamName {
 	PlayerToStealFrom,
@@ -32,6 +34,10 @@ pub enum TaskParamName {
 	SlipperyPawsVictimPulledCard2,
 	SlyPickinsVictim,
 	SlyPickinsCard,
+	ForcedExchangeVictim,
+	ForcedExchangeVictimCard,
+	ForcedExchangeSelf,
+	ForcedExchangeVictimDonationCard,
 }
 
 #[derive(Debug, Default, Clone)]
@@ -264,11 +270,12 @@ impl PlayerTasks {
 #[derive(Debug, Clone)]
 pub struct ReceiveModifier {
 	modifier: PlayerModifier,
+	origin: ModifierOrigin,
 }
 
 impl ReceiveModifier {
-	pub fn new(modifier: PlayerModifier) -> Self {
-		Self { modifier }
+	pub fn create(modifier: PlayerModifier, origin: ModifierOrigin) -> Box<dyn PlayerTask> {
+		Box::new(Self { modifier, origin })
 	}
 }
 
@@ -278,7 +285,7 @@ impl PlayerTask for ReceiveModifier {
 	) -> SlayResult<TaskProgressResult> {
 		game.players[player_index]
 			.buffs
-			.add_forever(self.modifier.to_owned());
+			.add_forever(self.modifier.to_owned(), self.origin);
 		Ok(TaskProgressResult::TaskComplete)
 	}
 

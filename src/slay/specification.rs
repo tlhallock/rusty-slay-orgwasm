@@ -13,6 +13,7 @@ use super::errors::SlayResult;
 use super::game_context::GameBookKeeping;
 use super::ids;
 use super::modifiers::ItemModifier;
+use super::modifiers::ModifierOrigin;
 use super::state::game::Game;
 use super::tasks::TaskProgressResult;
 use crate::slay::abilities::discard::Discard;
@@ -99,7 +100,16 @@ impl HeroAbility {
 }
 
 #[derive(Debug, Clone, Copy)]
-pub enum MagicSpell {}
+pub enum MagicSpell {
+	EnganglingTrap,
+	CriticalBoost,
+	DestructiveSpell,
+	WindsOfChange,
+	EnchangedSpell,
+	ForcedExchange,
+	ForcefulWinds,
+	CallToTheFallen,
+}
 
 // type ActionsCreator = Box<dyn Fn(ids::PlayerIndex) -> Vec<Box<TasksChoice>>>;
 
@@ -152,6 +162,14 @@ pub enum CardType {
 }
 
 impl CardType {
+	pub fn is_hero_card(&self) -> bool {
+		// Supposed to be a matches!()...
+		match self {
+			CardType::Hero(_) => true,
+			_ => false,
+		}
+	}
+
 	pub fn item_types() -> HashSet<CardType> {
 		HashSet::from([
 			CardType::Item(ItemType::Blessed),
@@ -241,7 +259,7 @@ impl MonsterSpec {
 //   loss_consequence: Sacrifice(1),
 // }
 
-pub fn get_card_specs() -> [CardSpec; 33] {
+pub fn get_card_specs() -> [CardSpec; 41] {
 	[
     ////////////////////////////////////////////////////////////////////////////
     // Challenge
@@ -908,6 +926,177 @@ pub fn get_card_specs() -> [CardSpec; 33] {
     effect-roll: "11+"
      */
     ////////////////////////////////////////////////////////////////////////////
+    // Magic
+    ////////////////////////////////////////////////////////////////////////////
+    CardSpec {
+      card_type: CardType::Magic,
+      label: "Entangling Trap".to_string(),
+      image_path: "cards/magic/entangling_trap.jpg".to_string(),
+      description: "DISCARD 2 cards, then STEAL a Hero card.".to_string(),
+      spell: Some(MagicSpell::EnganglingTrap),
+      repeat: 2,
+      ..Default::default()
+    },
+    CardSpec {
+      card_type: CardType::Magic,
+      label: "Critical Boost".to_string(),
+      image_path: "cards/magic/critical_boost.jpg".to_string(),
+      description: "DRAW 3 cards and DISCARD a card.".to_string(),
+      spell: Some(MagicSpell::CriticalBoost),
+      repeat: 2,
+      ..Default::default()
+    },
+    CardSpec {
+      card_type: CardType::Magic,
+      label: "Destructive Spell".to_string(),
+      image_path: "cards/magic/descructive_spell.jpg".to_string(),
+      description: "DISCARD a card, then DESTROY a Hero card.".to_string(),
+      spell: Some(MagicSpell::DestructiveSpell),
+      repeat: 2,
+      ..Default::default()
+    },
+    CardSpec {
+      card_type: CardType::Magic,
+      label: "Winds of Change".to_string(),
+      image_path: "cards/magic/winds_of_change.jpg".to_string(),
+      description: "Return an Item card equipped to any player's Hero card to that player's hand, then DRAW a card.".to_string(),
+      spell: Some(MagicSpell::WindsOfChange),
+      repeat: 2,
+      ..Default::default()
+    },
+    CardSpec {
+      card_type: CardType::Magic,
+      label: "Enchanted Spell".to_string(),
+      image_path: "cards/magic/enchanged_spell.jpg".to_string(),
+      description: "+2 to all of your rolls until the end of your turn".to_string(),
+      spell: Some(MagicSpell::EnchangedSpell),
+      repeat: 2,
+      ..Default::default()
+    },
+    CardSpec {
+      card_type: CardType::Magic,
+      label: "Forced Exchange".to_string(),
+      image_path: "cards/magic/forced_exchange.jpg".to_string(),
+      description: "Choose a player. STEAL a Hero card from that player's Party, then move a Hero card from your Party to that player's Party.".to_string(),
+      spell: Some(MagicSpell::ForcedExchange),
+      ..Default::default()
+    },
+    CardSpec {
+      card_type: CardType::Magic,
+      label: "Forceful Winds".to_string(),
+      image_path: "cards/magic/forceful_winds.jpg".to_string(),
+      description: "Return every equipped item card to its respective player's hand".to_string(),
+      spell: Some(MagicSpell::ForcefulWinds),
+      ..Default::default()
+    },
+    CardSpec {
+      card_type: CardType::Magic,
+      label: "Call to the Fallen".to_string(),
+      image_path: "cards/magic/call_to_the_fallen.jpg".to_string(),
+      description: "Search the discard pile for a Hero card and add it to your hand.".to_string(),
+      spell: Some(MagicSpell::CallToTheFallen),
+      ..Default::default()
+    },
+
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Items
+    ////////////////////////////////////////////////////////////////////////////
+/*
+- label: "Bard Mask"
+  image: cards/items/bard_mask.jpg
+  deck: draw
+  description: "The equipped Hero card is considered a Bard instead of its original class."
+  categories:
+    - item
+    - mask
+  params:
+    mask: bard
+- label: "Ranger Mask"
+  image: cards/items/ranger_mask.jpg
+  deck: draw
+  description: "The equipped Hero card is considered a Ranger instead of its original class."
+  categories:
+    - item
+    - mask
+  params:
+    mask: ranger
+- label: "Fighter Mask"
+  image: cards/items/fighter_mask.jpg
+  deck: draw
+  description: "The equipped Hero card is considered a Fighter instead of its original class."
+  categories:
+    - item
+    - mask
+  params:
+    mask: fighter
+- label: "Thief Mask"
+  image: cards/items/thief_mask.jpg
+  deck: draw
+  description: "The equipped Hero card is considered a Thief instead of its original class."
+  categories:
+    - item
+    - mask
+  params:
+    mask: thief
+- label: "Guardian Mask"
+  image: cards/items/guardian_mask.jpg
+  deck: draw
+  description: "The equipped Hero card is considered a Guardian instead of its original class."
+  categories:
+    - item
+    - mask
+  params:
+    mask: guardian
+- label: "Wizard Mask"
+  image: cards/items/wizard_mask.jpg
+  deck: draw
+  description: "The equipped Hero card is considered a Wizard instead of its original class."
+  categories:
+    - item
+    - mask
+  params:
+    mask: wizard
+- label: "Decoy Doll"
+  image: cards/items/decoy_doll.jpg
+  deck: draw
+  description: "If the equipped Hero card would be sacrificed or destroyed, move Decoy Doll to the discard pile instead."
+  categories:
+    - item
+- label: "Really Big Ring"
+  image: cards/items/really_big_ring.jpg
+  deck: draw
+  description: "Each time you roll to use the equipped Hero card's effect, +2 to your roll."
+  categories:
+    - item
+  repeat: 2
+- label: "Particularly Rusty Coin"
+  image: cards/items/particularly_rusty_coin.jpg
+  deck: draw
+  description: "If you unsuccessfully roll to use the equipped Hero card's effect, DRAW a card."
+  categories:
+    - item
+  repeat: 2
+- label: "Sealing Key"
+  image: cards/cursed_items/sealing_key.jpg
+  deck: draw
+  description: "You cannot use the equipped Hero card's effect."
+  categories:
+    - "cursed item"
+- label: "Suspiciously Shiny Coin"
+  image: cards/cursed_items/suspiciously_shiny_coin.jpg
+  deck: draw
+  description: "If you sucessfully roll to use the equipped Hero card's effect, DISCARD a card."
+  categories:
+    - "cursed item"
+- label: "Curse of the Snake's Eyes"
+  image: cards/cursed_items/curse_of_the_snakes_eyes.jpg
+  deck: draw
+  description: "Each time you roll to use the equipped Hero card's effect, -2 to your roll."
+  categories:
+    - "cursed item"
+  repeat: 2 */
+    ////////////////////////////////////////////////////////////////////////////
     // Leaders
     ////////////////////////////////////////////////////////////////////////////
     CardSpec {
@@ -967,14 +1156,14 @@ pub fn get_card_specs() -> [CardSpec; 33] {
               success: RollConsequence {
                 condition: Condition::ge(8),
                 tasks: vec![
-                  Box::new(ReceiveModifier::new(PlayerModifier::ExtraActionPoint)),
-                  Box::new(DrawTask::new(2)),
+                  ReceiveModifier::create(PlayerModifier::ExtraActionPoint, ModifierOrigin::FromSlainMonster),
+                  DrawTask::create(2),
                 ]
               },
               loss: Some(
                 RollConsequence {
                   condition: Condition::le(7),
-                  tasks: vec![Box::new(Sacrifice::new(2))],
+                  tasks: vec![Sacrifice::create(2)],
                 }
               )
             },
@@ -992,12 +1181,12 @@ pub fn get_card_specs() -> [CardSpec; 33] {
               consequences: RollConsequences {
                 success: RollConsequence {
                   condition: Condition::ge(8),
-                  tasks: vec![Box::new(ReceiveModifier::new(PlayerModifier::PlayMagicOnDraw)),]
+                  tasks: vec![ReceiveModifier::create(PlayerModifier::PlayMagicOnDraw, ModifierOrigin::FromSlainMonster),]
                 },
                 loss: Some(
                   RollConsequence {
                     condition: Condition::le(4),
-                    tasks: vec![Box::new(Sacrifice::new(1))],
+                    tasks: vec![Sacrifice::create(1)],
                   }
                 )
               },
@@ -1018,12 +1207,12 @@ pub fn get_card_specs() -> [CardSpec; 33] {
             consequences: RollConsequences {
               success: RollConsequence {
                 condition: Condition::ge(11),
-                tasks: vec![Box::new(ReceiveModifier::new(PlayerModifier::UndestroyableHeros))]
+                tasks: vec![ReceiveModifier::create(PlayerModifier::UndestroyableHeros, ModifierOrigin::FromSlainMonster)]
               },
               loss: Some(
                 RollConsequence {
                   condition: Condition::le(7),
-                  tasks: vec![Box::new(Discard::new(2))],
+                  tasks: vec![Discard::create(2)],
                 }
               )
             },

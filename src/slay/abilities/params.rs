@@ -363,3 +363,29 @@ impl PlayerTask for ChooseCardFromPlayerParameterTask {
 		"Player is stealing a card from a specific individual.".to_string()
 	}
 }
+
+#[derive(Debug, Clone)]
+pub struct SetParameterToMyself {
+	param_name: TaskParamName,
+}
+
+impl SetParameterToMyself {
+	pub fn create(param_name: TaskParamName) -> Box<dyn PlayerTask> {
+		Box::new(Self { param_name })
+	}
+}
+
+impl PlayerTask for SetParameterToMyself {
+	fn make_progress(
+		&mut self, _context: &mut GameBookKeeping, game: &mut Game, player_index: ids::PlayerIndex,
+	) -> SlayResult<TaskProgressResult> {
+		game.players[player_index]
+			.tasks
+			.set_player_value(self.param_name, player_index)?;
+		Ok(TaskProgressResult::TaskComplete)
+	}
+
+	fn label(&self) -> String {
+		format!("Set parameter {:?} to myself.", self.param_name)
+	}
+}

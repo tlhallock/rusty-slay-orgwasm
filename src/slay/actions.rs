@@ -228,6 +228,9 @@ pub struct DrawTask {
 }
 
 impl DrawTask {
+	pub fn create(num: usize) -> Box<dyn PlayerTask> {
+		Box::new(Self::new(num))
+	}
 	pub fn new(number_to_draw: usize) -> Self {
 		Self { number_to_draw }
 	}
