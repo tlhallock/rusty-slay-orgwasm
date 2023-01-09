@@ -136,11 +136,11 @@ impl ChallengeRoll {
 				.collect(),
 			roll_total: self.calculate_roll_total(),
 			choices: if let Some(choices) = choices {
-				choices.choice_perspetives()
+				choices
+					.choice_perspetives()
 					.into_iter()
 					.filter(|cp| match &cp.display_type {
-						ChoiceDisplayType::Modify(modi) =>
-							path == modi.get_path(),
+						ChoiceDisplayType::Modify(modi) => path == modi.get_path(),
 						_ => false,
 					})
 					.collect()
@@ -158,29 +158,27 @@ impl ChallengeState {
 			challenger_victorious: self.calculate_roll_total() <= 0, // TODO: put this logic in a common place
 			timeline: self.tracker().timeline.to_owned(),
 			reason: self.reason.to_owned(),
-			initiator: self.initiator.to_perspective(
-				game, choices, ModificationPath::Initiator,
-			),
-			challenger: self.challenger.to_perspective(
-				game, choices,
-				ModificationPath::Challenger,
-			),
+			initiator: self
+				.initiator
+				.to_perspective(game, choices, ModificationPath::Initiator),
+			challenger: self
+				.challenger
+				.to_perspective(game, choices, ModificationPath::Challenger),
 			choices: if let Some(choices) = choices {
 				// For some reason, we are provided action choices even though there is still an active roll...
 				log::info!("Choices: {:?} ", choices.choice_perspetives());
-				let ret: Vec<_> = choices.choice_perspetives()
+				let ret: Vec<_> = choices
+					.choice_perspetives()
 					.into_iter()
-					.filter(|cp|
-						match &cp.display_type {
-							ChoiceDisplayType::SetCompletion(_) => true,
-							_ => false,
-						}
-					)
+					.filter(|cp| match &cp.display_type {
+						ChoiceDisplayType::SetCompletion(_) => true,
+						_ => false,
+					})
 					.collect();
-					if ret.is_empty() {
-						unreachable!();
-					}
-					ret
+				if ret.is_empty() {
+					unreachable!();
+				}
+				ret
 			} else {
 				Vec::new()
 			},

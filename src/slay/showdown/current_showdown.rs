@@ -245,9 +245,9 @@ impl CurrentShowdown {
 		ModificationTask {
 			choices_to_assign: (0..game.number_of_players())
 				.filter(|player_index| {
-						current
-							.tracker()
-							.should_offer_modifications_again(*player_index)
+					current
+						.tracker()
+						.should_offer_modifications_again(*player_index)
 				})
 				.map(|player_index| {
 					(
@@ -262,7 +262,11 @@ impl CurrentShowdown {
 	pub(crate) fn set_player_completion(
 		&mut self, player_index: ids::PlayerIndex, persist: Completion,
 	) -> SlayResult<()> {
-		log::info!("Updating the player completion for {} to {:?}", player_index, persist);
+		log::info!(
+			"Updating the player completion for {} to {:?}",
+			player_index,
+			persist
+		);
 		match self.show_down_type {
 			ShowDownType::None => return Err(SlayError::new("alskjdf;alksjdf;")),
 			ShowDownType::Roll => self

@@ -52,11 +52,13 @@ pub struct ChoosePlayerParameterTask {
 	pub instructions: String,
 	pub players: Option<Vec<ids::PlayerIndex>>,
 
-	exclude_self: bool
+	exclude_self: bool,
 }
 
 impl ChoosePlayerParameterTask {
-	pub fn exclude_self(param_name: TaskParamName, instructions: &'static str) -> Box<dyn PlayerTask> {
+	pub fn exclude_self(
+		param_name: TaskParamName, instructions: &'static str,
+	) -> Box<dyn PlayerTask> {
 		Box::new(Self {
 			param_name,
 			instructions: instructions.to_string(),
@@ -64,7 +66,9 @@ impl ChoosePlayerParameterTask {
 			exclude_self: true,
 		}) as Box<dyn PlayerTask>
 	}
-	pub fn include_self(param_name: TaskParamName, instructions: &'static str) -> Box<dyn PlayerTask> {
+	pub fn include_self(
+		param_name: TaskParamName, instructions: &'static str,
+	) -> Box<dyn PlayerTask> {
 		Box::new(Self {
 			param_name,
 			instructions: instructions.to_string(),
@@ -82,12 +86,16 @@ impl ChoosePlayerParameterTask {
 			exclude_self: false,
 		}) as Box<dyn PlayerTask>
 	}
-	fn get_player_indices(&self, game: &Game, player_index: ids::PlayerIndex) -> Vec<ids::PlayerIndex> {
+	fn get_player_indices(
+		&self, game: &Game, player_index: ids::PlayerIndex,
+	) -> Vec<ids::PlayerIndex> {
 		if let Some(player_indices) = self.players.as_ref() {
 			player_indices.to_owned()
 		} else {
 			if self.exclude_self {
-				(0..game.number_of_players()).filter(|idx| *idx != player_index).collect()
+				(0..game.number_of_players())
+					.filter(|idx| *idx != player_index)
+					.collect()
 			} else {
 				(0..game.number_of_players()).collect()
 			}

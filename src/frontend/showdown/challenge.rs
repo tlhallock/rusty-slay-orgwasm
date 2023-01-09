@@ -110,10 +110,6 @@ pub fn view_challenge_description(props: &ChallengeModalProps) -> Html {
 // 	}
 // }
 
-
-
-
-
 #[derive(Properties, PartialEq)]
 pub struct ChallengeRollProps {
 	pub challenge: ChallengePerspective,
@@ -138,28 +134,28 @@ pub fn view_challenge_roll(props: &ChallengeRollProps) -> Html {
 				</div>
 			</div>
 			<div class={classes!("row")}>
-					<RollHistory 
-						history={props.challenge.initiator.history.to_owned()} 
+					<RollHistory
+						history={props.challenge.initiator.history.to_owned()}
 						callbacks={props.callbacks.to_owned()}
 					/>
 					<RollHistory
-						history={props.challenge.challenger.history.to_owned()} 
+						history={props.challenge.challenger.history.to_owned()}
 						callbacks={props.callbacks.to_owned()}
 					/>
 			</div>
 			<div class={classes!("row")}>
 					<RollTotal
-						success={!props.challenge.challenger_victorious} 
+						success={!props.challenge.challenger_victorious}
 						amount={props.challenge.initiator.roll_total}
 					/>
 					<RollTotal
-						success={props.challenge.challenger_victorious} 
+						success={props.challenge.challenger_victorious}
 						amount={props.challenge.challenger.roll_total}
 					/>
 			</div>
 			<div class={classes!("row")}>
 				<div class={classes!("column")}>
-					<RollChoices choices={props.challenge.initiator.choices.to_owned()} 
+					<RollChoices choices={props.challenge.initiator.choices.to_owned()}
 					callbacks={props.callbacks.to_owned()}/>
 				</div>
 				<div class={classes!("column")}>
@@ -170,8 +166,6 @@ pub fn view_challenge_roll(props: &ChallengeRollProps) -> Html {
 		</div>
 	}
 }
-
-
 
 #[derive(Properties, PartialEq)]
 pub struct ChallengeModalProps {

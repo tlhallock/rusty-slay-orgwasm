@@ -246,7 +246,7 @@ impl Deck {
 	pub fn maybe_deal(&mut self) -> Option<Stack> {
 		self.stacks.pop_front()
 	}
-	
+
 	pub fn deal(&mut self) -> Stack {
 		self.stacks.pop_front().unwrap()
 		// // TODO:

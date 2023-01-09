@@ -31,33 +31,30 @@ use crate::slay::tasks::ReceiveModifier;
 use crate::slay::tasks::TaskParamName;
 use crate::slay::visibility::VisibilitySpec;
 
-
-
 /*
 
 
 (||{
-  #[derive(Clone, Debug)]
-  struct Anonymous {}
-  impl PlayerTask for Anonymous {
-    fn make_progress(
-       &mut self, _context: &mut GameBookKeeping, _game: &mut Game, _player_index: ids::PlayerIndex,
-    ) -> SlayResult<TaskProgressResult> {
-      /////////////////
+	#[derive(Clone, Debug)]
+	struct Anonymous {}
+	impl PlayerTask for Anonymous {
+		fn make_progress(
+			 &mut self, _context: &mut GameBookKeeping, _game: &mut Game, _player_index: ids::PlayerIndex,
+		) -> SlayResult<TaskProgressResult> {
+			/////////////////
 
-      /////////////////
-      Ok(TaskProgressResult::TaskComplete)
-    }
-    fn label(&self) -> String {
-      "anonymous task".to_owned()
-    }
-  }
-  Box::new(Anonymous {}) as Box<dyn PlayerTask>
+			/////////////////
+			Ok(TaskProgressResult::TaskComplete)
+		}
+		fn label(&self) -> String {
+			"anonymous task".to_owned()
+		}
+	}
+	Box::new(Anonymous {}) as Box<dyn PlayerTask>
 })(),
 
 
 */
-
 
 pub const MAX_TURNS: u32 = 1000;
 
@@ -120,7 +117,7 @@ pub struct CardSpec {
 	pub hero_ability: Option<HeroAbility>,
 	pub spell: Option<MagicSpell>,
 	pub item_modifier: Option<ItemModifier>,
-  // pub hand_actions: ActionsCreator,
+	// pub hand_actions: ActionsCreator,
 	// pub party_actions: ActionsCreator,
 }
 
@@ -185,32 +182,30 @@ pub enum MonsterRequirements {
 	HeroType(HeroType),
 }
 
-
-
 #[derive(Debug, Clone)]
 struct MonsterSlainTask {
-  card_id: ids::CardId,
+	card_id: ids::CardId,
 }
 
 impl PlayerTask for MonsterSlainTask {
-    fn make_progress(
+	fn make_progress(
 		&mut self, context: &mut GameBookKeeping, game: &mut Game, player_index: ids::PlayerIndex,
 	) -> SlayResult<TaskProgressResult> {
-    game.move_card(
-      DeckPath::ActiveMonsters,
-      DeckPath::SlainMonsters(player_index),
-      self.card_id
-  )?;
+		game.move_card(
+			DeckPath::ActiveMonsters,
+			DeckPath::SlainMonsters(player_index),
+			self.card_id,
+		)?;
 
-    if let Some(stack) = game.deck_mut(DeckPath::NextMonsters).maybe_deal() {
-      game.deck_mut(DeckPath::ActiveMonsters).add(stack);
-    }
-    Ok(TaskProgressResult::TaskComplete)
-  }
+		if let Some(stack) = game.deck_mut(DeckPath::NextMonsters).maybe_deal() {
+			game.deck_mut(DeckPath::ActiveMonsters).add(stack);
+		}
+		Ok(TaskProgressResult::TaskComplete)
+	}
 
-  fn label(&self) -> String {
-    format!("Slay monster card {}.", self.card_id)
-  }
+	fn label(&self) -> String {
+		format!("Slay monster card {}.", self.card_id)
+	}
 }
 
 // #[derive(Debug, Clone)]
@@ -226,17 +221,17 @@ pub struct MonsterSpec {
 }
 
 impl MonsterSpec {
-  pub fn get_consequences(&self, card_id: ids::CardId) -> RollConsequences {
-    let mut tasks = self.consequences.success.tasks.clone();
-    tasks.push(Box::new(MonsterSlainTask {card_id}));
-    RollConsequences {
-      success: RollConsequence {
-        condition: self.consequences.success.condition.to_owned(),
-        tasks,
-      },
-      loss: self.consequences.loss.to_owned(),
-    }
-  }
+	pub fn get_consequences(&self, card_id: ids::CardId) -> RollConsequences {
+		let mut tasks = self.consequences.success.tasks.clone();
+		tasks.push(Box::new(MonsterSlainTask { card_id }));
+		RollConsequences {
+			success: RollConsequence {
+				condition: self.consequences.success.condition.to_owned(),
+				tasks,
+			},
+			loss: self.consequences.loss.to_owned(),
+		}
+	}
 }
 
 // const spec: MonsterSpec = MonsterSpec {
@@ -507,7 +502,7 @@ pub fn get_card_specs() -> [CardSpec; 33] {
           HeroAbility {
             condition: Condition::ge(5),
             tasks: vec![
-              
+
             ],
           }
         ),

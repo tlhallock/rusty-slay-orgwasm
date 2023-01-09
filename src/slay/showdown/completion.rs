@@ -68,7 +68,11 @@ impl CompletionTracker {
 	}
 
 	pub fn should_offer_modifications_again(&self, player_index: ids::PlayerIndex) -> bool {
-		self.player_completions.get(&player_index).unwrap().offer_on_modify()
+		self
+			.player_completions
+			.get(&player_index)
+			.unwrap()
+			.offer_on_modify()
 	}
 
 	pub(crate) fn reset_timeline(&mut self) {

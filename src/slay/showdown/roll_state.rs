@@ -159,7 +159,6 @@ pub struct RollPerspective {
 	pub reason: RollReason,
 	pub choices: Vec<ChoicePerspective>,
 
-
 	pub roll_total: i32,
 
 	pub win_condition: Condition,
@@ -192,8 +191,16 @@ impl RollState {
 			roll_total,
 			win_condition: self.consequences.success.condition.to_owned(),
 			won: self.consequences.success.condition.applies_to(roll_total),
-			loss_condition: self.consequences.loss.as_ref().map(|rc| rc.condition.to_owned()),
-			lossed: self.consequences.loss.as_ref().map(|rc| rc.condition.applies_to(roll_total)),
+			loss_condition: self
+				.consequences
+				.loss
+				.as_ref()
+				.map(|rc| rc.condition.to_owned()),
+			lossed: self
+				.consequences
+				.loss
+				.as_ref()
+				.map(|rc| rc.condition.applies_to(roll_total)),
 		}
 	}
 }

@@ -61,19 +61,17 @@ impl PlayerTask for AddTasks {
 fn create_roll_for_ability_task(
 	context: &mut GameBookKeeping, player_index: ids::PlayerIndex, card: &Card, ability: &HeroAbility,
 ) -> Box<dyn PlayerTask> {
-	Box::new(
-		AddTasks {
-			tasks: vec![
-				Box::new(CardUsedTask::new(player_index, card.id)),
-				Box::new(DoRollTask::new(RollState::new(
-					player_index,
-					ability.to_consequences(),
-					Roll::create_from(&mut context.rng),
-					RollReason::UseHeroAbility(card.as_perspective()),
-				))) as Box<dyn PlayerTask>
-			]
-		}
-	)
+	Box::new(AddTasks {
+		tasks: vec![
+			Box::new(CardUsedTask::new(player_index, card.id)),
+			Box::new(DoRollTask::new(RollState::new(
+				player_index,
+				ability.to_consequences(),
+				Roll::create_from(&mut context.rng),
+				RollReason::UseHeroAbility(card.as_perspective()),
+			))) as Box<dyn PlayerTask>,
+		],
+	})
 }
 
 fn create_place_hero_choice(
@@ -95,12 +93,7 @@ fn create_place_hero_choice(
 						condition: Condition::challenge_denied(),
 						tasks: vec![
 							card_path.get_place_task(),
-							create_roll_for_ability_task(
-								context,
-								player_index,
-								game.card(card_path),
-								ability,
-							),
+							create_roll_for_ability_task(context, player_index, game.card(card_path), ability),
 						],
 					},
 					loss: Some(RollConsequence {
@@ -318,12 +311,7 @@ fn create_roll_for_ability_choice(
 		},
 		vec![
 			Box::new(RemoveActionPointsTask::new(1)),
-			create_roll_for_ability_task(
-				context,
-				player_index,
-				game.card(card_path),
-				ability,
-			),
+			create_roll_for_ability_task(context, player_index, game.card(card_path), ability),
 		],
 	)
 }

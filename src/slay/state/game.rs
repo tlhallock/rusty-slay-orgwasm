@@ -170,7 +170,7 @@ impl Game {
 	}
 	pub fn card(&self, card_path: CardPath) -> &Card {
 		if let Some(card) = self.maybe_card(card_path) {
-				card
+			card
 		} else {
 			log::info!("Unable to find card at card path {:?}", card_path);
 			unreachable!()

@@ -4,7 +4,7 @@ use crate::slay::choices::ChoiceDisplayType;
 use crate::slay::choices::DisplayPath;
 use crate::slay::choices::TasksChoice;
 use crate::slay::deadlines;
-use crate::slay::errors::{SlayResult};
+use crate::slay::errors::SlayResult;
 use crate::slay::game_context::GameBookKeeping;
 use crate::slay::ids;
 use crate::slay::showdown::common::ModificationPath;
@@ -35,16 +35,12 @@ impl PlayerTask for ModifyRollTask {
 	fn make_progress(
 		&mut self, context: &mut GameBookKeeping, game: &mut Game, player_index: ids::PlayerIndex,
 	) -> SlayResult<TaskProgressResult> {
-		let modification = self
-			.modification
-			.to_owned();
+		let modification = self.modification.to_owned();
 
 		game
 			.showdown
 			.add_modification(self.modification_path, modification)?;
-		let modification_task = game
-			.showdown
-			.get_modification_task(context, game);
+		let modification_task = game.showdown.get_modification_task(context, game);
 		modification_task.apply(context, game);
 		Ok(TaskProgressResult::TaskComplete)
 	}

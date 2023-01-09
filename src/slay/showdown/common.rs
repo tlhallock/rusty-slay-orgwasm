@@ -65,10 +65,10 @@ pub enum RollModificationChoiceType {
 impl RollModificationChoiceType {
 	pub fn get_path(&self) -> ModificationPath {
 		match self {
-    	RollModificationChoiceType::AddToRoll(_, _, path) => *path,
-    	RollModificationChoiceType::RemoveFromRoll(_, _, path) => *path,
+			RollModificationChoiceType::AddToRoll(_, _, path) => *path,
+			RollModificationChoiceType::RemoveFromRoll(_, _, path) => *path,
+		}
 	}
-}
 	pub fn from_card(spec: &CardSpec, amount: i32, path: ModificationPath) -> Self {
 		if amount < 0 {
 			RollModificationChoiceType::RemoveFromRoll(CardSpecPerspective::new(spec), amount, path)

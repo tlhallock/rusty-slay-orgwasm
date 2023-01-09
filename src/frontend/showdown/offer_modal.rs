@@ -20,9 +20,8 @@ pub struct OfferModalProps {
 
 #[function_component(OfferDescriptionView)]
 pub fn view_offer_context(props: &OfferModalProps) -> Html {
-
 	let description = match &props.offer.reason {
-    ChallengeReason::PlaceHeroCard(spec) => html! {
+		ChallengeReason::PlaceHeroCard(spec) => html! {
 			<div class={classes!("row")}>
 				{props.offer.initiator.to_owned()}
 				{"is placing"}
@@ -35,7 +34,7 @@ pub fn view_offer_context(props: &OfferModalProps) -> Html {
 				{"In their party."}
 			</div>
 		},
-    ChallengeReason::PlaceItem(spec) => html! {
+		ChallengeReason::PlaceItem(spec) => html! {
 			<div class={classes!("row")}>
 			{props.offer.initiator.to_owned()}
 			{"wants to place the item"}
@@ -47,7 +46,7 @@ pub fn view_offer_context(props: &OfferModalProps) -> Html {
 			/>
 			</div>
 		},
-    ChallengeReason::CastMagic(spec) => html! {
+		ChallengeReason::CastMagic(spec) => html! {
 			<div class={classes!("row")}>
 			{"wants to cast the magic card"}
 			<CardSpecView

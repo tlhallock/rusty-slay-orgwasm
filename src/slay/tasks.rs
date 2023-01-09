@@ -14,7 +14,6 @@ use std::collections::VecDeque;
 use std::io::BufWriter;
 use std::io::Write;
 
-
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
 pub enum TaskParamName {
 	PlayerToStealFrom,

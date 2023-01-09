@@ -54,29 +54,29 @@ pub struct RollHistoryProps {
 pub fn view_roll_history(props: &RollHistoryProps) -> Html {
 	let history = props.history.iter().map(|m| {
 		html! {
-			 <div class={classes!("row")}>
-				  <div class={classes!("username")}>
-					  {m.modifier_name.to_owned()}
-				 </div>
-				 <CardSpecView
-					 spec={m.modifying_card_spec.to_owned()}
-					 view_card={props.callbacks.view_card.to_owned()}
-					 choice_state={ChoiceState::default()}
-					 extra_specs={ExtraSpecProps::default()}
-				 />
-				 {
-					if m.modification_amount < 0 {
-						html! {
-							<div class={classes!("roll-choice-minus")}>{ format!("{}", m.modification_amount) } </div>
-						}
-					} else {
-						html! {
-							<div class={classes!("roll-choice-plus")}>{ format!("+{}", m.modification_amount) } </div>
-						}
-					}
+			<div class={classes!("row")}>
+				 <div class={classes!("username")}>
+					 {m.modifier_name.to_owned()}
+				</div>
+				<CardSpecView
+					spec={m.modifying_card_spec.to_owned()}
+					view_card={props.callbacks.view_card.to_owned()}
+					choice_state={ChoiceState::default()}
+					extra_specs={ExtraSpecProps::default()}
+				/>
+				{
+				 if m.modification_amount < 0 {
+					 html! {
+						 <div class={classes!("roll-choice-minus")}>{ format!("{}", m.modification_amount) } </div>
+					 }
+				 } else {
+					 html! {
+						 <div class={classes!("roll-choice-plus")}>{ format!("+{}", m.modification_amount) } </div>
+					 }
 				 }
-			 </div>
-		 }
+				}
+			</div>
+		}
 	});
 	html! { <div class={classes!("column")}> {"Modifications:"}{ for history } </div> }
 }
