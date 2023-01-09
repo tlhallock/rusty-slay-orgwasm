@@ -7,6 +7,7 @@ use crate::slay::game_context::GameBookKeeping;
 use crate::slay::ids;
 use crate::slay::message::Notification;
 use crate::slay::state::game::{Game, GamePerspective};
+use crate::slay::state::initialize;
 use crate::slay::{driver, strategy};
 
 #[derive(Clone)]
@@ -24,7 +25,7 @@ impl AppState {
 
 		let mut context = GameBookKeeping::new();
 		let mut game = Game::new();
-		driver::initialize_game(&mut context, &mut game);
+		initialize::initialize_game(&mut context, &mut game);
 		let player_index = game.active_player_index();
 		Self {
 			context,

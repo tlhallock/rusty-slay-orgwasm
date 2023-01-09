@@ -1,20 +1,21 @@
+use log::LevelFilter;
+
 use crate::slay::actions;
 use crate::slay::errors::{SlayError, SlayResult};
 use crate::slay::game_context::GameBookKeeping;
 use crate::slay::ids;
 use crate::slay::message::Notification;
-use crate::slay::specification;
 use crate::slay::state::game::Game;
 use crate::slay::state::player::Player;
-use crate::slay::state::stack::Card;
-use crate::slay::state::stack::Stack;
 use crate::slay::state::summarizable::Summarizable;
 use crate::slay::tasks::TaskProgressResult;
 use crate::slay::{strategy, tasks};
 
-use rand::seq::SliceRandom;
-use rand::Rng;
 use std::io::BufWriter;
+
+use simple_logging;
+
+use super::state::initialize;
 
 pub fn player_has_won(player: &Player) -> bool {
 	player.slain_monsters.num_top_cards() >= 3 || player.hero_types().len() >= 6
@@ -42,56 +43,6 @@ fn check_for_expired_modifiers(game: &mut Game) {
 	todo!()
 }
 
-pub fn initialize_game(context: &mut GameBookKeeping, game: &mut Game) {
-	let (draw_capacity, leaders_capacity, monsters_capacity) = (101, 10, 20);
-	let mut draw = Vec::with_capacity(draw_capacity);
-	let mut leaders = Vec::with_capacity(leaders_capacity);
-	let mut monsters = Vec::with_capacity(monsters_capacity);
-	specification::get_card_specs().iter().for_each(|spec| {
-		for _ in 0..spec.repeat {
-			let stack = Stack::new(Card::new(context.id_generator.generate(), spec.to_owned()));
-			match spec.card_type {
-				specification::CardType::PartyLeader(_) => leaders.push(stack),
-				specification::CardType::Monster => monsters.push(stack),
-				_ => draw.push(stack),
-			};
-		}
-	});
-	if draw_capacity != draw.len() {
-		println!("Draw's capacity should be {}", draw.len())
-	}
-	if leaders_capacity != draw.len() {
-		println!("Leader's capacity should be {}", leaders.len())
-	}
-	if monsters_capacity != draw.len() {
-		println!("Monster's capacity should be {}", monsters.len())
-	}
-
-	[&mut draw, &mut leaders, &mut monsters]
-		.iter_mut()
-		.for_each(|deck| deck.shuffle(&mut context.rng));
-
-	game.draw.extend(draw.drain(..));
-	game.next_monsters.extend(monsters.drain(..));
-	game.leaders.extend(leaders.drain(..));
-
-	game.monsters.extend(game.next_monsters.drain(0..3));
-
-	for player_index in 0..4 {
-		let mut player = Player::new(
-			format!("Unnamed bot {}", player_index + 1),
-			player_index,
-			game.leaders.deal().top,
-		);
-		player.hand.extend(game.draw.drain(0..5));
-		game.players.push(player);
-	}
-
-	// initialize the first first random player
-	game.set_active_player(context.rng.gen_range(0..game.number_of_players()));
-	game.current_player_mut().turn_begin();
-	actions::assign_action_choices(context, game);
-}
 
 pub enum AdvanceGameResult {
 	GameOver,
@@ -181,12 +132,12 @@ pub fn make_selection(
 }
 
 pub fn game_loop() -> SlayResult<()> {
-	// simple_logging::log_to_file("output/log.txt", LevelFilter::Info).expect("Unable to log.");
+	simple_logging::log_to_file("output/log.txt", LevelFilter::Info).expect("Unable to log.");
 
 	let context = &mut GameBookKeeping::new();
 	let game = &mut Game::new();
 
-	initialize_game(context, game);
+	initialize::initialize_game(context, game);
 
 	let mut iteration = 0;
 	'turns: loop {

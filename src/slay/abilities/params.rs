@@ -364,6 +364,7 @@ impl PlayerTask for ChooseCardFromPlayerParameterTask {
 	}
 }
 
+
 #[derive(Debug, Clone)]
 pub struct SetParameterToMyself {
 	param_name: TaskParamName,

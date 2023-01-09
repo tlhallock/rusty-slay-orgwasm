@@ -3,7 +3,7 @@ use crate::slay::choices::{ChoiceDisplay, ChoiceDisplayType, Choices, TasksChoic
 use crate::slay::errors::SlayResult;
 use crate::slay::game_context::GameBookKeeping;
 use crate::slay::modifiers::{ModifierOrigin, PlayerModifier};
-use crate::slay::specification::{CardType, MagicSpell};
+use crate::slay::specification::{MagicSpell};
 use crate::slay::state::deck::DeckPath;
 use crate::slay::state::game::Game;
 use crate::slay::state::stack::{Card, Stack};
@@ -204,6 +204,6 @@ impl PlayerTask for ReturnModifierTask {
 	}
 
 	fn label(&self) -> String {
-		todo!()
+		"Returning all modifiers".to_owned()
 	}
 }
