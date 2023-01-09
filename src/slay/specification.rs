@@ -73,7 +73,7 @@ impl DeckSpec {
 #[derive(Debug, Clone)]
 pub struct HeroAbility {
 	pub condition: Condition,
-  pub ability: HeroAbilityType,
+	pub ability: HeroAbilityType,
 }
 
 impl HeroAbility {
@@ -81,7 +81,7 @@ impl HeroAbility {
 		RollConsequences {
 			success: RollConsequence {
 				condition: self.condition.to_owned(),
-        tasks: self.ability.create_tasks(),
+				tasks: self.ability.create_tasks(),
 			},
 			loss: None,
 		}
@@ -181,7 +181,7 @@ pub enum HeroType {
 pub enum ItemType {
 	Cursed,
 	Blessed,
-  Mask, // Could have a hero type here as well...
+	Mask, // Could have a hero type here as well...
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]

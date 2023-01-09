@@ -13,11 +13,11 @@ pub mod modifiers;
 pub mod old;
 pub mod showdown;
 pub mod specification;
+pub mod specs;
 pub mod state;
 pub mod state_modifiers;
 pub mod strategy;
 pub mod tasks;
 pub mod visibility;
-pub mod specs;
 
 // pub mod test_scripts;

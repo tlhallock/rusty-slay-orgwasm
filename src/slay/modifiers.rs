@@ -1,6 +1,9 @@
 use crate::slay::state::game::Turn;
 
-use super::{ids, specification::{MagicSpell, HeroType}};
+use super::{
+	ids,
+	specification::{HeroType, MagicSpell},
+};
 
 #[derive(Debug, Clone, Copy)]
 pub enum ModifierDuration {
@@ -99,4 +102,3 @@ pub enum ItemModifier {
 	RemoveAbility,
 	SacrificeMeInstead,
 }
-
