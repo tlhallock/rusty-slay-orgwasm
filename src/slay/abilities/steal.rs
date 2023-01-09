@@ -27,7 +27,7 @@ impl PlayerTask for StealTask {
 		&mut self, _context: &mut GameBookKeeping, game: &mut Game, thief_index: ids::PlayerIndex,
 	) -> SlayResult<TaskProgressResult> {
 		game.players[thief_index].tasks.prepend_from(&mut vec![
-			ChoosePlayerParameterTask::create(TaskParamName::PlayerToStealFrom, "to steal from"),
+			ChoosePlayerParameterTask::exclude_self(TaskParamName::PlayerToStealFrom, "to steal from"),
 			// This one coulds just be a method call, all it does is assign a new task...
 			// (Kinda like the steal action...)
 			// I guess it should just be renamed to 'choose card from player's party' or smh...
@@ -44,7 +44,7 @@ impl PlayerTask for StealTask {
 	}
 
 	fn label(&self) -> String {
-		format!("Steal a card is preparing to steal a card.")
+		format!("Preparing to steal a card")
 	}
 }
 

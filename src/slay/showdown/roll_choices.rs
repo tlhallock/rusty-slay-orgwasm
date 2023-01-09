@@ -4,7 +4,7 @@ use crate::slay::choices::ChoiceDisplayType;
 use crate::slay::choices::DisplayPath;
 use crate::slay::choices::TasksChoice;
 use crate::slay::deadlines;
-use crate::slay::errors::{SlayError, SlayResult};
+use crate::slay::errors::{SlayResult};
 use crate::slay::game_context::GameBookKeeping;
 use crate::slay::ids;
 use crate::slay::showdown::common::ModificationPath;
@@ -19,13 +19,13 @@ use crate::slay::tasks::{MoveCardTask, PlayerTask, TaskProgressResult};
 
 #[derive(Debug, Clone)]
 pub struct ModifyRollTask {
-	modification: Option<RollModification>,
+	modification: RollModification,
 	modification_path: ModificationPath,
 }
 impl ModifyRollTask {
 	pub fn new(modification: RollModification, path: ModificationPath) -> Self {
 		Self {
-			modification: Some(modification),
+			modification,
 			modification_path: path,
 		}
 	}
@@ -37,15 +37,14 @@ impl PlayerTask for ModifyRollTask {
 	) -> SlayResult<TaskProgressResult> {
 		let modification = self
 			.modification
-			.take()
-			.ok_or_else(|| SlayError::new("Cannot choose the same choice twice."))?;
+			.to_owned();
 
 		game
 			.showdown
 			.add_modification(self.modification_path, modification)?;
 		let modification_task = game
 			.showdown
-			.get_modification_task(context, game, player_index);
+			.get_modification_task(context, game);
 		modification_task.apply(context, game);
 		Ok(TaskProgressResult::TaskComplete)
 	}
@@ -70,6 +69,7 @@ pub fn create_modify_roll_choice(
 			display_type: ChoiceDisplayType::Modify(RollModificationChoiceType::from_card(
 				&card.spec,
 				modification_amount,
+				*modification_path,
 			)),
 			label: format!(
 				"Use {} to modify {}'s roll by {}",
@@ -85,7 +85,8 @@ pub fn create_modify_roll_choice(
 			Box::new(ModifyRollTask::new(
 				RollModification {
 					modifying_player_index: player_index,
-					card_path: CardPath::TopCardIn(DeckPath::Hand(player_index), card.id),
+					// card_path: CardPath::TopCardIn(DeckPath::Hand(player_index), card.id),
+					card_id: card.id,
 					modification_amount,
 				},
 				*modification_path,

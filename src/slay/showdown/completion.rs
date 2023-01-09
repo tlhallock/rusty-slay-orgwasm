@@ -27,6 +27,13 @@ impl Completion {
 			Self::AllDone => true,
 		}
 	}
+	pub fn offer_on_modify(&self) -> bool {
+		match self {
+			Self::Thinking => true,
+			Self::DoneUntilModification => true,
+			Self::AllDone => false,
+		}
+	}
 }
 
 #[derive(Debug, Clone)]
@@ -61,9 +68,7 @@ impl CompletionTracker {
 	}
 
 	pub fn should_offer_modifications_again(&self, player_index: ids::PlayerIndex) -> bool {
-		let result = self.player_completions.get(&player_index).unwrap();
-		*result == Completion::DoneUntilModification
-		// self.player_completions.get(&player_index).as_deref().contains(&Completion::DoneUntilModification)
+		self.player_completions.get(&player_index).unwrap().offer_on_modify()
 	}
 
 	pub(crate) fn reset_timeline(&mut self) {

@@ -159,9 +159,10 @@ pub fn view_roll_modal(props: &RollModalProps) -> Html {
 				<br/>
 				<Dice roll={props.roll.initial.to_owned()}/>
 				<br/>
-				<RollHistory history={props.roll.history.to_owned()}/>
+				<RollHistory history={props.roll.history.to_owned()} callbacks={props.callbacks.to_owned()}/>
 				<br/>
-				<RollTotal success={props.roll.success} amount={props.roll.roll_total}/>
+				// TODO: add a not failed...
+				<RollTotal success={props.roll.won} amount={props.roll.roll_total}/>
 				<br/>
 				<RollChoices choices={props.roll.choices.to_owned()} callbacks={props.callbacks.to_owned()}/>
 				<br/>

@@ -25,7 +25,7 @@ RUN set -ex \
 
 RUN cargo install wasm-pack
 RUN apt update
-RUN apt install vim fish -y
+RUN apt install vim fish less -y
 RUN cargo install trunk
 RUN rustup component add rustfmt
 # rustup target add wasm32-unknown-unknown

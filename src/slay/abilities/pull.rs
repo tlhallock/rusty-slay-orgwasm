@@ -62,7 +62,7 @@ impl PlayerTask for PullFromTask {
 		if let Some(param) = self.output_param {
 			game.players[puller_index]
 				.tasks
-				.set_card_value(param, pulled_card);
+				.set_card_value(param, pulled_card)?;
 		}
 		Ok(TaskProgressResult::TaskComplete)
 	}

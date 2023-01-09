@@ -243,6 +243,10 @@ impl Deck {
 			.ok_or_else(|| errors::SlayError::new("Unable to find card in deck."))
 	}
 
+	pub fn maybe_deal(&mut self) -> Option<Stack> {
+		self.stacks.pop_front()
+	}
+	
 	pub fn deal(&mut self) -> Stack {
 		self.stacks.pop_front().unwrap()
 		// // TODO:
@@ -268,14 +272,14 @@ impl Deck {
 			.map(|s| &s.top)
 	}
 
-	pub(crate) fn other_cards(&self, exclude: &HashSet<ids::CardId>) -> HashSet<ids::CardId> {
-		self
-			.stacks
-			.iter()
-			.filter(|stack| exclude.contains(&stack.top.id))
-			.map(|stack| stack.top.id)
-			.collect()
-	}
+	// pub(crate) fn other_cards(&self, exclude: &HashSet<ids::CardId>) -> HashSet<ids::CardId> {
+	// 	self
+	// 		.stacks
+	// 		.iter()
+	// 		.filter(|stack| exclude.contains(&stack.top.id))
+	// 		.map(|stack| stack.top.id)
+	// 		.collect()
+	// }
 
 	pub(crate) fn modifier(&self, top_card_id: u32, modifier_card_id: u32) -> Option<&Card> {
 		for stack in self.stacks.iter() {

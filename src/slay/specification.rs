@@ -9,29 +9,57 @@ use super::abilities::params::ChooseCardFromPlayerParameterTask;
 use super::abilities::params::ClearParamsTask;
 use super::abilities::steal;
 use super::abilities::steal::StealTask;
+use super::errors::SlayResult;
+use super::game_context::GameBookKeeping;
+use super::ids;
 use super::modifiers::ItemModifier;
+use super::state::game::Game;
+use super::tasks::TaskProgressResult;
 use crate::slay::abilities::discard::Discard;
 use crate::slay::abilities::heros::VictimDraws;
 use crate::slay::abilities::params::ChoosePlayerParameterTask;
 use crate::slay::abilities::pull::PullFromTask;
 use crate::slay::abilities::sacrifice::Sacrifice;
 use crate::slay::actions::DrawTask;
-use crate::slay::errors::SlayResult;
-use crate::slay::game_context::GameBookKeeping;
-use crate::slay::ids;
 use crate::slay::modifiers::PlayerModifier;
 use crate::slay::showdown::consequences::Condition;
 use crate::slay::showdown::consequences::RollConsequence;
 use crate::slay::showdown::consequences::RollConsequences;
 use crate::slay::state::deck::DeckPath;
-use crate::slay::state::game::Game;
 use crate::slay::tasks::PlayerTask;
 use crate::slay::tasks::ReceiveModifier;
 use crate::slay::tasks::TaskParamName;
-use crate::slay::tasks::TaskProgressResult;
 use crate::slay::visibility::VisibilitySpec;
 
-pub const MAX_TURNS: u32 = 100;
+
+
+/*
+
+
+(||{
+  #[derive(Clone, Debug)]
+  struct Anonymous {}
+  impl PlayerTask for Anonymous {
+    fn make_progress(
+       &mut self, _context: &mut GameBookKeeping, _game: &mut Game, _player_index: ids::PlayerIndex,
+    ) -> SlayResult<TaskProgressResult> {
+      /////////////////
+
+      /////////////////
+      Ok(TaskProgressResult::TaskComplete)
+    }
+    fn label(&self) -> String {
+      "anonymous task".to_owned()
+    }
+  }
+  Box::new(Anonymous {}) as Box<dyn PlayerTask>
+})(),
+
+
+*/
+
+
+pub const MAX_TURNS: u32 = 1000;
 
 // Move this to the decks file?
 #[derive(Debug, Clone)]
@@ -91,8 +119,9 @@ pub struct CardSpec {
 	pub modifiers: Vec<i32>,
 	pub hero_ability: Option<HeroAbility>,
 	pub spell: Option<MagicSpell>,
-	pub item_modifier: Option<ItemModifier>, // pub hand_actions: ActionsCreator,
-	                                         // pub party_actions: ActionsCreator,
+	pub item_modifier: Option<ItemModifier>,
+  // pub hand_actions: ActionsCreator,
+	// pub party_actions: ActionsCreator,
 }
 
 impl Default for CardSpec {
@@ -156,6 +185,34 @@ pub enum MonsterRequirements {
 	HeroType(HeroType),
 }
 
+
+
+#[derive(Debug, Clone)]
+struct MonsterSlainTask {
+  card_id: ids::CardId,
+}
+
+impl PlayerTask for MonsterSlainTask {
+    fn make_progress(
+		&mut self, context: &mut GameBookKeeping, game: &mut Game, player_index: ids::PlayerIndex,
+	) -> SlayResult<TaskProgressResult> {
+    game.move_card(
+      DeckPath::ActiveMonsters,
+      DeckPath::SlainMonsters(player_index),
+      self.card_id
+  )?;
+
+    if let Some(stack) = game.deck_mut(DeckPath::NextMonsters).maybe_deal() {
+      game.deck_mut(DeckPath::ActiveMonsters).add(stack);
+    }
+    Ok(TaskProgressResult::TaskComplete)
+  }
+
+  fn label(&self) -> String {
+    format!("Slay monster card {}.", self.card_id)
+  }
+}
+
 // #[derive(Debug, Clone)]
 // pub enum RollConsequenceType {
 //     MonsterSlain(ids::CardId),
@@ -166,6 +223,20 @@ pub enum MonsterRequirements {
 pub struct MonsterSpec {
 	pub consequences: RollConsequences,
 	pub requirements: Vec<MonsterRequirements>,
+}
+
+impl MonsterSpec {
+  pub fn get_consequences(&self, card_id: ids::CardId) -> RollConsequences {
+    let mut tasks = self.consequences.success.tasks.clone();
+    tasks.push(Box::new(MonsterSlainTask {card_id}));
+    RollConsequences {
+      success: RollConsequence {
+        condition: self.consequences.success.condition.to_owned(),
+        tasks,
+      },
+      loss: self.consequences.loss.to_owned(),
+    }
+  }
 }
 
 // const spec: MonsterSpec = MonsterSpec {
@@ -248,7 +319,7 @@ pub fn get_card_specs() -> [CardSpec; 33] {
           HeroAbility {
             condition: Condition::ge(6),
             tasks: vec![
-              ChoosePlayerParameterTask::create(
+              ChoosePlayerParameterTask::exclude_self(
                 TaskParamName::PlayerToPullFrom,
                 "Choose a player to pull from.",
               ),
@@ -270,7 +341,7 @@ pub fn get_card_specs() -> [CardSpec; 33] {
           HeroAbility {
             condition: Condition::ge(6),
             tasks: vec![
-              ChoosePlayerParameterTask::create(
+              ChoosePlayerParameterTask::exclude_self(
                 TaskParamName::SlipperyPawsVictim,
                 "Choose a player to pull 2 cards from, you will have to discard one of them.",
               ),
@@ -314,7 +385,7 @@ pub fn get_card_specs() -> [CardSpec; 33] {
           HeroAbility {
             condition: Condition::ge(10),
             tasks: vec![
-              ChoosePlayerParameterTask::create(
+              ChoosePlayerParameterTask::exclude_self(
                 TaskParamName::MeowzioVictim,
                 "Choose a player to steal and pull from.",
               ),
@@ -340,9 +411,9 @@ pub fn get_card_specs() -> [CardSpec; 33] {
           HeroAbility {
             condition: Condition::ge(9),
             tasks: vec![
-              ChoosePlayerParameterTask::create(
+              ChoosePlayerParameterTask::exclude_self(
                 TaskParamName::PlayerToDestroy,
-                "to destroy a hero card",
+                "to destroy a hero card (Shurikitty)",
               ),
               ChooseCardFromPlayerParameterTask::from_party(
                 TaskParamName::PlayerToDestroy,
@@ -350,7 +421,7 @@ pub fn get_card_specs() -> [CardSpec; 33] {
                 "Which hero card would you like to destroy?"
               ),
               DestroyCardTask::create(
-                TaskParamName::PlayerToStealFrom,
+                TaskParamName::PlayerToDestroy,
                 TaskParamName::CardToSteal,
                 DestroyModifiersDestination::Myself,
               ),
@@ -384,7 +455,7 @@ pub fn get_card_specs() -> [CardSpec; 33] {
           HeroAbility {
             condition: Condition::ge(8),
             tasks: vec![
-              ChoosePlayerParameterTask::create(
+              ChoosePlayerParameterTask::exclude_self(
                 TaskParamName::SilentShadowVictim,
                 "Who's hand do you want to see?",
               ),
@@ -409,9 +480,9 @@ pub fn get_card_specs() -> [CardSpec; 33] {
           HeroAbility {
             condition: Condition::ge(6),
             tasks: vec![
-              ChoosePlayerParameterTask::create(
+              ChoosePlayerParameterTask::exclude_self(
                 TaskParamName::SlyPickinsVictim,
-                "Who do you want to steal from?",
+                "Sly Pickings: Who do you want to steal from?",
               ),
               PullFromTask::record_pulled(
                 TaskParamName::SlyPickinsVictim,
@@ -420,7 +491,8 @@ pub fn get_card_specs() -> [CardSpec; 33] {
               OfferPlayImmediately::create(
                 TaskParamName::SlyPickinsCard,
                 Some(CardType::item_types()),
-              )
+              ),
+              ClearParamsTask::create(),
             ],
           }
         ),
@@ -435,24 +507,7 @@ pub fn get_card_specs() -> [CardSpec; 33] {
           HeroAbility {
             condition: Condition::ge(5),
             tasks: vec![
-              (||{
-                #[derive(Clone, Debug)]
-                struct Anonymous {}
-                impl PlayerTask for Anonymous {
-                  fn make_progress(
-                     &mut self, _context: &mut GameBookKeeping, _game: &mut Game, _player_index: ids::PlayerIndex,
-                  ) -> SlayResult<TaskProgressResult> {
-                    /////////////////
-
-                    /////////////////
-                    Ok(TaskProgressResult::TaskComplete)
-                  }
-                  fn label(&self) -> String {
-                    "anonymous task".to_owned()
-                  }
-                }
-                Box::new(Anonymous {}) as Box<dyn PlayerTask>
-              })(),
+              
             ],
           }
         ),

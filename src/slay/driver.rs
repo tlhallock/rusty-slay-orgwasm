@@ -12,7 +12,6 @@ use crate::slay::state::summarizable::Summarizable;
 use crate::slay::tasks::TaskProgressResult;
 use crate::slay::{strategy, tasks};
 
-use log::LevelFilter;
 use rand::seq::SliceRandom;
 use rand::Rng;
 use std::io::BufWriter;
@@ -27,6 +26,7 @@ pub fn game_is_over(game: &Game) -> bool {
 
 fn use_action_points(context: &mut GameBookKeeping, game: &mut Game) {
 	if game.current_player().get_remaining_action_points() > 0 {
+		log::info!("Assigning action points");
 		actions::assign_action_choices(context, game);
 		return;
 	}
@@ -144,6 +144,9 @@ pub fn advance_game(
 	}
 
 	if !waiting_for_players(game) {
+		if !game.showdown.is_empty() {
+			unreachable!();
+		}
 		use_action_points(context, game);
 	}
 	Ok(AdvanceGameResult::WaitingForPlayers)
@@ -178,7 +181,7 @@ pub fn make_selection(
 }
 
 pub fn game_loop() -> SlayResult<()> {
-	simple_logging::log_to_file("output/log.txt", LevelFilter::Info).expect("Unable to log.");
+	// simple_logging::log_to_file("output/log.txt", LevelFilter::Info).expect("Unable to log.");
 
 	let context = &mut GameBookKeeping::new();
 	let game = &mut Game::new();

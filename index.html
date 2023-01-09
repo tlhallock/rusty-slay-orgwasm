@@ -148,10 +148,6 @@
             border: 0.4em solid yellow;
             border-radius: 0.5em;
         }
-        .is-choice {
-            border: 0.4em solid yellow;
-            border-radius: 0.4em;
-        }
         .choice-button {
             color: white;
             background-color: blue;
@@ -198,6 +194,7 @@
             display: grid;
             grid-template-columns: 1fr;
             margin: 5px;
+            width: 100%;
         }
         .roll-choices {
             display: flex;
@@ -210,6 +207,14 @@
             display: flex;
             border: 2px solid yellow;
             margin: 0.5em;
+        }
+        .username {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            font-size:  2em;
+            color: green;
+            height: 100%;
         }
         .roll-choice-plus {
             display: flex;
@@ -230,10 +235,14 @@
         .roll-total-success {
             font-size: 4em;
             color: green;
+            border: 0.1em solid green;
+            width: 100%;
         }
         .roll-total-failure {
             font-size: 4em;
             color: red;
+            border: 0.1em solid red;
+            width: 100%;
         }
         .completions {
             font-size:  2em;
@@ -244,8 +253,12 @@
         }
         .completion {
             display: grid;
-            grid-template-columns: repeat(2, 50%);
+            grid-template-columns: repeat(2, 1fr);
         }
+        /* .challenge-row-container {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+        } */
 
 
 
@@ -276,6 +289,24 @@
         } 
         .thinking-3 {
             animation: thinking3 3s ease infinite;
+        }
+        @keyframes border-blink {    
+            0% {    
+                border-color: white    
+            }
+            50% {    
+                border-color: blue    
+            }
+            100% {    
+                border-color: white
+            }
+        }    
+        .is-choice {
+            animation: border-blink 3s linear infinite; 
+            border: 0.5em solid;
+        }
+        img {
+            background-color: white;
         }
     </style>
 </head>

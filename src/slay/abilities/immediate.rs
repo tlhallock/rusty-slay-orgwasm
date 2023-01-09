@@ -79,7 +79,7 @@ impl PlayerTask for OfferPlayImmediately {
 
 		let default_choice = context.id_generator.generate();
 		game.players[player_index].choices = Some(Choices {
-			instructions: "Would you like to play the card immediately?".to_string(),
+			instructions: format!("You have received {}, would you like to play it immediately?", card.label()),
 			timeline: deadlines::get_refactor_me_deadline(),
 			default_choice: Some(default_choice),
 			options: vec![

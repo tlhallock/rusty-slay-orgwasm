@@ -38,6 +38,7 @@ pub fn view_roll_completions(props: &CompletionsProps) -> Html {
 	});
 	html! {
 		<div class={classes!{"completions"}}>
+			// {"Completions:"}
 			{ for completions }
 		</div>
 	}
@@ -46,22 +47,38 @@ pub fn view_roll_completions(props: &CompletionsProps) -> Html {
 #[derive(Properties, PartialEq)]
 pub struct RollHistoryProps {
 	pub history: Vec<ModificationPerspective>,
+	pub callbacks: GameCallbacks,
 }
 
 #[function_component(RollHistory)]
 pub fn view_roll_history(props: &RollHistoryProps) -> Html {
-	let completions = props.history.iter().map(|m| {
+	let history = props.history.iter().map(|m| {
 		html! {
-			 <label>
-				 { format!("Player {} used {} to modify by {}.",
-					 m.modifier_name,
-					 "<implement this>",
-					 m.modification_amount,
-		) }
-			 </label>
+			 <div class={classes!("row")}>
+				  <div class={classes!("username")}>
+					  {m.modifier_name.to_owned()}
+				 </div>
+				 <CardSpecView
+					 spec={m.modifying_card_spec.to_owned()}
+					 view_card={props.callbacks.view_card.to_owned()}
+					 choice_state={ChoiceState::default()}
+					 extra_specs={ExtraSpecProps::default()}
+				 />
+				 {
+					if m.modification_amount < 0 {
+						html! {
+							<div class={classes!("roll-choice-minus")}>{ format!("{}", m.modification_amount) } </div>
+						}
+					} else {
+						html! {
+							<div class={classes!("roll-choice-plus")}>{ format!("+{}", m.modification_amount) } </div>
+						}
+					}
+				 }
+			 </div>
 		 }
 	});
-	html! { <> { for completions } </> }
+	html! { <div class={classes!("column")}> {"Modifications:"}{ for history } </div> }
 }
 
 #[derive(Properties, PartialEq)]
@@ -95,7 +112,7 @@ pub fn view_roll_choices(props: &RollChoicesProps) -> Html {
 		};
 		match &choice.display_type {
 			ChoiceDisplayType::Modify(modi) => match modi {
-				RollModificationChoiceType::AddToRoll(spec, amount) => html! {
+				RollModificationChoiceType::AddToRoll(spec, amount, _) => html! {
 					<div
 						onclick={choose_this}
 						title={format!("Modify this card by {}", amount)}
@@ -114,7 +131,7 @@ pub fn view_roll_choices(props: &RollChoicesProps) -> Html {
 						<div class={classes!("roll-choice-plus")}>{ format!("+{}", amount) } </div>
 					</div>
 				},
-				RollModificationChoiceType::RemoveFromRoll(spec, amount) => html! {
+				RollModificationChoiceType::RemoveFromRoll(spec, amount, _) => html! {
 					<div
 						onclick={choose_this}
 						title={format!("Modify this card by {}", amount)}
@@ -170,7 +187,8 @@ pub fn view_roll_choices(props: &RollChoicesProps) -> Html {
 		}
 	});
 	html! {
-		<div class={classes!("roll-choices")}>
+		<div class={classes!("roll-choices", if props.choices.is_empty() { None } else { Some("is-choice") })}>
+			// {"Options:"}
 			{for choices}
 		</div>
 	}

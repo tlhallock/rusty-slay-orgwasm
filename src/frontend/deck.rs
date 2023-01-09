@@ -15,9 +15,13 @@ pub struct DeckProps {
 
 #[function_component(DeckView)]
 pub fn view_deck(props: &DeckProps) -> Html {
+	let mut is_choice = None;
+	if !props.deck.choice_associations.is_empty() {
+		is_choice = Some("is-choice".to_owned());
+	}
 	let deck_value = if let Some(stacks) = &props.deck.stacks {
 		html! {
-				<div class={classes!("cards")}>
+				<div class={classes!("cards", is_choice)}>
 						{
 								for stacks.iter().map(
 										|s| html! {
@@ -33,7 +37,7 @@ pub fn view_deck(props: &DeckProps) -> Html {
 		}
 	} else {
 		html! {
-				<div class={classes!("many-cards")}>
+				<div class={classes!("many-cards", is_choice)}>
 						// {props.deck.count} {" cards"}
 
 						{

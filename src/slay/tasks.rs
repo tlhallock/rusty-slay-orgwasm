@@ -14,20 +14,6 @@ use std::collections::VecDeque;
 use std::io::BufWriter;
 use std::io::Write;
 
-// impl TaskSpec {
-
-// 	pub fn to_task(&self, player_index: ids::PlayerIndex) -> Box<dyn PlayerTask> {
-// 		unreachable!();
-// 		match &self {
-// 			TaskSpec::Sacrifice(num) => Box::new(Sacrifice::new(*num)),
-// 			TaskSpec::Discard(num) => Box::new(Discard::new(*num)),
-// 			TaskSpec::ReceiveModifier(modifier) => {
-// 				Box::new(ReceiveModifier::new(*modifier))
-// 			}
-// 			TaskSpec::Draw(num) => Box::new(DrawTask::new(player_index, (*num) as usize)),
-// 		}
-// 	}
-// }
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
 pub enum TaskParamName {
@@ -124,6 +110,7 @@ pub trait PlayerTask: Debug + dyn_clone::DynClone {
 
 #[derive(Debug, Default, Clone)]
 pub struct PlayerTasks {
+	// Maybe this should be a stack?
 	// I don't like this part of the code. Seems complicated.
 	// Help? (interior mutability?)
 	// Each task is mutable while being performed (maybe it updates some params..),
@@ -218,7 +205,8 @@ impl PlayerTasks {
 			self.upcoming.push_front(task);
 		}
 		while !self.prepend.is_empty() {
-			let task = self.prepend.remove(0);
+			let last_index = self.prepend.len() - 1;
+			let task = self.prepend.remove(last_index);
 			self.upcoming.push_front(task);
 		}
 	}
@@ -339,19 +327,19 @@ pub(crate) fn continue_tasks(
 		}
 		if let Some(mut task) = game.take_current_task(player_index) {
 			let label = task.as_ref().label();
-			log::debug!("Took task '{}'", label);
+			log::info!("Took task '{}'", label);
 			match task.make_progress(context, game, player_index)? {
 				TaskProgressResult::TaskComplete => {
 					result = TaskProgressResult::ProgressMade;
-					log::debug!("Task '{}' complete", label);
+					log::info!("Task '{}' complete", label);
 				}
 				TaskProgressResult::ProgressMade => {
 					game.players[player_index].put_current_task_back(task)?;
 					result = TaskProgressResult::ProgressMade;
-					log::debug!("Returning to '{}' later", label);
+					log::info!("Returning to '{}' later", label);
 				}
 				TaskProgressResult::NothingDone => {
-					log::debug!("Nothing to be done for task '{}'", label);
+					log::info!("Nothing to be done for task '{}'", label);
 					game.players[player_index].put_current_task_back(task)?;
 					return Ok(result);
 				}

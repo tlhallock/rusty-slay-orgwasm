@@ -4,6 +4,7 @@ use super::common::{ModificationPerspective, RollModification};
 use super::completion::{CompletionTracker, PlayerCompletionPerspective};
 use super::consequences::RollConsequences;
 use super::roll_state::list_modification_choices;
+use crate::slay::choices::ChoiceDisplayType;
 use crate::slay::choices::{ChoicePerspective, Choices};
 use crate::slay::deadlines::Timeline;
 use crate::slay::game_context::GameBookKeeping;
@@ -123,7 +124,7 @@ impl ShowDown for ChallengeState {
 
 impl ChallengeRoll {
 	pub fn to_perspective(
-		&self, game: &Game, choices: &Option<&Choices>,
+		&self, game: &Game, choices: &Option<&Choices>, path: ModificationPath,
 	) -> ChallengeRollPerspective {
 		ChallengeRollPerspective {
 			roller_name: game.players[self.player_index].name.to_owned(),
@@ -136,6 +137,13 @@ impl ChallengeRoll {
 			roll_total: self.calculate_roll_total(),
 			choices: if let Some(choices) = choices {
 				choices.choice_perspetives()
+					.into_iter()
+					.filter(|cp| match &cp.display_type {
+						ChoiceDisplayType::Modify(modi) =>
+							path == modi.get_path(),
+						_ => false,
+					})
+					.collect()
 			} else {
 				Vec::new()
 			},
@@ -147,20 +155,32 @@ impl ChallengeState {
 	pub fn to_perspective(&self, game: &Game, choices: &Option<&Choices>) -> ChallengePerspective {
 		ChallengePerspective {
 			completions: self.tracker().to_perspective(game),
-			success: false,
+			challenger_victorious: self.calculate_roll_total() <= 0, // TODO: put this logic in a common place
 			timeline: self.tracker().timeline.to_owned(),
 			reason: self.reason.to_owned(),
 			initiator: self.initiator.to_perspective(
-				game, choices,
-				// DisplayPath::Roll(ModificationPath::Initiator),
+				game, choices, ModificationPath::Initiator,
 			),
 			challenger: self.challenger.to_perspective(
 				game, choices,
-				// DisplayPath::Roll(ModificationPath::Challenger),
+				ModificationPath::Challenger,
 			),
-			roll_total: self.calculate_roll_total(),
 			choices: if let Some(choices) = choices {
-				choices.choice_perspetives()
+				// For some reason, we are provided action choices even though there is still an active roll...
+				log::info!("Choices: {:?} ", choices.choice_perspetives());
+				let ret: Vec<_> = choices.choice_perspetives()
+					.into_iter()
+					.filter(|cp|
+						match &cp.display_type {
+							ChoiceDisplayType::SetCompletion(_) => true,
+							_ => false,
+						}
+					)
+					.collect();
+					if ret.is_empty() {
+						unreachable!();
+					}
+					ret
 			} else {
 				Vec::new()
 			},
@@ -173,11 +193,11 @@ pub struct ChallengePerspective {
 	pub initiator: ChallengeRollPerspective,
 	pub challenger: ChallengeRollPerspective,
 	pub completions: Vec<PlayerCompletionPerspective>,
-	pub success: bool,
 	pub timeline: Timeline,
 	pub reason: ChallengeReason,
 	pub choices: Vec<ChoicePerspective>,
-	pub roll_total: i32,
+	// pub roll_total: i32,
+	pub challenger_victorious: bool,
 }
 
 #[derive(Debug, PartialEq, Clone)]

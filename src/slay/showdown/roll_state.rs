@@ -12,6 +12,8 @@ use crate::slay::showdown::roll_choices::{self, create_modify_roll_choice};
 use crate::slay::state::game::Game;
 use crate::slay::state::stack::CardSpecPerspective;
 
+use super::consequences::Condition;
+
 // Only the party needs stacks...
 
 #[derive(Debug, PartialEq, Clone)]
@@ -153,15 +155,22 @@ pub struct RollPerspective {
 	pub initial: Roll,
 	pub history: Vec<ModificationPerspective>,
 	pub completions: Vec<PlayerCompletionPerspective>,
-	pub roll_total: i32,
-	pub success: bool,
 	pub timeline: Timeline,
 	pub reason: RollReason,
 	pub choices: Vec<ChoicePerspective>,
+
+
+	pub roll_total: i32,
+
+	pub win_condition: Condition,
+	pub won: bool,
+	pub loss_condition: Option<Condition>,
+	pub lossed: Option<bool>,
 }
 
 impl RollState {
 	pub fn to_perspective(&self, game: &Game, choices: &Option<&Choices>) -> RollPerspective {
+		let roll_total = self.calculate_roll_total();
 		RollPerspective {
 			roller_name: game.get_player_name(self.roller_index),
 			initial: self.initial.to_owned(),
@@ -171,8 +180,7 @@ impl RollState {
 				.map(|m| m.to_perspective(game))
 				.collect(),
 			completions: self.tracker().to_perspective(game),
-			roll_total: self.calculate_roll_total(),
-			success: false,
+
 			timeline: self.tracker().timeline.to_owned(),
 			reason: self.reason.to_owned(),
 			choices: if let Some(choices) = choices {
@@ -180,6 +188,12 @@ impl RollState {
 			} else {
 				Vec::new()
 			},
+
+			roll_total,
+			win_condition: self.consequences.success.condition.to_owned(),
+			won: self.consequences.success.condition.applies_to(roll_total),
+			loss_condition: self.consequences.loss.as_ref().map(|rc| rc.condition.to_owned()),
+			lossed: self.consequences.loss.as_ref().map(|rc| rc.condition.applies_to(roll_total)),
 		}
 	}
 }

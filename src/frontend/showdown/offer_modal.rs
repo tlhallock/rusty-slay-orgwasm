@@ -1,9 +1,15 @@
 use yew::classes;
 use yew::prelude::*;
 
+use crate::frontend::app::ChoiceState;
 use crate::frontend::app::GameCallbacks;
+use crate::frontend::icons::DoNot;
 use crate::frontend::icons::Timer;
 use crate::frontend::showdown::common::CompletionsView;
+use crate::frontend::stack::CardSpecView;
+use crate::frontend::stack::ExtraSpecProps;
+use crate::slay::choices::ChoiceDisplayType;
+use crate::slay::showdown::common::ChallengeReason;
 use crate::slay::showdown::offer::OfferChallengesPerspective;
 
 #[derive(Properties, PartialEq)]
@@ -13,10 +19,53 @@ pub struct OfferModalProps {
 }
 
 #[function_component(OfferDescriptionView)]
-pub fn view_offer_context(_props: &OfferModalProps) -> Html {
-	let text = html! {<div></div>};
+pub fn view_offer_context(props: &OfferModalProps) -> Html {
+
+	let description = match &props.offer.reason {
+    ChallengeReason::PlaceHeroCard(spec) => html! {
+			<div class={classes!("row")}>
+				{props.offer.initiator.to_owned()}
+				{"is placing"}
+				<CardSpecView
+					spec={spec.to_owned()}
+					view_card={props.callbacks.view_card.to_owned()}
+					choice_state={ChoiceState::default()}
+					extra_specs={ExtraSpecProps::default()}
+				/>
+				{"In their party."}
+			</div>
+		},
+    ChallengeReason::PlaceItem(spec) => html! {
+			<div class={classes!("row")}>
+			{props.offer.initiator.to_owned()}
+			{"wants to place the item"}
+			<CardSpecView
+				spec={spec.to_owned()}
+				view_card={props.callbacks.view_card.to_owned()}
+				choice_state={ChoiceState::default()}
+				extra_specs={ExtraSpecProps::default()}
+			/>
+			</div>
+		},
+    ChallengeReason::CastMagic(spec) => html! {
+			<div class={classes!("row")}>
+			{"wants to cast the magic card"}
+			<CardSpecView
+				spec={spec.to_owned()}
+				view_card={props.callbacks.view_card.to_owned()}
+				choice_state={ChoiceState::default()}
+				extra_specs={ExtraSpecProps::default()}
+			/>
+			</div>
+		},
+	};
+
 	html! {
-		<label>{"The instructions go here."}<br/>{text}</label>
+		<div>
+			{ description }
+			<br/>
+			{"Would you like to challenge?"}
+		</div>
 	}
 }
 
@@ -28,13 +77,34 @@ fn view_offer_choices(props: &OfferModalProps) -> Html {
 			let choice_id = choice.choice_id;
 			move |_| choose.iter().for_each(|c| c.emit(choice_id))
 		};
-
-		html! {
-			<div
-				onclick={choose_this}
-			>
-				{choice.label.to_owned()}
-			</div>
+		// html! {
+		// 	<div
+		// 		onclick={choose_this}
+		// 	>
+		// 		{choice.label.to_owned()}
+		// 	</div>
+		// }
+		match choice.display_type {
+			ChoiceDisplayType::Challenge(_) => html! {
+				<div
+					onclick={choose_this}
+				>
+					<img
+						src={"imgs/icons/challenge.png"}
+						alt={"Go back"}
+						width={100}
+					/>
+					// {choice.label.to_owned()}
+				</div>
+			},
+			ChoiceDisplayType::SetCompletion(_) => html! {
+				<div
+					onclick={choose_this}
+				>
+					<DoNot/>
+				</div>
+			},
+			_ => todo!(),
 		}
 	});
 	html! {

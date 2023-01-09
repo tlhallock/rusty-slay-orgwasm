@@ -60,13 +60,20 @@ impl PlayerTask for AddTasks {
 
 fn create_roll_for_ability_task(
 	context: &mut GameBookKeeping, player_index: ids::PlayerIndex, card: &Card, ability: &HeroAbility,
-) -> DoRollTask {
-	DoRollTask::new(RollState::new(
-		player_index,
-		ability.to_consequences(),
-		Roll::create_from(&mut context.rng),
-		RollReason::UseHeroAbility(card.as_perspective()),
-	))
+) -> Box<dyn PlayerTask> {
+	Box::new(
+		AddTasks {
+			tasks: vec![
+				Box::new(CardUsedTask::new(player_index, card.id)),
+				Box::new(DoRollTask::new(RollState::new(
+					player_index,
+					ability.to_consequences(),
+					Roll::create_from(&mut context.rng),
+					RollReason::UseHeroAbility(card.as_perspective()),
+				))) as Box<dyn PlayerTask>
+			]
+		}
+	)
 }
 
 fn create_place_hero_choice(
@@ -88,12 +95,12 @@ fn create_place_hero_choice(
 						condition: Condition::challenge_denied(),
 						tasks: vec![
 							card_path.get_place_task(),
-							Box::new(create_roll_for_ability_task(
+							create_roll_for_ability_task(
 								context,
 								player_index,
 								game.card(card_path),
 								ability,
-							)) as Box<dyn tasks::PlayerTask>,
+							),
 						],
 					},
 					loss: Some(RollConsequence {
@@ -310,14 +317,13 @@ fn create_roll_for_ability_choice(
 			label: format!("Use {}'s ability", game.card(card_path).spec.label),
 		},
 		vec![
-			Box::new(CardUsedTask::new(player_index, card_path.get_card_id())),
 			Box::new(RemoveActionPointsTask::new(1)),
-			Box::new(create_roll_for_ability_task(
+			create_roll_for_ability_task(
 				context,
 				player_index,
 				game.card(card_path),
 				ability,
-			)) as Box<dyn PlayerTask>,
+			),
 		],
 	)
 }
@@ -336,7 +342,7 @@ fn create_attack_monster_choice(
 			Box::new(RemoveActionPointsTask::new(2)) as Box<dyn PlayerTask>,
 			Box::new(DoRollTask::new(RollState::new(
 				player_index,
-				monster.consequences.clone(),
+				monster.get_consequences(card_path.get_card_id()),
 				Roll::create_from(&mut context.rng),
 				RollReason::AttackMonster(game.card(card_path).as_perspective()),
 			))) as Box<dyn PlayerTask>,
@@ -384,6 +390,9 @@ fn create_hand_action_choice(
 fn create_party_action_choice(
 	context: &mut GameBookKeeping, game: &Game, player_index: ids::PlayerIndex, card_path: CardPath,
 ) -> Option<TasksChoice> {
+	if game.players[player_index].was_card_played(&game.card(card_path).id) {
+		return None;
+	}
 	if let Some(ability) = game.card(card_path).spec.hero_ability.as_ref() {
 		return Some(create_roll_for_ability_choice(
 			context,

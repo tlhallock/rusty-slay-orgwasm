@@ -36,9 +36,9 @@ fn app() -> Html {
 
 	html! {
 			<>
-					<h1>{ "Hello World" }</h1>
+					<h1>{ "Here to Slay!" }</h1>
 					<div>
-							<button onclick={restart}>{ "Restart" } </button>
+							<button class={classes!("border-blink")} onclick={restart}>{ "Restart" } </button>
 							<GamePerspectiveView game={current_game.perspective()} choose={choose.to_owned()}/>
 					</div>
 			</>

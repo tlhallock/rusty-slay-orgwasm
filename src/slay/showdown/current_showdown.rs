@@ -75,6 +75,10 @@ impl CurrentShowdown {
 		}
 	}
 
+	pub fn is_empty(&self) -> bool {
+		self.show_down_type == ShowDownType::None
+	}
+
 	pub fn get_roll(&self) -> Option<&RollState> {
 		self.roll.as_ref()
 	}
@@ -235,21 +239,20 @@ impl CurrentShowdown {
 	}
 
 	pub(crate) fn get_modification_task(
-		&self, context: &mut GameBookKeeping, game: &Game, modifying_player_index: ids::PlayerIndex,
+		&self, context: &mut GameBookKeeping, game: &Game,
 	) -> ModificationTask {
 		let current = self.current().unwrap();
 		ModificationTask {
 			choices_to_assign: (0..game.number_of_players())
 				.filter(|player_index| {
-					*player_index == modifying_player_index
-						|| current
+						current
 							.tracker()
 							.should_offer_modifications_again(*player_index)
 				})
 				.map(|player_index| {
 					(
 						player_index,
-						current.create_choice_for(context, game, player_index),
+						current.create_choice_for(context, game, player_index), // Could be delayed?
 					)
 				})
 				.collect(),
@@ -259,11 +262,7 @@ impl CurrentShowdown {
 	pub(crate) fn set_player_completion(
 		&mut self, player_index: ids::PlayerIndex, persist: Completion,
 	) -> SlayResult<()> {
-		log::info!(
-			"Updating the player completion for {} to {:?}",
-			player_index,
-			persist
-		);
+		log::info!("Updating the player completion for {} to {:?}", player_index, persist);
 		match self.show_down_type {
 			ShowDownType::None => return Err(SlayError::new("alskjdf;alksjdf;")),
 			ShowDownType::Roll => self

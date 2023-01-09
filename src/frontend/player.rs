@@ -43,6 +43,11 @@ pub struct PlayerProps {
 
 #[function_component(PlayerView)]
 pub fn view_player(props: &PlayerProps) -> Html {
+	let mut is_choice = None;
+	if !props.player.choice_associations.is_empty() {
+		is_choice = Some("is-choice".to_owned());
+	}
+
 	let decks = props.player.decks.iter().map(|deck| {
 		html! {
 				<DeckView
@@ -69,7 +74,7 @@ pub fn view_player(props: &PlayerProps) -> Html {
 		if props.player.me { "(that's you!)" } else { "" },
 	);
 	html! {
-			<div class={classes!(clazz)}>
+			<div class={classes!(clazz, is_choice)}>
 					<div class={classes!("player-status")}>
 							{title}
 							<ActionPoints

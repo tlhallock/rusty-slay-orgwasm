@@ -92,7 +92,7 @@ impl CardPath {
 		match self {
 			CardPath::TopCardIn(_, card_id) => *card_id,
 			CardPath::ModifyingCardIn(_, _, card_id) => *card_id,
-			CardPath::Leader(_card_id) => todo!(),
+			CardPath::Leader(_) => todo!(),
 		}
 	}
 

@@ -51,14 +51,25 @@ pub struct ChoosePlayerParameterTask {
 	pub param_name: TaskParamName,
 	pub instructions: String,
 	pub players: Option<Vec<ids::PlayerIndex>>,
+
+	exclude_self: bool
 }
 
 impl ChoosePlayerParameterTask {
-	pub fn create(param_name: TaskParamName, instructions: &'static str) -> Box<dyn PlayerTask> {
+	pub fn exclude_self(param_name: TaskParamName, instructions: &'static str) -> Box<dyn PlayerTask> {
 		Box::new(Self {
 			param_name,
 			instructions: instructions.to_string(),
 			players: None,
+			exclude_self: true,
+		}) as Box<dyn PlayerTask>
+	}
+	pub fn include_self(param_name: TaskParamName, instructions: &'static str) -> Box<dyn PlayerTask> {
+		Box::new(Self {
+			param_name,
+			instructions: instructions.to_string(),
+			players: None,
+			exclude_self: false,
 		}) as Box<dyn PlayerTask>
 	}
 	pub fn one_of(
@@ -68,13 +79,18 @@ impl ChoosePlayerParameterTask {
 			param_name,
 			instructions: instructions.to_string(),
 			players: Some(players),
+			exclude_self: false,
 		}) as Box<dyn PlayerTask>
 	}
-	fn get_player_indices(&self, game: &Game) -> Vec<ids::PlayerIndex> {
+	fn get_player_indices(&self, game: &Game, player_index: ids::PlayerIndex) -> Vec<ids::PlayerIndex> {
 		if let Some(player_indices) = self.players.as_ref() {
 			player_indices.to_owned()
 		} else {
-			(0..game.number_of_players()).collect()
+			if self.exclude_self {
+				(0..game.number_of_players()).filter(|idx| *idx != player_index).collect()
+			} else {
+				(0..game.number_of_players()).collect()
+			}
 		}
 	}
 }
@@ -85,7 +101,7 @@ impl PlayerTask for ChoosePlayerParameterTask {
 	) -> SlayResult<TaskProgressResult> {
 		game.players[player_index].choices = Some(Choices {
 			options: self
-				.get_player_indices(game)
+				.get_player_indices(game, player_index)
 				.iter()
 				.filter(|index| **index != player_index)
 				.map(|victim_index| {

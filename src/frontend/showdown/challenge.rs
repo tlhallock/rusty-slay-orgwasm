@@ -12,7 +12,6 @@ use crate::frontend::showdown::common::RollTotal;
 use crate::frontend::stack::CardSpecView;
 use crate::frontend::stack::ExtraSpecProps;
 use crate::slay::showdown::challenge::ChallengePerspective;
-use crate::slay::showdown::challenge::ChallengeRollPerspective;
 use crate::slay::showdown::common::ChallengeReason;
 
 #[function_component(ChallengeDescription)]
@@ -84,31 +83,95 @@ pub fn view_challenge_description(props: &ChallengeModalProps) -> Html {
 	}
 }
 
+// #[derive(Properties, PartialEq)]
+// pub struct ChallengeRollProps {
+// 	pub challenge: ChallengePerspective,
+// 	pub callbacks: GameCallbacks,
+// 	pub roll: ChallengeRollPerspective,
+// 	pub success: bool,
+// }
+
+// #[function_component(ChallengeRollView)]
+// pub fn view_challenge_roll(props: &ChallengeRollProps) -> Html {
+// 	let _open = use_state(|| false);
+// 	html! {
+// 		<div
+// 			class={classes!("column")}
+// 		>
+// 			<label>{format!("{}'s roll", props.roll.roller_name)}</label>
+// 			<Dice roll={props.roll.initial.to_owned()}/>
+// 			<br/>
+// 			<RollHistory history={props.roll.history.to_owned()} callbacks={props.callbacks.to_owned()}/>
+// 			<br/>
+// 			<RollTotal success={props.success} amount={props.roll.roll_total}/>
+// 			<br/>
+// 			<RollChoices choices={props.roll.choices.to_owned()} callbacks={props.callbacks.to_owned()}/>
+// 		</div>
+// 	}
+// }
+
+
+
+
+
 #[derive(Properties, PartialEq)]
 pub struct ChallengeRollProps {
 	pub challenge: ChallengePerspective,
 	pub callbacks: GameCallbacks,
-	pub roll: ChallengeRollPerspective,
 }
 
-#[function_component(ChallengeRollView)]
+#[function_component(ChallengeRollsView)]
 pub fn view_challenge_roll(props: &ChallengeRollProps) -> Html {
 	let _open = use_state(|| false);
 	html! {
 		<div
 			class={classes!("column")}
 		>
-			<label>{format!("{}'s roll", props.roll.roller_name)}</label>
-			<Dice roll={props.roll.initial.to_owned()}/>
-			<br/>
-			<RollHistory history={props.roll.history.to_owned()}/>
-			<br/>
-			<RollTotal success={false} amount={props.roll.roll_total}/>
-			<br/>
-			<RollChoices choices={props.roll.choices.to_owned()} callbacks={props.callbacks.to_owned()}/>
+			<div class={classes!("row")}>
+				<div class={classes!("column")}>
+					<label>{format!("{}'s roll", props.challenge.initiator.roller_name)}</label>
+					<Dice roll={props.challenge.initiator.initial.to_owned()}/>
+				</div>
+				<div class={classes!("column")}>
+					<label>{format!("{}'s roll", props.challenge.challenger.roller_name)}</label>
+					<Dice roll={props.challenge.challenger.initial.to_owned()}/>
+				</div>
+			</div>
+			<div class={classes!("row")}>
+					<RollHistory 
+						history={props.challenge.initiator.history.to_owned()} 
+						callbacks={props.callbacks.to_owned()}
+					/>
+					<RollHistory
+						history={props.challenge.challenger.history.to_owned()} 
+						callbacks={props.callbacks.to_owned()}
+					/>
+			</div>
+			<div class={classes!("row")}>
+					<RollTotal
+						success={!props.challenge.challenger_victorious} 
+						amount={props.challenge.initiator.roll_total}
+					/>
+					<RollTotal
+						success={props.challenge.challenger_victorious} 
+						amount={props.challenge.challenger.roll_total}
+					/>
+			</div>
+			<div class={classes!("row")}>
+				<div class={classes!("column")}>
+					<RollChoices choices={props.challenge.initiator.choices.to_owned()} 
+					callbacks={props.callbacks.to_owned()}/>
+				</div>
+				<div class={classes!("column")}>
+					<RollChoices choices={props.challenge.challenger.choices.to_owned()}
+					 callbacks={props.callbacks.to_owned()}/>
+				</div>
+			</div>
 		</div>
 	}
 }
+
+
 
 #[derive(Properties, PartialEq)]
 pub struct ChallengeModalProps {
@@ -129,18 +192,10 @@ pub fn view_challenge_modal(props: &ChallengeModalProps) -> Html {
 				<br/>
 				<Timer timeline={props.challenge.timeline.to_owned()}/>
 				<br/>
-				<div class={classes!("row")}>
-					<ChallengeRollView
-						challenge={props.challenge.to_owned()}
-						callbacks={props.callbacks.to_owned()}
-						roll={props.challenge.initiator.to_owned()}
-					/>
-					<ChallengeRollView
-						challenge={props.challenge.to_owned()}
-						callbacks={props.callbacks.to_owned()}
-						roll={props.challenge.challenger.to_owned()}
-					/>
-				</div>
+				<ChallengeRollsView
+					challenge={props.challenge.to_owned()}
+					callbacks={props.callbacks.to_owned()}
+				/>
 				<br/>
 				<CompletionsView completions={props.challenge.completions.to_owned()}/>
 				<br/>

@@ -1,4 +1,3 @@
-use crate::slay::choices::CardPath;
 use crate::slay::ids;
 use crate::slay::specification::CardSpec;
 use crate::slay::state::game::Game;
@@ -40,13 +39,15 @@ pub enum ModificationPath {
 #[derive(Debug, Clone)]
 pub struct RollModification {
 	pub modifying_player_index: ids::PlayerIndex,
-	pub card_path: CardPath,
+	pub card_id: ids::CardId,
+	// This cannot be a card path: because it starts in the hand and ends in the discard pile...
+	// pub card_path: CardPath,
 	pub modification_amount: i32,
 }
 
 impl RollModification {
 	pub fn to_perspective(&self, game: &Game) -> ModificationPerspective {
-		let modifying_card = game.card(self.card_path);
+		let modifying_card = game.find_card(self.card_id).unwrap();
 		ModificationPerspective {
 			modifier_name: game.get_player_name(self.modifying_player_index),
 			modifying_card_spec: CardSpecPerspective::new(&modifying_card.spec),
@@ -57,16 +58,22 @@ impl RollModification {
 
 #[derive(Debug, PartialEq, Clone)]
 pub enum RollModificationChoiceType {
-	AddToRoll(CardSpecPerspective, i32),
-	RemoveFromRoll(CardSpecPerspective, i32),
+	AddToRoll(CardSpecPerspective, i32, ModificationPath),
+	RemoveFromRoll(CardSpecPerspective, i32, ModificationPath),
 }
 
 impl RollModificationChoiceType {
-	pub fn from_card(spec: &CardSpec, amount: i32) -> Self {
+	pub fn get_path(&self) -> ModificationPath {
+		match self {
+    	RollModificationChoiceType::AddToRoll(_, _, path) => *path,
+    	RollModificationChoiceType::RemoveFromRoll(_, _, path) => *path,
+	}
+}
+	pub fn from_card(spec: &CardSpec, amount: i32, path: ModificationPath) -> Self {
 		if amount < 0 {
-			RollModificationChoiceType::RemoveFromRoll(CardSpecPerspective::new(spec), amount)
+			RollModificationChoiceType::RemoveFromRoll(CardSpecPerspective::new(spec), amount, path)
 		} else {
-			RollModificationChoiceType::AddToRoll(CardSpecPerspective::new(spec), amount)
+			RollModificationChoiceType::AddToRoll(CardSpecPerspective::new(spec), amount, path)
 		}
 	}
 }

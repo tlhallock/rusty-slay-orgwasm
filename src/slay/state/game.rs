@@ -169,7 +169,12 @@ impl Game {
 		// self.deck(card_path.deck_path()).stack(card_path.top_id())
 	}
 	pub fn card(&self, card_path: CardPath) -> &Card {
-		self.maybe_card(card_path).unwrap()
+		if let Some(card) = self.maybe_card(card_path) {
+				card
+		} else {
+			log::info!("Unable to find card at card path {:?}", card_path);
+			unreachable!()
+		}
 	}
 
 	// Maybe cards should have been a top level field on game?
@@ -312,7 +317,7 @@ impl Game {
 		self.players[player_index]
 			.tasks
 			.get_player_value(param)
-			.ok_or_else(|| SlayError::new("Missing required player parameter"))
+			.ok_or_else(|| SlayError::n(format!("Missing required player parameter: {:?}", param)))
 	}
 	pub(crate) fn card_param(
 		&self, player_index: ids::PlayerIndex, param: &TaskParamName,
@@ -320,7 +325,7 @@ impl Game {
 		self.players[player_index]
 			.tasks
 			.get_card_value(param)
-			.ok_or_else(|| SlayError::new("Missing required card parameter"))
+			.ok_or_else(|| SlayError::n(format!("Missing required card parameter: {:?}", param)))
 	}
 
 	pub(crate) fn players_with_stacks(&self) -> Vec<ids::PlayerIndex> {
