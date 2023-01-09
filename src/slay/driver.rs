@@ -43,7 +43,6 @@ fn check_for_expired_modifiers(game: &mut Game) {
 	todo!()
 }
 
-
 pub enum AdvanceGameResult {
 	GameOver,
 	WaitingForPlayers,

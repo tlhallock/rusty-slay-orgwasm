@@ -1,14 +1,12 @@
-
-use rand::Rng;
 use rand::prelude::SliceRandom;
+use rand::Rng;
 
-use crate::slay::{game_context::GameBookKeeping, specification::CardType};
-use crate::slay::{specification, actions, ids};
 use crate::slay::state::game::Game;
+use crate::slay::{actions, ids, specification};
+use crate::slay::{game_context::GameBookKeeping, specification::CardType};
 
 use super::player::Player;
-use super::stack::{Stack, Card};
-
+use super::stack::{Card, Stack};
 
 fn initialize_global_decks(context: &mut GameBookKeeping, game: &mut Game) {
 	let (draw_capacity, leaders_capacity, monsters_capacity) = (101, 10, 20);
@@ -55,15 +53,14 @@ fn initialize_players(context: &mut GameBookKeeping, game: &mut Game) {
 	}
 }
 
-
 pub fn initialize_game(context: &mut GameBookKeeping, game: &mut Game) {
-  initialize_global_decks(context, game);
-  initialize_players(context, game);
+	initialize_global_decks(context, game);
+	initialize_players(context, game);
 	game.monsters.extend(game.next_monsters.drain(0..3));
 
 	for player_index in 0..game.number_of_players() {
-    let drain = game.draw.drain(0..5);
-    game.players[player_index].hand.extend(drain);
+		let drain = game.draw.drain(0..5);
+		game.players[player_index].hand.extend(drain);
 	}
 
 	// initialize the first first random player
@@ -72,81 +69,67 @@ pub fn initialize_game(context: &mut GameBookKeeping, game: &mut Game) {
 	actions::assign_action_choices(context, game);
 }
 
-
 fn randomly_initialize_hand(
-  context: &mut GameBookKeeping,
-  game: &mut Game,
-  player_index: ids::PlayerIndex,
+	context: &mut GameBookKeeping, game: &mut Game, player_index: ids::PlayerIndex,
 ) {
-  let number_of_hand_cards = context.rng.gen_range(0..10);
-  let drain = game.draw.drain(0..number_of_hand_cards);
-  game.players[player_index].hand.extend(drain);
+	let number_of_hand_cards = context.rng.gen_range(0..10);
+	let drain = game.draw.drain(0..number_of_hand_cards);
+	game.players[player_index].hand.extend(drain);
 }
 
 fn randomly_initialize_monsters(
-  context: &mut GameBookKeeping,
-  game: &mut Game,
-  player_index: ids::PlayerIndex,
+	context: &mut GameBookKeeping, game: &mut Game, player_index: ids::PlayerIndex,
 ) {
-  let number_of_monsters = context.rng.gen_range(0..3);
-  let drain = game.next_monsters.drain(0..number_of_monsters);
-  game.players[player_index].slain_monsters.extend(drain);
+	let number_of_monsters = context.rng.gen_range(0..3);
+	let drain = game.next_monsters.drain(0..number_of_monsters);
+	game.players[player_index].slain_monsters.extend(drain);
 
-  // Need to add the buffs...
+	// Need to add the buffs...
 }
 
 fn randomly_initialize_modifiers(
-  context: &mut GameBookKeeping,
-  game: &mut Game,
-  player_index: ids::PlayerIndex,
+	context: &mut GameBookKeeping, game: &mut Game, player_index: ids::PlayerIndex,
 ) {
-  // TODO!
+	// TODO!
 }
 
 fn adding_card_would_mean_player_wins(
-  game: &mut Game,
-  player_index: ids::PlayerIndex,
-  stack: &Stack,
+	game: &mut Game, player_index: ids::PlayerIndex, stack: &Stack,
 ) -> bool {
-  if let Some(hero_type) = stack.get_hero_type() {
-    let mut hero_types = game.players[player_index].hero_types();
-    hero_types.insert(hero_type);
-    hero_types.len() >= 6
-  } else {
-    false
-  }
+	if let Some(hero_type) = stack.get_hero_type() {
+		let mut hero_types = game.players[player_index].hero_types();
+		hero_types.insert(hero_type);
+		hero_types.len() >= 6
+	} else {
+		false
+	}
 }
 
 fn randomly_initialize_party(
-  context: &mut GameBookKeeping,
-  game: &mut Game,
-  player_index: ids::PlayerIndex,
+	context: &mut GameBookKeeping, game: &mut Game, player_index: ids::PlayerIndex,
 ) {
-  let number_of_party_cards = context.rng.gen_range(0..10);
-  for _ in 0..number_of_party_cards {
-    if let Some(stack) = game.draw.maybe_deal() {
-      if adding_card_would_mean_player_wins(game, player_index, &stack) {
-        game.draw.add(stack);
-      } else {
-        game.players[player_index].party.add(stack);
-      }
-    }
-  }
+	let number_of_party_cards = context.rng.gen_range(0..10);
+	for _ in 0..number_of_party_cards {
+		if let Some(stack) = game.draw.maybe_deal() {
+			if adding_card_would_mean_player_wins(game, player_index, &stack) {
+				game.draw.add(stack);
+			} else {
+				game.players[player_index].party.add(stack);
+			}
+		}
+	}
 }
 
-pub fn initialize_game_to_random_state(
-  context: &mut GameBookKeeping,
-  game: &mut Game,
-) {
-  initialize_global_decks(context, game);
-  initialize_players(context, game);
+pub fn initialize_game_to_random_state(context: &mut GameBookKeeping, game: &mut Game) {
+	initialize_global_decks(context, game);
+	initialize_players(context, game);
 	game.monsters.extend(game.next_monsters.drain(0..3));
 
 	for player_index in 0..game.number_of_players() {
-    randomly_initialize_hand(context, game, player_index);
-    randomly_initialize_party(context, game, player_index);
-    randomly_initialize_modifiers(context, game, player_index);
-    randomly_initialize_monsters(context, game, player_index);
+		randomly_initialize_hand(context, game, player_index);
+		randomly_initialize_party(context, game, player_index);
+		randomly_initialize_modifiers(context, game, player_index);
+		randomly_initialize_monsters(context, game, player_index);
 	}
 
 	// initialize the first first random player
