@@ -11,6 +11,7 @@ use crate::slay::state::summarizable::Summarizable;
 use crate::slay::tasks::TaskProgressResult;
 use crate::slay::{strategy, tasks};
 
+use std::collections::HashSet;
 use std::io::BufWriter;
 
 use simple_logging;
@@ -18,7 +19,9 @@ use simple_logging;
 use super::state::initialize;
 
 pub fn player_has_won(player: &Player) -> bool {
-	player.slain_monsters.num_top_cards() >= 3 || player.hero_types().len() >= 6
+	let hero_types = &mut HashSet::new();
+	player.collect_hero_types(hero_types);
+	player.slain_monsters.num_top_cards() >= 3 || hero_types.len() >= 6
 }
 
 pub fn game_is_over(game: &Game) -> bool {

@@ -2,7 +2,7 @@ use crate::slay::state::game::Turn;
 
 use super::{
 	ids,
-	specification::{HeroType, MagicSpell},
+	specification::{HeroType}, specs::magic::MagicSpell,
 };
 
 #[derive(Debug, Clone, Copy)]
@@ -102,3 +102,4 @@ pub enum ItemModifier {
 	RemoveAbility,
 	SacrificeMeInstead,
 }
+

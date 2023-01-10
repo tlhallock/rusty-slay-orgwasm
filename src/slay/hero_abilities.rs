@@ -18,7 +18,7 @@ use super::{
 	abilities::{
 		destroy::{DestroyCardTask, DestroyModifiersDestination},
 		heros::{self, VictimDraws},
-		immediate::OfferPlayImmediately,
+		immediate::{OfferPlayImmediately, PlayImmediatelyFilter},
 		params::{ChooseCardFromPlayerParameterTask, ChoosePlayerParameterTask, ClearParamsTask},
 		pull::PullFromTask,
 		steal::{self, StealTask},
@@ -163,7 +163,10 @@ impl HeroAbilityType {
 					TaskParamName::SlyPickinsVictim,
 					Some(TaskParamName::SlyPickinsCard),
 				),
-				OfferPlayImmediately::create(TaskParamName::SlyPickinsCard, Some(CardType::item_types())),
+				OfferPlayImmediately::create(
+					TaskParamName::SlyPickinsCard,
+					PlayImmediatelyFilter::IsMagic
+				),
 				ClearParamsTask::create(),
 			],
 			HeroAbilityType::HolyCurselifter => vec![],

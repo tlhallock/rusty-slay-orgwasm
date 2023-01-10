@@ -3,7 +3,7 @@ use crate::slay::choices::{ChoiceDisplay, ChoiceDisplayType, Choices, TasksChoic
 use crate::slay::errors::SlayResult;
 use crate::slay::game_context::GameBookKeeping;
 use crate::slay::modifiers::{ModifierOrigin, PlayerModifier};
-use crate::slay::specification::MagicSpell;
+use crate::slay::specs::magic::MagicSpell;
 use crate::slay::state::deck::DeckPath;
 use crate::slay::state::game::Game;
 use crate::slay::state::stack::{Card, Stack};
@@ -18,14 +18,29 @@ use super::params::{
 };
 use super::steal::{StealCardFromTask, StealTask, UnStealCardFromTask};
 
+
+
+pub enum SearchDiscardFilters {
+	IsHero,
+}
+
+impl SearchDiscardFilters {
+	fn filter(&self, card: &Card) -> bool {
+		match self {
+    	SearchDiscardFilters::IsHero => card.is_hero(),
+		}
+	}
+}
+
+
 pub fn create_search_discard_choices(
 	context: &mut GameBookKeeping, game: &mut Game, player_index: ids::PlayerIndex,
-	filter_cards: &dyn Fn(&&Card) -> bool,
+	filter: SearchDiscardFilters,
 ) -> Option<Choices> {
 	let options = game
 		.deck(DeckPath::Discard)
 		.tops()
-		.filter(filter_cards)
+		.filter(|card| filter.filter(card))
 		.map(|card| {
 			TasksChoice::new(
 				context.id_generator.generate(),
@@ -142,10 +157,12 @@ impl PlayerTask for MagicTask {
 				Ok(TaskProgressResult::TaskComplete)
 			}
 			MagicSpell::CallToTheFallen => {
-				game.players[player_index].choices =
-					create_search_discard_choices(context, game, player_index, &|card| {
-						card.card_type().is_hero_card()
-					});
+				game.players[player_index].choices = create_search_discard_choices(
+					context,
+					game,
+					player_index,
+					SearchDiscardFilters::IsHero
+				);
 				Ok(TaskProgressResult::TaskComplete)
 			}
 		}

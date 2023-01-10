@@ -1,4 +1,3 @@
-use std::collections::HashSet;
 
 use crate::slay::actions;
 use crate::slay::choices::ChoiceDisplay;
@@ -10,34 +9,41 @@ use crate::slay::errors::SlayError;
 use crate::slay::errors::SlayResult;
 use crate::slay::game_context::GameBookKeeping;
 use crate::slay::ids;
-use crate::slay::specification::CardType;
 use crate::slay::state::game::Game;
+use crate::slay::state::stack::Card;
 use crate::slay::tasks::PlayerTask;
 use crate::slay::tasks::TaskParamName;
 use crate::slay::tasks::TaskProgressResult;
 
+
+#[derive(Clone, Debug)]
+pub enum PlayImmediatelyFilter {
+	IsMagic,
+}
+
+impl PlayImmediatelyFilter {
+	pub fn can_play_immediately(&self, card: &Card) -> bool {
+		match self {
+    	PlayImmediatelyFilter::IsMagic => card.is_magic(),
+		}
+	}
+}
+
+
 #[derive(Clone, Debug)]
 pub struct OfferPlayImmediately {
 	card_param: TaskParamName,
-	card_types: Option<HashSet<CardType>>,
+	filter: PlayImmediatelyFilter,
 }
 
 impl OfferPlayImmediately {
 	pub fn create(
-		card_param: TaskParamName, card_types: Option<HashSet<CardType>>,
+		card_param: TaskParamName, filter: PlayImmediatelyFilter,
 	) -> Box<dyn PlayerTask> {
 		Box::new(OfferPlayImmediately {
 			card_param,
-			card_types,
+			filter,
 		})
-	}
-
-	fn does_not_apply(&self, card: &crate::slay::state::stack::Card) -> bool {
-		if let Some(card_types) = self.card_types.as_ref() {
-			card_types.contains(&card.card_type())
-		} else {
-			true
-		}
 	}
 }
 
@@ -57,10 +63,11 @@ impl PlayerTask for OfferPlayImmediately {
 			.find_card(card_id)
 			.ok_or_else(|| SlayError::new("Unable to find card."))?;
 
-		if self.does_not_apply(card) {
+		if !self.filter.can_play_immediately(card) {
 			return Ok(TaskProgressResult::TaskComplete);
 		}
 
+		// TODO: refactor this into a player_from_hand...
 		let mut play_immediately_tasks = Vec::new();
 		if let Some(item_modifier) = card.spec.card_modifier.as_ref() {
 			// src/slay/actions.rs:452

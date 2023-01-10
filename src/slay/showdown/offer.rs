@@ -43,16 +43,16 @@ impl OfferChallengesState {
 	) -> Vec<TasksChoice> {
 		let mut ret = vec![roll_choices::create_set_completion_done(default_choice)];
 
-		for card in game.players[challenging_player_index].hand.tops() {
-			if card.card_type() != &CardType::Challenge {
-				continue;
-			}
-			ret.push(create_challenge_choice(
-				challenging_player_index,
-				context.id_generator.generate(),
-				card,
-			));
-			break;
+		if let Some(card) = game.players[challenging_player_index].hand
+			.tops().find(|card| card.is_challenge())
+		{
+			ret.push(
+				create_challenge_choice(
+					challenging_player_index,
+					context.id_generator.generate(),
+					card,
+				)
+			)
 		}
 		ret
 	}

@@ -9,7 +9,6 @@ use crate::slay::errors::SlayResult;
 use crate::slay::ids;
 use crate::slay::specification;
 use crate::slay::specification::CardType;
-use crate::slay::specification::DeckSpec;
 use crate::slay::specification::HeroType;
 use crate::slay::state::game::Game;
 use crate::slay::state::stack::Card;
@@ -18,6 +17,7 @@ use crate::slay::state::stack::StackPerspective;
 use crate::slay::state::summarizable::Summarizable;
 use crate::slay::visibility::Perspective;
 use crate::slay::visibility::Visibility;
+use crate::slay::visibility::VisibilitySpec;
 
 use std::collections::HashSet;
 use std::collections::VecDeque;
@@ -26,6 +26,32 @@ use std::io::BufWriter;
 use std::io::Write;
 use std::iter::Iterator;
 use std::ops::RangeBounds;
+
+use super::player::HeroTypeCounter;
+
+
+
+// Move this to the decks file?
+#[derive(Debug, Clone)]
+pub struct DeckSpec {
+	pub visibility: VisibilitySpec,
+	pub path: DeckPath,
+}
+
+impl DeckSpec {
+	pub fn get_label(&self) -> String {
+		match self.path {
+			DeckPath::Draw => "Draw pile".to_string(),
+			DeckPath::Discard => "Discard pile".to_string(),
+			DeckPath::PartyLeaders => "Unused Party leaders".to_string(),
+			DeckPath::ActiveMonsters => "Monsters".to_string(),
+			DeckPath::NextMonsters => "Next monsters".to_string(),
+			DeckPath::Hand(player_index) => format!("Player {}'s hand", player_index),
+			DeckPath::Party(player_index) => format!("Player {}'s party", player_index),
+			DeckPath::SlainMonsters(player_index) => format!("Player {}'s monsters", player_index),
+		}
+	}
+}
 
 // Lol, tried of looking for the deck by id...
 #[derive(Debug, PartialEq, Eq, Clone, Copy, Hash)]
@@ -104,7 +130,7 @@ pub struct Deck {
 	// TODO: make stacks optional...
 	// TODO: Make the stacks just have a card id
 	stacks: VecDeque<Stack>,
-	pub spec: specification::DeckSpec,
+	pub spec: DeckSpec,
 }
 
 impl Deck {
@@ -160,14 +186,14 @@ impl Deck {
 		self.stacks.len()
 	}
 
-	pub fn list_top_cards_by_type(&self, card_type: &CardType) -> Vec<ids::CardId> {
-		self
-			.stacks
-			.iter()
-			.filter(|s| s.top.card_type() == card_type)
-			.map(|s| s.top.id)
-			.collect()
-	}
+	// pub fn list_top_cards_by_type(&self, card_type: &CardType) -> Vec<ids::CardId> {
+	// 	self
+	// 		.stacks
+	// 		.iter()
+	// 		.filter(|s| s.top.card_type() == card_type)
+	// 		.map(|s| s.top.id)
+	// 		.collect()
+	// }
 
 	pub fn stacks(&self) -> impl Iterator<Item = &Stack> {
 		self.stacks.iter()
@@ -219,12 +245,21 @@ impl Deck {
 		});
 	}
 
-	pub fn hero_types(&self) -> HashSet<HeroType> {
-		return self
-			.stacks
-			.iter()
-			.filter_map(|s| s.get_hero_type())
-			.collect();
+	pub fn count_hero_types(&self, hero_types: &mut HeroTypeCounter) {
+		for stack in self.stacks.iter() {
+			hero_types.maybe_add_hero_type(stack.get_hero_type());
+		}
+	}
+	pub fn collect_hero_types(&self, hero_types: &mut HashSet<HeroType>) {
+		hero_types.extend(self.stacks.iter().flat_map(
+			|stack| stack.get_hero_type()
+		))
+	}
+	pub(crate) fn contains_hero_type(&self, hero_type: &HeroType) -> bool {
+		self.stacks.iter().any(|stack| match stack.get_hero_type() {
+    Some(ht) => ht == *hero_type,
+    None => false,
+})
 	}
 
 	pub fn take(&mut self, card_id: ids::CardId) -> Option<Stack> {
@@ -316,6 +351,7 @@ impl Deck {
 		}
 		None
 	}
+
 }
 
 impl Summarizable for Deck {

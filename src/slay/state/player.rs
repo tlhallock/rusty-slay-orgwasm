@@ -5,7 +5,6 @@ use crate::slay::choices::Choices;
 use crate::slay::errors;
 use crate::slay::ids;
 use crate::slay::modifiers::PlayerBuffs;
-use crate::slay::specification::DeckSpec;
 use crate::slay::specification::HeroType;
 use crate::slay::state::deck::Deck;
 use crate::slay::state::deck::DeckPath;
@@ -20,11 +19,48 @@ use crate::slay::tasks::PlayerTasks;
 use crate::slay::visibility::Perspective;
 use crate::slay::visibility::VisibilitySpec;
 
+use std::collections::HashMap;
 use std::collections::HashSet;
 use std::fmt::Debug;
 use std::io::BufWriter;
 use std::io::Write;
 use std::iter::Iterator;
+
+use super::deck::DeckSpec;
+
+
+
+pub struct HeroTypeCounter {
+	counts: HashMap<HeroType, u32>,
+}
+
+impl HeroTypeCounter {
+	pub fn new() -> Self {
+		Self {
+			counts: Default::default(),
+		}
+	}
+	pub fn add_hero_type(&mut self, hero_type: &HeroType) {
+		self.counts.insert(
+			*hero_type,
+			if let Some(prev) = self.counts.get(hero_type) {
+				prev + 1
+			} else {
+				1
+			}
+		);
+	}
+
+pub(crate) fn maybe_add_hero_type(&mut self, hero_type_option: Option<HeroType>) {
+	if let Some(hero_type) = hero_type_option.as_ref() {
+		self.add_hero_type(hero_type);
+	}
+}
+}
+
+
+
+
 
 #[derive(Clone, Debug)]
 pub struct Player {
@@ -105,11 +141,18 @@ impl Player {
 		self.played_this_turn.clear();
 	}
 
-	pub fn hero_types(&self) -> HashSet<HeroType> {
+	pub fn count_hero_types(&self, hero_types: &mut HeroTypeCounter) {
 		// Could this be a one liner?
-		let mut hero_types = self.party.hero_types();
-		hero_types.insert(self.leader.get_hero_type().unwrap());
-		hero_types
+		self.party.count_hero_types(hero_types);
+		hero_types.maybe_add_hero_type(self.leader.get_unmodified_hero_type());
+	}
+	pub fn collect_hero_types(&self, hero_types: &mut HashSet<HeroType>) {
+		// Could this be a one liner?
+		self.party.collect_hero_types(hero_types);
+		hero_types.insert(self.leader.get_unmodified_hero_type().unwrap());
+	}
+	pub fn has_hero_type(&self, hero_type: &HeroType) -> bool {
+		self.leader.get_unmodified_hero_type().unwrap() == *hero_type || self.party.contains_hero_type(hero_type)
 	}
 
 	pub fn take_current_task(&mut self) -> Option<Box<dyn tasks::PlayerTask>> {

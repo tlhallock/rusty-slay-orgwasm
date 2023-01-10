@@ -24,7 +24,6 @@ use crate::slay::showdown::offer::OfferChallengesState;
 use crate::slay::showdown::roll_state::RollReason;
 use crate::slay::showdown::roll_state::RollState;
 use crate::slay::specification::HeroAbility;
-use crate::slay::specification::MagicSpell;
 use crate::slay::specification::MonsterSpec;
 use crate::slay::state::deck::DeckPath;
 use crate::slay::state::game::Game;
@@ -35,6 +34,8 @@ use crate::slay::tasks::MoveCardTask;
 use crate::slay::tasks::PlayerTask;
 use crate::slay::tasks::TaskParamName;
 use crate::slay::tasks::TaskProgressResult;
+
+use super::specs::magic::MagicSpell;
 
 // Emit logs like "Waiting for challenges..."
 
@@ -415,7 +416,7 @@ pub fn assign_action_choices(context: &mut GameBookKeeping, game: &mut Game) {
 					game,
 					player_index,
 					CardPath::TopCardIn(DeckPath::ActiveMonsters, monster_card.id),
-					monster,
+					&monster,
 				));
 			}
 		}

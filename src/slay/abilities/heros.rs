@@ -66,11 +66,7 @@ impl PlayerTask for Mimimeow {
 			if player_index == victim_index {
 				continue;
 			}
-			if !game.players[player_index]
-				.party
-				.hero_types()
-				.contains(&HeroType::Thief)
-			{
+			if !game.players[player_index].has_hero_type(&HeroType::Thief) {
 				continue;
 			}
 			pull::pull_a_random_card(context, game, player_index, victim_index);

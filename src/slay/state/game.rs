@@ -9,7 +9,6 @@ use crate::slay::showdown::current_showdown::CurrentShowdown;
 use crate::slay::showdown::offer::OfferChallengesPerspective;
 use crate::slay::showdown::roll_state::RollPerspective;
 use crate::slay::specification;
-use crate::slay::specification::DeckSpec;
 use crate::slay::state::deck::Deck;
 use crate::slay::state::deck::DeckPath;
 use crate::slay::state::deck::DeckPerspective;
@@ -26,6 +25,8 @@ use std::fmt::Debug;
 use std::io::BufWriter;
 use std::io::Write;
 use std::iter::Iterator;
+
+use super::deck::DeckSpec;
 
 #[derive(Debug, Default, Clone, PartialEq)]
 pub struct Turn {

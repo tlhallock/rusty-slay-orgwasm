@@ -6,6 +6,8 @@ use crate::frontend::card_modal::CardModalInfo;
 use crate::frontend::stack::StackView;
 use crate::slay::state::deck::DeckPerspective;
 
+
+
 #[derive(Properties, PartialEq)]
 pub struct DeckProps {
 	pub deck: DeckPerspective,

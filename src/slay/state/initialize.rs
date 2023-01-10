@@ -1,3 +1,5 @@
+use std::collections::HashSet;
+
 use rand::prelude::SliceRandom;
 use rand::Rng;
 
@@ -5,6 +7,7 @@ use crate::slay::state::game::Game;
 use crate::slay::{actions, ids, specification};
 use crate::slay::{game_context::GameBookKeeping, specification::CardType};
 
+use super::deck::DeckPath;
 use super::player::Player;
 use super::stack::{Card, Stack};
 
@@ -15,11 +18,15 @@ fn initialize_global_decks(context: &mut GameBookKeeping, game: &mut Game) {
 	let mut monsters = Vec::with_capacity(monsters_capacity);
 	specification::get_card_specs().iter().for_each(|spec| {
 		for _ in 0..spec.repeat {
-			let stack = Stack::new(Card::new(context.id_generator.generate(), spec.to_owned()));
-			match spec.card_type {
-				CardType::PartyLeader(_) => leaders.push(stack),
-				CardType::Monster => monsters.push(stack),
-				_ => draw.push(stack),
+			let stack = Stack::new(
+				Card::new(context.id_generator.generate(), 
+				spec.to_owned()));
+			
+			match spec.get_initial_deck() {
+		    DeckPath::Draw => draw.push(stack),
+		    DeckPath::PartyLeaders => leaders.push(stack),
+		    DeckPath::NextMonsters => monsters.push(stack),
+				_ => unreachable!(),
 			};
 		}
 	});
@@ -97,7 +104,8 @@ fn adding_card_would_mean_player_wins(
 	game: &mut Game, player_index: ids::PlayerIndex, stack: &Stack,
 ) -> bool {
 	if let Some(hero_type) = stack.get_hero_type() {
-		let mut hero_types = game.players[player_index].hero_types();
+		let hero_types = &mut HashSet::new();
+		game.players[player_index].collect_hero_types(hero_types);
 		hero_types.insert(hero_type);
 		hero_types.len() >= 6
 	} else {

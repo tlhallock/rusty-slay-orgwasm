@@ -6,20 +6,16 @@ use super::game_context::GameBookKeeping;
 use super::hero_abilities::HeroAbilityType;
 use super::ids;
 use super::modifiers::ItemModifier;
-use super::modifiers::ModifierOrigin;
+use super::specs::cards::SlayCardSpec;
+use super::specs::magic::MagicSpell;
+use super::specs::monster::Monster;
 use super::state::game::Game;
 use super::tasks::TaskProgressResult;
-use crate::slay::abilities::discard::Discard;
-use crate::slay::abilities::sacrifice::Sacrifice;
-use crate::slay::actions::DrawTask;
-use crate::slay::modifiers::PlayerModifier;
 use crate::slay::showdown::consequences::Condition;
 use crate::slay::showdown::consequences::RollConsequence;
 use crate::slay::showdown::consequences::RollConsequences;
 use crate::slay::state::deck::DeckPath;
 use crate::slay::tasks::PlayerTask;
-use crate::slay::tasks::ReceiveModifier;
-use crate::slay::visibility::VisibilitySpec;
 
 /*
 
@@ -48,27 +44,6 @@ use crate::slay::visibility::VisibilitySpec;
 
 pub const MAX_TURNS: u32 = 1000;
 
-// Move this to the decks file?
-#[derive(Debug, Clone)]
-pub struct DeckSpec {
-	pub visibility: VisibilitySpec,
-	pub path: DeckPath,
-}
-
-impl DeckSpec {
-	pub fn get_label(&self) -> String {
-		match self.path {
-			DeckPath::Draw => "Draw pile".to_string(),
-			DeckPath::Discard => "Discard pile".to_string(),
-			DeckPath::PartyLeaders => "Unused Party leaders".to_string(),
-			DeckPath::ActiveMonsters => "Monsters".to_string(),
-			DeckPath::NextMonsters => "Next monsters".to_string(),
-			DeckPath::Hand(player_index) => format!("Player {}'s hand", player_index),
-			DeckPath::Party(player_index) => format!("Player {}'s party", player_index),
-			DeckPath::SlainMonsters(player_index) => format!("Player {}'s monsters", player_index),
-		}
-	}
-}
 
 #[derive(Debug, Clone)]
 pub struct HeroAbility {
@@ -88,42 +63,73 @@ impl HeroAbility {
 	}
 }
 
-#[derive(Debug, Clone, Copy)]
-pub enum MagicSpell {
-	EnganglingTrap,
-	CriticalBoost,
-	DestructiveSpell,
-	WindsOfChange,
-	EnchangedSpell,
-	ForcedExchange,
-	ForcefulWinds,
-	CallToTheFallen,
-}
 
 // type ActionsCreator = Box<dyn Fn(ids::PlayerIndex) -> Vec<Box<TasksChoice>>>;
 
+// Rename this to generation spec...
 #[derive(Debug, Clone)]
 pub struct CardSpec {
-	pub card_type: CardType,
+	card_type: CardType,
 	pub repeat: u32,
 	pub label: String,
 	pub description: String,
 	pub image_path: String,
 
 	// challenge tasks...
-	pub monster: Option<MonsterSpec>,
+	pub monster: Option<Monster>,
 	pub modifiers: Vec<i32>,
 	pub hero_ability: Option<HeroAbility>,
 	pub spell: Option<MagicSpell>,
 	pub card_modifier: Option<ItemModifier>,
+
+
+  pub real_spec: SlayCardSpec,
 	// pub hand_actions: ActionsCreator,
 	// pub party_actions: ActionsCreator,
+}
+
+impl CardSpec {
+  pub fn get_initial_deck(&self) -> DeckPath {
+    match self.card_type {
+        CardType::PartyLeader(_) => DeckPath::PartyLeaders,
+        CardType::Monster => DeckPath::NextMonsters,
+        _ => DeckPath::Draw,
+    }
+  }
+  pub fn get_unmodified_hero_type(&self) -> Option<HeroType> {
+    match &self.card_type {
+        CardType::Hero(hero_type) => Some(*hero_type),
+        CardType::PartyLeader(hero_type) => Some(*hero_type),
+        _ => None,
+    }
+  }
+
+  pub(crate) fn is_magic(&self) -> bool {
+    match &self.card_type {
+      CardType::Magic => true,
+      _ => false,
+    }
+  }
+
+  pub(crate) fn is_hero(&self) -> bool {
+    match &self.card_type {
+      CardType::Hero(_) => true,
+      _ => false,
+    }
+  }
+
+pub(crate) fn is_challenge(&self) -> bool {
+  match &self.card_type {
+    CardType::Challenge => true,
+    _ => false,
+  }
+}
 }
 
 impl Default for CardSpec {
 	fn default() -> Self {
 		Self {
-			card_type: CardType::Blank,
+			card_type: CardType::Challenge,
 			repeat: 1,
 			label: "Please set the name.".to_string(),
 			description: "Please set the description.".to_string(),
@@ -133,14 +139,14 @@ impl Default for CardSpec {
 			hero_ability: None,
 			spell: None,
 			card_modifier: None,
+
+      real_spec: SlayCardSpec::Challenge,
 		}
 	}
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum CardType {
-	Blank,
-
 	Hero(HeroType),
 	PartyLeader(HeroType),
 	Monster,
@@ -249,7 +255,7 @@ impl MonsterSpec {
 //   loss_consequence: Sacrifice(1),
 // }
 
-pub fn get_card_specs() -> [CardSpec; 83] {
+pub fn get_card_specs() -> [CardSpec; 95] {
 	[
     ////////////////////////////////////////////////////////////////////////////
     // Challenge
@@ -1174,30 +1180,108 @@ pub fn get_card_specs() -> [CardSpec; 83] {
     ////////////////////////////////////////////////////////////////////////////
     // Monsters
     ////////////////////////////////////////////////////////////////////////////
+          CardSpec {
+            card_type: CardType::Monster,
+            label: "Anuran Cauldron".to_string(),
+            image_path: "cards/monsters/anuran_cauldron.jpg".to_string(),
+            description: "Each time you roll, +1 to your roll.".to_string(),
+            monster: Some(Monster::AnuranCauldron),
+            ..Default::default()
+        },
+          CardSpec {
+            card_type: CardType::Monster,
+            label: "Titan Wyvern".to_string(),
+            image_path: "cards/monsters/titan_wyvern.jpg".to_string(),
+            description: "Each time you roll for a Challenge card, +1 to your roll.".to_string(),
+            monster: Some(Monster::TitanWyvern),
+            ..Default::default()
+        },
+          CardSpec {
+            card_type: CardType::Monster,
+            label: "Dark Dragon King".to_string(),
+            image_path: "cards/monsters/dark_dragon_king.jpg".to_string(),
+            description: "Each time you roll for a Hero card's effect, +1 to your roll.".to_string(),
+            monster: Some(Monster::DarkDragonKing),
+            ..Default::default()
+        },
+          CardSpec {
+            card_type: CardType::Monster,
+            label: "Abyss Queen".to_string(),
+            image_path: "cards/monsters/abyss_queen.jpg".to_string(),
+            description: "Each time another player plays a Modifier card on one of your rolls, +1 to your roll.".to_string(),
+            monster: Some(Monster::AbyssQueen),
+            ..Default::default()
+        },
+          CardSpec {
+            card_type: CardType::Monster,
+            label: "Rex Major".to_string(),
+            image_path: "cards/monsters/rex_major.jpg".to_string(),
+            description: "Each time you DRAW a Modifier card, you may reveal it and DRAW a second card.".to_string(),
+            monster: Some(Monster::RexMajor),
+            ..Default::default()
+        },
+          CardSpec {
+            card_type: CardType::Monster,
+            label: "Corrupted Sabretooth".to_string(),
+            image_path: "cards/monsters/corrupted_sabretooth.jpg".to_string(),
+            description: "Each time you would DESTROY a Hero card, you may STEAL that Hero card instead.".to_string(),
+            monster: Some(Monster::CorruptedSabretooth),
+            ..Default::default()
+        },
+          CardSpec {
+            card_type: CardType::Monster,
+            label: "Crowned Serpent".to_string(),
+            image_path: "cards/monsters/crowned_serpent.jpg".to_string(),
+            description: "Each time any player (including you) plays a Modifier card, you may DRAW a card.".to_string(),
+            monster: Some(Monster::CrownedSerpent),
+            ..Default::default()
+        },
+          CardSpec {
+            card_type: CardType::Monster,
+            label: "Warworn Owlbear".to_string(),
+            image_path: "cards/monsters/warworn_owlbear.jpg".to_string(),
+            description: "Item cards you play cannot be challenged.".to_string(),
+            monster: Some(Monster::WarwornOwlbear),
+            ..Default::default()
+        },
+          CardSpec {
+            card_type: CardType::Monster,
+            label: "Dracos".to_string(),
+            image_path: "cards/monsters/dracos.jpg".to_string(),
+            description: "Each time a Hero card in your Party is destroyed, you may DRAW a card.".to_string(),
+            monster: Some(Monster::Dracos),
+            ..Default::default()
+        },
+          CardSpec {
+            card_type: CardType::Monster,
+            label: "Malammoth".to_string(),
+            image_path: "cards/monsters/malamammoth.jpg".to_string(),
+            description: "Each time you DRAW an Item card, you may play it immediately.".to_string(),
+            monster: Some(Monster::Malammoth),
+            ..Default::default()
+        },
+          CardSpec {
+            card_type: CardType::Monster,
+            label: "Bloodwing".to_string(),
+            image_path: "cards/monsters/bloodwing.jpg".to_string(),
+            description: "Each time another player CHALLENGES you, that player must DISCARD a card.".to_string(),
+            monster: Some(Monster::Bloodwing),
+            ..Default::default()
+        },
+    CardSpec {
+      card_type: CardType::Monster,
+      label: "Arctic Aries".to_string(),
+      image_path: "cards/monsters/arctic_aries.jpg".to_string(),
+      description: "Each time you successfully roll to use a Hero card's effect, you may DRAW a card.".to_string(),
+      monster: Some(Monster::ArcticAries),
+      ..Default::default()
+  },
     CardSpec {
         card_type: CardType::Monster,
         label: "Mega Slime".to_string(),
         image_path: "cards/monsters/mega_slime.jpg".to_string(),
         description: "You may spend an extra action point on each of your turns.".to_string(),
-        monster: Some(
-          MonsterSpec {
-            consequences: RollConsequences {
-              success: RollConsequence {
-                condition: Condition::ge(8),
-                tasks: vec![
-                  ReceiveModifier::create(PlayerModifier::ExtraActionPoint, ModifierOrigin::FromSlainMonster),
-                  DrawTask::create(2),
-                ]
-              },
-              loss: Some(
-                RollConsequence {
-                  condition: Condition::le(7),
-                  tasks: vec![Sacrifice::create(2)],
-                }
-              )
-            },
-            requirements: vec![MonsterRequirements::Hero; 4],
-        }),
+        monster: Some(Monster::MegaSlime),
         ..Default::default()
     },
     CardSpec {
@@ -1205,25 +1289,7 @@ pub fn get_card_specs() -> [CardSpec; 83] {
         label: "Orthus".to_string(),
         image_path: "cards/monsters/orthus.jpg".to_string(),
         description: "Each time you DRAW a Magic card, you may play it immediately.".to_string(),
-        monster: Some(
-            MonsterSpec {
-              consequences: RollConsequences {
-                success: RollConsequence {
-                  condition: Condition::ge(8),
-                  tasks: vec![ReceiveModifier::create(PlayerModifier::PlayMagicOnDraw, ModifierOrigin::FromSlainMonster),]
-                },
-                loss: Some(
-                  RollConsequence {
-                    condition: Condition::le(4),
-                    tasks: vec![Sacrifice::create(1)],
-                  }
-                )
-              },
-            requirements: vec![
-                MonsterRequirements::Hero,
-                MonsterRequirements::HeroType(HeroType::Wizard),
-            ],
-        }),
+        monster: Some(Monster::Orthus),
         ..Default::default()
     },
     CardSpec {
@@ -1231,22 +1297,7 @@ pub fn get_card_specs() -> [CardSpec; 83] {
         label: "Terratuga".to_string(),
         image_path: "cards/monsters/terratuga.jpg".to_string(),
         description: "Your Hero cards cannot be destroyed.".to_string(),
-        monster: Some(
-          MonsterSpec {
-            consequences: RollConsequences {
-              success: RollConsequence {
-                condition: Condition::ge(11),
-                tasks: vec![ReceiveModifier::create(PlayerModifier::UndestroyableHeros, ModifierOrigin::FromSlainMonster)]
-              },
-              loss: Some(
-                RollConsequence {
-                  condition: Condition::le(7),
-                  tasks: vec![Discard::create(2)],
-                }
-              )
-            },
-            requirements: vec![MonsterRequirements::Hero],
-        }),
+        monster: Some(Monster::Terratuga),
         ..Default::default()
     },
 ]

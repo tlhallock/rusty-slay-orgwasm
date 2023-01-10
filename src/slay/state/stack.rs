@@ -4,6 +4,7 @@ use crate::slay::choices::ChoiceDisplayType;
 use crate::slay::choices::Choices;
 use crate::slay::choices::DisplayPath;
 use crate::slay::ids;
+use crate::slay::modifiers::ItemModifier;
 use crate::slay::specification;
 use crate::slay::specification::CardSpec;
 use crate::slay::specification::CardType;
@@ -30,6 +31,10 @@ impl Card {
 		Card { id, spec }
 	}
 
+	pub(crate) fn is_magic(&self) -> bool {
+		self.spec.is_magic()
+	}
+
 	pub fn modification_amounts(&self) -> Vec<i32> {
 		self.spec.modifiers.to_vec() // ::<Vec<(ids::CardId, i32)>>()
 	}
@@ -38,23 +43,16 @@ impl Card {
 		self.spec.label.to_string()
 	}
 
-	pub fn monster_spec(&self) -> &Option<MonsterSpec> {
-		&self.spec.monster
+	pub fn monster_spec(&self) -> Option<MonsterSpec> {
+		if let Some(monster) = &self.spec.monster {
+			Some(monster.create_spec())
+		} else {
+			None
+		}
 	}
 
 	pub fn hero_ability(&self) -> &Option<HeroAbility> {
 		&self.spec.hero_ability
-	}
-
-	pub fn card_type(&self) -> &CardType {
-		&self.spec.card_type
-	}
-
-	pub fn get_hero_type(&self) -> Option<HeroType> {
-		match &self.spec.card_type {
-			CardType::Hero(hero_type) | CardType::PartyLeader(hero_type) => Some(*hero_type),
-			_ => None,
-		}
 	}
 
 	// Should be part of the spec...
@@ -65,6 +63,19 @@ impl Card {
 	pub fn as_choice(&self) -> ChoiceDisplayType {
 		ChoiceDisplayType::Card(self.as_perspective())
 	}
+
+	pub(crate) fn is_hero(&self) -> bool {
+		self.spec.is_hero()
+	}
+
+pub(crate) fn is_challenge(&self) -> bool {
+	self.spec.is_challenge()
+}
+
+pub(crate) fn get_unmodified_hero_type(&self) -> Option<HeroType> {
+	self.spec.get_unmodified_hero_type()
+}
+
 }
 
 #[derive(Debug, Clone)]
@@ -82,12 +93,22 @@ impl Stack {
 		}
 	}
 
-	pub fn get_hero_type(&self) -> Option<specification::HeroType> {
-		self.top.get_hero_type()
-	}
-
 	pub fn contains(&self, card_id: ids::CardId) -> bool {
 		self.top.id == card_id || self.modifiers.iter().any(|c| c.id == card_id)
+	}
+
+	pub(crate) fn get_hero_type(&self) -> Option<HeroType> {
+		if let Some(hero_type) = self.top.spec.get_unmodified_hero_type() {
+			let mut ret = hero_type;
+			for modifier in self.modifiers.iter() {
+				if let Some(ItemModifier::Mask(hero_type)) = modifier.spec.card_modifier.as_ref() {
+					ret = *hero_type;
+				}
+			}
+			Some(ret)
+		} else {
+			None
+		}
 	}
 }
 
@@ -158,7 +179,7 @@ impl Stack {
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct CardSpecPerspective {
-	pub card_type: CardType,
+	// pub card_type: CardType,
 	pub label: String,
 	pub description: String,
 	pub image_path: String,
@@ -169,7 +190,7 @@ pub struct CardSpecPerspective {
 impl CardSpecPerspective {
 	pub fn new(spec: &CardSpec) -> Self {
 		Self {
-			card_type: spec.card_type.to_owned(),
+			// card_type: spec.card_type.to_owned(),
 			label: spec.label.to_owned(),
 			description: spec.description.to_owned(),
 			image_path: spec.image_path.to_owned(),
