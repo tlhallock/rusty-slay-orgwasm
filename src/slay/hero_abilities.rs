@@ -165,7 +165,7 @@ impl HeroAbilityType {
 				),
 				OfferPlayImmediately::create(
 					TaskParamName::SlyPickinsCard,
-					PlayImmediatelyFilter::IsMagic
+					PlayImmediatelyFilter::IsMagic,
 				),
 				ClearParamsTask::create(),
 			],

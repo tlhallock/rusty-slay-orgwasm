@@ -18,14 +18,12 @@ fn initialize_global_decks(context: &mut GameBookKeeping, game: &mut Game) {
 	let mut monsters = Vec::with_capacity(monsters_capacity);
 	specification::get_card_specs().iter().for_each(|spec| {
 		for _ in 0..spec.repeat {
-			let stack = Stack::new(
-				Card::new(context.id_generator.generate(), 
-				spec.to_owned()));
-			
+			let stack = Stack::new(Card::new(context.id_generator.generate(), spec.to_owned()));
+
 			match spec.get_initial_deck() {
-		    DeckPath::Draw => draw.push(stack),
-		    DeckPath::PartyLeaders => leaders.push(stack),
-		    DeckPath::NextMonsters => monsters.push(stack),
+				DeckPath::Draw => draw.push(stack),
+				DeckPath::PartyLeaders => leaders.push(stack),
+				DeckPath::NextMonsters => monsters.push(stack),
 				_ => unreachable!(),
 			};
 		}

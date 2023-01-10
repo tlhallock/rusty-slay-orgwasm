@@ -68,14 +68,13 @@ impl Card {
 		self.spec.is_hero()
 	}
 
-pub(crate) fn is_challenge(&self) -> bool {
-	self.spec.is_challenge()
-}
+	pub(crate) fn is_challenge(&self) -> bool {
+		self.spec.is_challenge()
+	}
 
-pub(crate) fn get_unmodified_hero_type(&self) -> Option<HeroType> {
-	self.spec.get_unmodified_hero_type()
-}
-
+	pub(crate) fn get_unmodified_hero_type(&self) -> Option<HeroType> {
+		self.spec.get_unmodified_hero_type()
+	}
 }
 
 #[derive(Debug, Clone)]

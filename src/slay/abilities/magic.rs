@@ -18,8 +18,6 @@ use super::params::{
 };
 use super::steal::{StealCardFromTask, StealTask, UnStealCardFromTask};
 
-
-
 pub enum SearchDiscardFilters {
 	IsHero,
 }
@@ -27,11 +25,10 @@ pub enum SearchDiscardFilters {
 impl SearchDiscardFilters {
 	fn filter(&self, card: &Card) -> bool {
 		match self {
-    	SearchDiscardFilters::IsHero => card.is_hero(),
+			SearchDiscardFilters::IsHero => card.is_hero(),
 		}
 	}
 }
-
 
 pub fn create_search_discard_choices(
 	context: &mut GameBookKeeping, game: &mut Game, player_index: ids::PlayerIndex,
@@ -157,12 +154,8 @@ impl PlayerTask for MagicTask {
 				Ok(TaskProgressResult::TaskComplete)
 			}
 			MagicSpell::CallToTheFallen => {
-				game.players[player_index].choices = create_search_discard_choices(
-					context,
-					game,
-					player_index,
-					SearchDiscardFilters::IsHero
-				);
+				game.players[player_index].choices =
+					create_search_discard_choices(context, game, player_index, SearchDiscardFilters::IsHero);
 				Ok(TaskProgressResult::TaskComplete)
 			}
 		}

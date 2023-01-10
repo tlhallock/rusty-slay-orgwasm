@@ -28,8 +28,6 @@ use std::iter::Iterator;
 
 use super::deck::DeckSpec;
 
-
-
 pub struct HeroTypeCounter {
 	counts: HashMap<HeroType, u32>,
 }
@@ -47,20 +45,16 @@ impl HeroTypeCounter {
 				prev + 1
 			} else {
 				1
-			}
+			},
 		);
 	}
 
-pub(crate) fn maybe_add_hero_type(&mut self, hero_type_option: Option<HeroType>) {
-	if let Some(hero_type) = hero_type_option.as_ref() {
-		self.add_hero_type(hero_type);
+	pub(crate) fn maybe_add_hero_type(&mut self, hero_type_option: Option<HeroType>) {
+		if let Some(hero_type) = hero_type_option.as_ref() {
+			self.add_hero_type(hero_type);
+		}
 	}
 }
-}
-
-
-
-
 
 #[derive(Clone, Debug)]
 pub struct Player {
@@ -152,7 +146,8 @@ impl Player {
 		hero_types.insert(self.leader.get_unmodified_hero_type().unwrap());
 	}
 	pub fn has_hero_type(&self, hero_type: &HeroType) -> bool {
-		self.leader.get_unmodified_hero_type().unwrap() == *hero_type || self.party.contains_hero_type(hero_type)
+		self.leader.get_unmodified_hero_type().unwrap() == *hero_type
+			|| self.party.contains_hero_type(hero_type)
 	}
 
 	pub fn take_current_task(&mut self) -> Option<Box<dyn tasks::PlayerTask>> {

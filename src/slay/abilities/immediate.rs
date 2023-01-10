@@ -1,4 +1,3 @@
-
 use crate::slay::actions;
 use crate::slay::choices::ChoiceDisplay;
 use crate::slay::choices::ChoiceDisplayType;
@@ -15,7 +14,6 @@ use crate::slay::tasks::PlayerTask;
 use crate::slay::tasks::TaskParamName;
 use crate::slay::tasks::TaskProgressResult;
 
-
 #[derive(Clone, Debug)]
 pub enum PlayImmediatelyFilter {
 	IsMagic,
@@ -24,11 +22,10 @@ pub enum PlayImmediatelyFilter {
 impl PlayImmediatelyFilter {
 	pub fn can_play_immediately(&self, card: &Card) -> bool {
 		match self {
-    	PlayImmediatelyFilter::IsMagic => card.is_magic(),
+			PlayImmediatelyFilter::IsMagic => card.is_magic(),
 		}
 	}
 }
-
 
 #[derive(Clone, Debug)]
 pub struct OfferPlayImmediately {
@@ -37,13 +34,8 @@ pub struct OfferPlayImmediately {
 }
 
 impl OfferPlayImmediately {
-	pub fn create(
-		card_param: TaskParamName, filter: PlayImmediatelyFilter,
-	) -> Box<dyn PlayerTask> {
-		Box::new(OfferPlayImmediately {
-			card_param,
-			filter,
-		})
+	pub fn create(card_param: TaskParamName, filter: PlayImmediatelyFilter) -> Box<dyn PlayerTask> {
+		Box::new(OfferPlayImmediately { card_param, filter })
 	}
 }
 

@@ -29,8 +29,6 @@ use std::ops::RangeBounds;
 
 use super::player::HeroTypeCounter;
 
-
-
 // Move this to the decks file?
 #[derive(Debug, Clone)]
 pub struct DeckSpec {
@@ -251,15 +249,13 @@ impl Deck {
 		}
 	}
 	pub fn collect_hero_types(&self, hero_types: &mut HashSet<HeroType>) {
-		hero_types.extend(self.stacks.iter().flat_map(
-			|stack| stack.get_hero_type()
-		))
+		hero_types.extend(self.stacks.iter().flat_map(|stack| stack.get_hero_type()))
 	}
 	pub(crate) fn contains_hero_type(&self, hero_type: &HeroType) -> bool {
 		self.stacks.iter().any(|stack| match stack.get_hero_type() {
-    Some(ht) => ht == *hero_type,
-    None => false,
-})
+			Some(ht) => ht == *hero_type,
+			None => false,
+		})
 	}
 
 	pub fn take(&mut self, card_id: ids::CardId) -> Option<Stack> {
@@ -351,7 +347,6 @@ impl Deck {
 		}
 		None
 	}
-
 }
 
 impl Summarizable for Deck {

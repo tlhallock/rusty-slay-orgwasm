@@ -1,7 +1,3 @@
-
-
-
-
 #[derive(Debug, Clone, Copy)]
 pub enum MagicSpell {
 	EnganglingTrap,
@@ -14,16 +10,15 @@ pub enum MagicSpell {
 	CallToTheFallen,
 }
 impl MagicSpell {
-    pub(crate) fn label(&self) -> String {
-        todo!()
-    }
+	pub(crate) fn label(&self) -> String {
+		todo!()
+	}
 
-    pub(crate) fn description(&self) -> String {
-        todo!()
-    }
+	pub(crate) fn description(&self) -> String {
+		todo!()
+	}
 
-    pub(crate) fn image_path(&self) -> String {
-        todo!()
-    }
-
+	pub(crate) fn image_path(&self) -> String {
+		todo!()
+	}
 }

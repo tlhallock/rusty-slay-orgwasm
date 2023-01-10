@@ -44,7 +44,6 @@ use crate::slay::tasks::PlayerTask;
 
 pub const MAX_TURNS: u32 = 1000;
 
-
 #[derive(Debug, Clone)]
 pub struct HeroAbility {
 	pub condition: Condition,
@@ -62,7 +61,6 @@ impl HeroAbility {
 		}
 	}
 }
-
 
 // type ActionsCreator = Box<dyn Fn(ids::PlayerIndex) -> Vec<Box<TasksChoice>>>;
 
@@ -82,48 +80,47 @@ pub struct CardSpec {
 	pub spell: Option<MagicSpell>,
 	pub card_modifier: Option<ItemModifier>,
 
-
-  pub real_spec: SlayCardSpec,
+	pub real_spec: SlayCardSpec,
 	// pub hand_actions: ActionsCreator,
 	// pub party_actions: ActionsCreator,
 }
 
 impl CardSpec {
-  pub fn get_initial_deck(&self) -> DeckPath {
-    match self.card_type {
-        CardType::PartyLeader(_) => DeckPath::PartyLeaders,
-        CardType::Monster => DeckPath::NextMonsters,
-        _ => DeckPath::Draw,
-    }
-  }
-  pub fn get_unmodified_hero_type(&self) -> Option<HeroType> {
-    match &self.card_type {
-        CardType::Hero(hero_type) => Some(*hero_type),
-        CardType::PartyLeader(hero_type) => Some(*hero_type),
-        _ => None,
-    }
-  }
+	pub fn get_initial_deck(&self) -> DeckPath {
+		match self.card_type {
+			CardType::PartyLeader(_) => DeckPath::PartyLeaders,
+			CardType::Monster => DeckPath::NextMonsters,
+			_ => DeckPath::Draw,
+		}
+	}
+	pub fn get_unmodified_hero_type(&self) -> Option<HeroType> {
+		match &self.card_type {
+			CardType::Hero(hero_type) => Some(*hero_type),
+			CardType::PartyLeader(hero_type) => Some(*hero_type),
+			_ => None,
+		}
+	}
 
-  pub(crate) fn is_magic(&self) -> bool {
-    match &self.card_type {
-      CardType::Magic => true,
-      _ => false,
-    }
-  }
+	pub(crate) fn is_magic(&self) -> bool {
+		match &self.card_type {
+			CardType::Magic => true,
+			_ => false,
+		}
+	}
 
-  pub(crate) fn is_hero(&self) -> bool {
-    match &self.card_type {
-      CardType::Hero(_) => true,
-      _ => false,
-    }
-  }
+	pub(crate) fn is_hero(&self) -> bool {
+		match &self.card_type {
+			CardType::Hero(_) => true,
+			_ => false,
+		}
+	}
 
-pub(crate) fn is_challenge(&self) -> bool {
-  match &self.card_type {
-    CardType::Challenge => true,
-    _ => false,
-  }
-}
+	pub(crate) fn is_challenge(&self) -> bool {
+		match &self.card_type {
+			CardType::Challenge => true,
+			_ => false,
+		}
+	}
 }
 
 impl Default for CardSpec {
@@ -140,7 +137,7 @@ impl Default for CardSpec {
 			spell: None,
 			card_modifier: None,
 
-      real_spec: SlayCardSpec::Challenge,
+			real_spec: SlayCardSpec::Challenge,
 		}
 	}
 }
