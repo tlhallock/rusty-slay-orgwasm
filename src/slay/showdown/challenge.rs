@@ -1,30 +1,57 @@
+use std::rc::Rc;
+
+use rand::rngs::ThreadRng;
+
 use super::common::ChallengeReason;
 use super::common::ModificationPath;
-use super::common::{ModificationPerspective, RollModification};
-use super::completion::{CompletionTracker, PlayerCompletionPerspective};
+use super::common::RollModification;
+use super::completion::CompletionTracker;
 use super::consequences::RollConsequences;
 use super::roll_state::list_modification_choices;
-use crate::slay::choices::ChoiceDisplayType;
+use crate::slay::choices::ChoicesPerspective;
 use crate::slay::choices::{ChoicePerspective, Choices};
-use crate::slay::deadlines::Timeline;
 use crate::slay::game_context::GameBookKeeping;
 use crate::slay::showdown::common::Roll;
 use crate::slay::showdown::current_showdown::ShowDown;
 use crate::slay::state::game::Game;
+use crate::slay::state::game::GameStaticInformation;
 use crate::slay::{deadlines, ids};
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct ChallengeRoll {
+	pub player_index: ids::PlayerIndex,
 	pub initial: Roll,
 	pub history: Vec<RollModification>,
-	pub player_index: ids::PlayerIndex,
+
+	path: ModificationPath,
+}
+
+#[derive(Debug, Clone)]
+pub struct ChallengeState {
+	pub initiator: ChallengeRoll,
+	pub challenger: ChallengeRoll,
+	pub completion_tracker: Option<CompletionTracker>,
+	pub reason: ChallengeReason,
+
+	consequences: RollConsequences,
+}
+
+#[derive(Debug, PartialEq, Clone)]
+pub struct ChallengePerspective {
+	pub initiator: ChallengeRoll,
+	pub challenger: ChallengeRoll,
+	pub completion_tracker: CompletionTracker,
+	pub reason: ChallengeReason,
+	// pub roll_total: i32,
+	// pub challenger_victorious: bool,
 }
 
 impl ChallengeRoll {
-	pub fn new(rng: &mut rand::rngs::ThreadRng, player_index: ids::PlayerIndex) -> Self {
+	pub fn new(rng: &mut ThreadRng, player_index: ids::PlayerIndex, path: ModificationPath) -> Self {
 		Self {
 			initial: Roll::create_from(rng),
 			history: Default::default(),
+			path,
 			player_index,
 		}
 	}
@@ -38,17 +65,38 @@ impl ChallengeRoll {
 				.map(|h| h.modification_amount)
 				.sum::<i32>()
 	}
+
+	pub fn roller_name(&self, statics: &Rc<GameStaticInformation>) -> String {
+		statics.players[self.player_index].name.to_owned()
+	}
+
+	pub fn choices(&self, choices: &Option<ChoicesPerspective>) -> Vec<ChoicePerspective> {
+		if let Some(choices) = choices {
+			choices
+				.options
+				.iter()
+				.filter(|choice| {
+					choice
+						.display
+						.display_type
+						.belongs_to_challenge_roll(self.path)
+				})
+				.map(|choice| choice.to_owned())
+				.collect()
+		} else {
+			Vec::new()
+		}
+	}
 }
 
-#[derive(Debug, Clone)]
-pub struct ChallengeState {
-	pub initiator: ChallengeRoll,
-	pub challenger: ChallengeRoll,
-	pub completion_tracker: Option<CompletionTracker>,
-	pub reason: ChallengeReason,
-
-	consequences: RollConsequences,
-}
+// #[derive(Debug, PartialEq, Clone)]
+// pub struct ChallengeRollPerspective {
+// 	pub roller_name: String,
+// 	pub initial: Roll,
+// 	pub history: Vec<ModificationPerspective>, // Ok
+// 	pub roll_total: i32,
+// 	pub choices: Vec<ChoicePerspective>,
+// }
 
 impl ChallengeState {
 	pub fn calculate_roll_total(&self) -> i32 {
@@ -63,8 +111,8 @@ impl ChallengeState {
 		reason: ChallengeReason,
 	) -> Self {
 		Self {
-			initiator: ChallengeRoll::new(rng, player_index),
-			challenger: ChallengeRoll::new(rng, challenger_index),
+			initiator: ChallengeRoll::new(rng, player_index, ModificationPath::Initiator),
+			challenger: ChallengeRoll::new(rng, challenger_index, ModificationPath::Challenger),
 			completion_tracker: None,
 			consequences,
 			reason,
@@ -130,90 +178,70 @@ impl ShowDown for ChallengeState {
 	}
 }
 
-impl ChallengeRoll {
-	pub fn to_perspective(
-		&self,
-		game: &Game,
-		choices: &Option<&Choices>,
-		path: ModificationPath,
-	) -> ChallengeRollPerspective {
-		ChallengeRollPerspective {
-			roller_name: game.players[self.player_index].name.to_owned(),
-			initial: self.initial.to_owned(),
-			history: self
-				.history
-				.iter()
-				.map(|m| m.to_perspective(game))
-				.collect(),
-			roll_total: self.calculate_roll_total(),
-			choices: if let Some(choices) = choices {
-				choices
-					.choice_perspetives()
-					.into_iter()
-					.filter(|cp| match &cp.display_type {
-						ChoiceDisplayType::Modify(modi) => path == modi.get_path(),
-						_ => false,
-					})
-					.collect()
-			} else {
-				Vec::new()
-			},
-		}
-	}
-}
+// impl ChallengeRoll {
+// pub fn to_perspective(
+// 	&self,
+// 	game: &Game,
+// 	choices: &Option<&Choices>,
+// 	path: ModificationPath,
+// ) -> ChallengeRoll {
+// 	ChallengeRoll {
+// 		roller_name: ,
+// 		initial: self.initial.to_owned(),
+// 		history: self
+// 			.history
+// 			.iter()
+// 			.map(|m| m.to_perspective(game))
+// 			.collect(),
+// 		roll_total: self.calculate_roll_total(),
+// 		choices: if let Some(choices) = choices {
+// 			choices
+// 				.choice_perspetives()
+// 				.into_iter()
+// 				.filter(|cp| match &cp.display_type {
+// 					ChoiceDisplayType::Modify(modi) => path == modi.get_path(),
+// 					_ => false,
+// 				})
+// 				.collect()
+// 		} else {
+// 			Vec::new()
+// 		},
+// 	}
+// }
+// }
 
 impl ChallengeState {
-	pub fn to_perspective(&self, game: &Game, choices: &Option<&Choices>) -> ChallengePerspective {
+	pub fn to_perspective(&self) -> ChallengePerspective {
 		ChallengePerspective {
-			completions: self.tracker().to_perspective(game),
-			challenger_victorious: self.calculate_roll_total() <= 0, // TODO: put this logic in a common place
-			timeline: self.tracker().timeline.to_owned(),
+			initiator: self.initiator.to_owned(),
+			challenger: self.challenger.to_owned(),
+			completion_tracker: self.completion_tracker.as_ref().unwrap().to_owned(),
 			reason: self.reason.to_owned(),
-			initiator: self
-				.initiator
-				.to_perspective(game, choices, ModificationPath::Initiator),
-			challenger: self
-				.challenger
-				.to_perspective(game, choices, ModificationPath::Challenger),
-			choices: if let Some(choices) = choices {
-				// For some reason, we are provided action choices even though there is still an active roll...
-				log::info!("Choices: {:?} ", choices.choice_perspetives());
-				let ret: Vec<_> = choices
-					.choice_perspetives()
-					.into_iter()
-					.filter(|cp| match &cp.display_type {
-						ChoiceDisplayType::SetCompletion(_) => true,
-						_ => false,
-					})
-					.collect();
-				if ret.is_empty() {
-					unreachable!();
-				}
-				ret
-			} else {
-				Vec::new()
-			},
 		}
 	}
 }
 
-#[derive(Debug, PartialEq, Clone)]
-pub struct ChallengePerspective {
-	pub initiator: ChallengeRollPerspective,
-	pub challenger: ChallengeRollPerspective,
-	pub completions: Vec<PlayerCompletionPerspective>,
-	pub timeline: Timeline,
-	pub reason: ChallengeReason,
-	pub choices: Vec<ChoicePerspective>,
-	// pub roll_total: i32,
-	pub challenger_victorious: bool,
-}
+impl ChallengePerspective {
+	pub fn calculate_roll_total(&self) -> i32 {
+		// TODO: consolidate
+		self.initiator.calculate_roll_total() - self.challenger.calculate_roll_total()
+	}
 
-#[derive(Debug, PartialEq, Clone)]
-pub struct ChallengeRollPerspective {
-	pub roller_name: String,
-	pub initial: Roll,
-	pub history: Vec<ModificationPerspective>,
-	pub roll_total: i32,
-	pub choices: Vec<ChoicePerspective>,
+	pub fn is_challenger_victories(&self) -> bool {
+		// TODO: consolidate
+		self.calculate_roll_total() <= 0
+	}
+
+	pub fn choices(&self, choices: &Option<ChoicesPerspective>) -> Vec<ChoicePerspective> {
+		if let Some(choices) = choices {
+			choices
+				.options
+				.iter()
+				.filter(|choice| choice.display.display_type.belongs_to_challenge())
+				.map(|x| x.to_owned())
+				.collect()
+		} else {
+			Vec::new()
+		}
+	}
 }

@@ -1,13 +1,10 @@
 use crate::slay::choices::CardPath;
-use crate::slay::choices::ChoiceAssociation;
 use crate::slay::choices::ChoiceDisplayType;
 use crate::slay::choices::Choices;
 use crate::slay::choices::DisplayPath;
 use crate::slay::ids;
 use crate::slay::modifiers::ItemModifier;
-use crate::slay::specification;
 use crate::slay::specification::CardSpec;
-use crate::slay::specification::CardType;
 use crate::slay::specification::HeroType;
 use crate::slay::specification::MonsterSpec;
 use crate::slay::specs::cards::SlayCardSpec;
@@ -21,10 +18,30 @@ use std::io::BufWriter;
 use std::io::Write;
 use std::iter::Iterator;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Card {
 	pub id: ids::CardId,
 	pub card_type: SlayCardSpec,
+}
+
+#[derive(Debug, PartialEq, Clone)]
+pub struct CardPerspective {
+	pub id: ids::CardId,
+	pub spec: SlayCardSpec,
+	pub played_this_turn: bool,
+}
+
+#[derive(Debug, Clone)]
+pub struct Stack {
+	// pub id: ElementId,
+	pub top: Card,
+	pub modifiers: Vec<Card>,
+}
+
+#[derive(Debug, PartialEq, Clone)]
+pub struct StackPerspective {
+	pub top: CardPerspective,
+	pub modifiers: Vec<CardPerspective>,
 }
 
 impl Card {
@@ -34,6 +51,20 @@ impl Card {
 
 	pub fn new(id: ids::CardId, card_type: SlayCardSpec) -> Self {
 		Card { id, card_type }
+	}
+
+	pub fn to_perspective(
+		&self,
+		game: &Game,
+		choices: &Option<&Choices>,
+		player_index: Option<ids::PlayerIndex>,
+		card_path: DisplayPath,
+	) -> CardPerspective {
+		CardPerspective {
+			id: self.id,
+			played_this_turn: game.was_card_played(player_index, self.id),
+			spec: self.card_type,
+		}
 	}
 
 	pub(crate) fn is_magic(&self) -> bool {
@@ -75,13 +106,6 @@ impl Card {
 	pub(crate) fn get_unmodified_hero_type(&self) -> Option<HeroType> {
 		self.get_spec().get_unmodified_hero_type()
 	}
-}
-
-#[derive(Debug, Clone)]
-pub struct Stack {
-	// pub id: ElementId,
-	pub top: Card,
-	pub modifiers: Vec<Card>,
 }
 
 impl Stack {
@@ -135,23 +159,6 @@ impl Summarizable for Stack {
 		write!(f, "[")?;
 		self.top.summarize(f, indentation_level + 1)?;
 		write!(f, " {}], ", self.modifiers.len())
-	}
-}
-
-impl Card {
-	pub fn to_perspective(
-		&self,
-		game: &Game,
-		choices: &Option<&Choices>,
-		player_index: Option<ids::PlayerIndex>,
-		card_path: DisplayPath,
-	) -> CardPerspective {
-		CardPerspective {
-			id: self.id,
-			played_this_turn: game.was_card_played(player_index, self.id),
-			spec: self.card_type,
-			choice_associations: ChoiceAssociation::create_from_choices(choices, card_path),
-		}
 	}
 }
 
@@ -209,17 +216,3 @@ impl Stack {
 // 		}
 // 	}
 // }
-
-#[derive(Debug, PartialEq, Clone)]
-pub struct CardPerspective {
-	pub id: ids::CardId,
-	pub played_this_turn: bool,
-	pub spec: SlayCardSpec,
-	pub choice_associations: Vec<ChoiceAssociation>,
-}
-
-#[derive(Debug, PartialEq, Clone)]
-pub struct StackPerspective {
-	pub top: CardPerspective,
-	pub modifiers: Vec<CardPerspective>,
-}

@@ -1,8 +1,9 @@
+use std::rc::Rc;
+
 use yew::classes;
 use yew::prelude::*;
 
-use crate::frontend::app::ChoiceState;
-use crate::frontend::app::GameCallbacks;
+use crate::frontend::app::CommonProps;
 use crate::frontend::dice::Dice;
 use crate::frontend::icons::Timer;
 use crate::frontend::showdown::common::CompletionsView;
@@ -22,7 +23,7 @@ pub struct SimplerRollModalProps {
 #[derive(Properties, PartialEq)]
 pub struct RollModalProps {
 	pub roll: RollPerspective,
-	pub callbacks: GameCallbacks,
+	pub common: Rc<CommonProps>,
 }
 
 // fn format_condition(condition: &Condition) -> String {
@@ -55,13 +56,12 @@ pub fn view_roll_context(props: &RollModalProps) -> Html {
 				{
 					format!(
 						"{} is rolling for ",
-						props.roll.roller_name,
+						props.roll.roller_name(&props.common.statics).to_owned()
 					)
 				}
 					<CardSpecView
 						spec={spec.to_owned()}
-						view_card={props.callbacks.view_card.to_owned()}
-						choice_state={ChoiceState::default()}
+						common={props.common.to_owned()}
 						extra_specs={ExtraSpecProps::default()}
 					/>
 					{
@@ -89,13 +89,12 @@ pub fn view_roll_context(props: &RollModalProps) -> Html {
 					{
 						format!(
 							"{} is attacking ",
-							props.roll.roller_name,
+							props.roll.roller_name(&props.common.statics).to_owned()
 						)
 					}
 					<CardSpecView
 						spec={spec.to_owned()}
-						view_card={props.callbacks.view_card.to_owned()}
-						choice_state={ChoiceState::default()}
+						common={props.common.to_owned()}
 						extra_specs={ExtraSpecProps::default()}
 					/>
 				</div>
@@ -142,7 +141,7 @@ fn view_roll_timer(props: &SimplerRollModalProps) -> Html {
 		<div>
 			// <label>{format!("This roll times out at {:?}", props.roll.deadline)}</label>
 			<br/>
-			<Timer timeline={props.roll.timeline.to_owned()}/>
+			<Timer timeline={props.roll.completion_tracker.timeline.to_owned()}/>
 		</div>
 	}
 }
@@ -153,20 +152,35 @@ pub fn view_roll_modal(props: &RollModalProps) -> Html {
 	html! {
 		<div class={classes!("modal")}>
 			<div class={classes!("modal-content")}>
-				<RollDescription roll={props.roll.to_owned()} callbacks={props.callbacks.to_owned()}/>
+				<RollDescription
+					roll={props.roll.to_owned()}
+					common={props.common.to_owned()}
+				/>
 				<br/>
 				<RollTimer roll={props.roll.to_owned()}/>
 				<br/>
 				<Dice roll={props.roll.initial.to_owned()}/>
 				<br/>
-				<RollHistory history={props.roll.history.to_owned()} callbacks={props.callbacks.to_owned()}/>
+				<RollHistory
+					history={props.roll.history.to_owned()}
+					common={props.common.to_owned()}
+				/>
 				<br/>
 				// TODO: add a not failed...
-				<RollTotal success={props.roll.won} amount={props.roll.roll_total}/>
+				<RollTotal
+					success={props.roll.won()}
+					amount={props.roll.calculate_roll_total()}
+				/>
 				<br/>
-				<RollChoices choices={props.roll.choices.to_owned()} callbacks={props.callbacks.to_owned()}/>
+				<RollChoices
+					choices={props.roll.choices(props.common.get_choices())}
+					common={props.common.to_owned()}
+				/>
 				<br/>
-				<CompletionsView completions={props.roll.completions.to_owned()}/>
+				<CompletionsView
+					completions={props.roll.completion_tracker.completions.to_vec()}
+					common={props.common.to_owned()}
+				/>
 				<br/>
 				<div>
 				</div>

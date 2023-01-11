@@ -1,17 +1,19 @@
+use std::rc::Rc;
+
 use yew::classes;
 use yew::prelude::*;
 
-use crate::frontend::app::ChoiceState;
 use crate::frontend::card_modal::CardModalInfo;
-use crate::slay::choices::ChoiceAssociation;
-use crate::slay::choices::ChoiceAssociationType;
+use crate::slay::choices::ChoicePerspective;
+use crate::slay::choices::ChoicesPerspective;
 use crate::slay::specs::cards::SlayCardSpec;
 use crate::slay::state::stack::StackPerspective;
 
+use super::app::CommonProps;
+
 #[derive(Properties, PartialEq, Default)]
 pub struct ExtraSpecProps {
-	pub represented_choices: Vec<ChoiceAssociation>,
-	pub is_highlighted_choice: bool,
+	pub represented_choices: Vec<ChoicePerspective>,
 	pub is_default_choice: bool,
 	pub has_been_played_this_turn: bool,
 	pub disable_view: bool,
@@ -29,19 +31,18 @@ impl ExtraSpecProps {
 #[derive(Properties, PartialEq)]
 pub struct SpecProps {
 	pub spec: SlayCardSpec,
-	pub view_card: Callback<Option<CardModalInfo>, ()>,
-	pub choice_state: ChoiceState,
+	pub common: Rc<CommonProps>,
 	pub extra_specs: ExtraSpecProps,
 }
 
 #[function_component(CardSpecView)]
 pub fn view_spec(props: &SpecProps) -> Html {
 	let view_this_card = {
-		let view_card = props.view_card.clone();
-		let modal = props
-			.spec
-			.get_card_spec_creation()
-			.to_card_modal(props.extra_specs.represented_choices.to_owned());
+		let view_card = props.common.view_card.clone();
+		let modal = CardModalInfo {
+			spec: props.spec,
+			represents: props.extra_specs.represented_choices.to_owned(),
+		};
 		move |_| view_card.emit(Some(modal.clone()))
 	};
 
@@ -69,12 +70,11 @@ pub fn view_spec(props: &SpecProps) -> Html {
 #[derive(Properties, PartialEq)]
 pub struct StackProps {
 	pub stack: StackPerspective,
-	pub view_card: Callback<Option<CardModalInfo>, ()>,
-	pub choice_state: ChoiceState,
+	pub common: Rc<CommonProps>,
 }
 
 impl StackProps {
-	pub fn create_extra_props(&self) -> ExtraSpecProps {
+	pub fn create_extra_props(&self, choices: &Option<ChoicesPerspective>) -> ExtraSpecProps {
 		// for association in self.stack.top.choice_associations.iter() {
 		// 	log::info!("Association type: {:?} {}",
 		// 		association,
@@ -86,30 +86,15 @@ impl StackProps {
 		// 		.any(|a| a.association_type == ChoiceAssociationType::Representer),
 		// 	);
 		// }
-
+		let choices = if let Some(choices) = choices {
+			choices.represents_card(self.stack.top.id) // TODO;
+		} else {
+			Vec::new()
+		};
+		let is_default_choice = choices.iter().any(|c| c.is_default);
 		ExtraSpecProps {
-			represented_choices: self
-				.stack
-				.top
-				.choice_associations
-				.iter()
-				.filter(|a| a.association_type == ChoiceAssociationType::Representer)
-				.map(|a| a.to_owned())
-				.collect(),
-			is_highlighted_choice: self.choice_state.highlighted_choice.iter().any(|id| {
-				self
-					.stack
-					.top
-					.choice_associations
-					.iter()
-					.any(|a| a.choice_id == *id)
-			}),
-			is_default_choice: self
-				.stack
-				.top
-				.choice_associations
-				.iter()
-				.any(|a| a.is_default),
+			represented_choices: choices,
+			is_default_choice,
 			has_been_played_this_turn: self.stack.top.played_this_turn,
 			disable_view: false,
 		}
@@ -121,9 +106,8 @@ pub fn view_stack(props: &StackProps) -> Html {
 	html! {
 			<CardSpecView
 					spec={props.stack.top.spec.to_owned()}
-					view_card={props.view_card.to_owned()}
-					choice_state={props.choice_state.to_owned()}
-					extra_specs={props.create_extra_props()}
+					common={props.common.to_owned()}
+					extra_specs={props.create_extra_props(props.common.get_choices())}
 			/>
 	}
 }

@@ -1,8 +1,9 @@
+use std::rc::Rc;
+
 use yew::classes;
 use yew::prelude::*;
 
-use crate::frontend::app::ChoiceState;
-use crate::frontend::app::GameCallbacks;
+use crate::frontend::app::CommonProps;
 use crate::frontend::dice::Dice;
 use crate::frontend::icons::Timer;
 use crate::frontend::showdown::common::CompletionsView;
@@ -23,14 +24,13 @@ pub fn view_challenge_description(props: &ChallengeModalProps) -> Html {
 				{
 					format!(
 						"{} challenged {}'s choice to place ",
-						props.challenge.challenger.roller_name,
-						props.challenge.initiator.roller_name,
+						props.challenge.challenger.roller_name(&props.common.statics),
+						props.challenge.initiator.roller_name(&props.common.statics),
 					)
 				}
 					<CardSpecView
 						spec={spec.to_owned()}
-						view_card={props.callbacks.view_card.to_owned()}
-						choice_state={ChoiceState::default()}
+						common={props.common.to_owned()}
 						extra_specs={ExtraSpecProps::default()}
 					/>
 					{
@@ -45,14 +45,13 @@ pub fn view_challenge_description(props: &ChallengeModalProps) -> Html {
 				{
 					format!(
 						"{} challenged {}'s choice to place the item ",
-						props.challenge.challenger.roller_name,
-						props.challenge.initiator.roller_name,
+						props.challenge.challenger.roller_name(&props.common.statics),
+						props.challenge.initiator.roller_name(&props.common.statics),
 					)
 				}
 					<CardSpecView
 						spec={spec.to_owned()}
-						view_card={props.callbacks.view_card.to_owned()}
-						choice_state={ChoiceState::default()}
+						common={props.common.to_owned()}
 						extra_specs={ExtraSpecProps::default()}
 					/>
 				</div>
@@ -64,14 +63,13 @@ pub fn view_challenge_description(props: &ChallengeModalProps) -> Html {
 				{
 					format!(
 						"{} challenged {}'s choice to play magic card",
-						props.challenge.challenger.roller_name,
-						props.challenge.initiator.roller_name,
+						props.challenge.challenger.roller_name(&props.common.statics),
+						props.challenge.initiator.roller_name(&props.common.statics),
 					)
 				}
 					<CardSpecView
 						spec={spec.to_owned()}
-						view_card={props.callbacks.view_card.to_owned()}
-						choice_state={ChoiceState::default()}
+						common={props.common.to_owned()}
 						extra_specs={ExtraSpecProps::default()}
 					/>
 				</div>
@@ -113,7 +111,7 @@ pub fn view_challenge_description(props: &ChallengeModalProps) -> Html {
 #[derive(Properties, PartialEq)]
 pub struct ChallengeRollProps {
 	pub challenge: ChallengePerspective,
-	pub callbacks: GameCallbacks,
+	pub common: Rc<CommonProps>,
 }
 
 #[function_component(ChallengeRollsView)]
@@ -125,42 +123,60 @@ pub fn view_challenge_roll(props: &ChallengeRollProps) -> Html {
 		>
 			<div class={classes!("row")}>
 				<div class={classes!("column")}>
-					<label>{format!("{}'s roll", props.challenge.initiator.roller_name)}</label>
+					<label>
+						{
+							format!(
+								"{}'s roll",
+								props.challenge.initiator.roller_name(&props.common.statics)
+							)
+						}
+					</label>
 					<Dice roll={props.challenge.initiator.initial.to_owned()}/>
 				</div>
 				<div class={classes!("column")}>
-					<label>{format!("{}'s roll", props.challenge.challenger.roller_name)}</label>
+					<label>
+						{
+							format!(
+								"{}'s roll",
+								props.challenge.challenger.roller_name(&props.common.statics)
+							)
+						}
+					</label>
 					<Dice roll={props.challenge.challenger.initial.to_owned()}/>
 				</div>
 			</div>
 			<div class={classes!("row")}>
 					<RollHistory
 						history={props.challenge.initiator.history.to_owned()}
-						callbacks={props.callbacks.to_owned()}
+						common={props.common.to_owned()}
 					/>
 					<RollHistory
 						history={props.challenge.challenger.history.to_owned()}
-						callbacks={props.callbacks.to_owned()}
+						common={props.common.to_owned()}
 					/>
 			</div>
 			<div class={classes!("row")}>
 					<RollTotal
-						success={!props.challenge.challenger_victorious}
-						amount={props.challenge.initiator.roll_total}
+						success={!props.challenge.is_challenger_victories()}
+						amount={props.challenge.initiator.calculate_roll_total()}
 					/>
 					<RollTotal
-						success={props.challenge.challenger_victorious}
-						amount={props.challenge.challenger.roll_total}
+						success={props.challenge.is_challenger_victories()}
+						amount={props.challenge.challenger.calculate_roll_total()}
 					/>
 			</div>
 			<div class={classes!("row")}>
 				<div class={classes!("column")}>
-					<RollChoices choices={props.challenge.initiator.choices.to_owned()}
-					callbacks={props.callbacks.to_owned()}/>
+					<RollChoices
+						choices={props.challenge.initiator.choices(props.common.get_choices())}
+						common={props.common.to_owned()}
+					/>
 				</div>
 				<div class={classes!("column")}>
-					<RollChoices choices={props.challenge.challenger.choices.to_owned()}
-					 callbacks={props.callbacks.to_owned()}/>
+					<RollChoices
+						choices={props.challenge.challenger.choices(props.common.get_choices())}
+						common={props.common.to_owned()}
+					/>
 				</div>
 			</div>
 		</div>
@@ -170,7 +186,7 @@ pub fn view_challenge_roll(props: &ChallengeRollProps) -> Html {
 #[derive(Properties, PartialEq)]
 pub struct ChallengeModalProps {
 	pub challenge: ChallengePerspective,
-	pub callbacks: GameCallbacks,
+	pub common: Rc<CommonProps>,
 }
 
 #[function_component(ChallengeModalView)]
@@ -181,21 +197,24 @@ pub fn view_challenge_modal(props: &ChallengeModalProps) -> Html {
 			<div class={classes!("modal-content")}>
 				<ChallengeDescription
 					challenge={props.challenge.to_owned()}
-					callbacks={props.callbacks.to_owned()}
+					common={props.common.to_owned()}
 				/>
 				<br/>
-				<Timer timeline={props.challenge.timeline.to_owned()}/>
+				<Timer timeline={props.challenge.completion_tracker.timeline.to_owned()}/>
 				<br/>
 				<ChallengeRollsView
 					challenge={props.challenge.to_owned()}
-					callbacks={props.callbacks.to_owned()}
+					common={props.common.to_owned()}
 				/>
 				<br/>
-				<CompletionsView completions={props.challenge.completions.to_owned()}/>
+				<CompletionsView
+					completions={props.challenge.completion_tracker.completions.to_vec()}
+					common={props.common.to_owned()}
+				/>
 				<br/>
 				<RollChoices
-					choices={props.challenge.choices.to_owned()}
-					callbacks={props.callbacks.to_owned()}
+					choices={props.challenge.choices(props.common.get_choices())}
+					common={props.common.to_owned()}
 				/>
 				<br/>
 				<div>

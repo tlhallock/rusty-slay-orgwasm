@@ -1,8 +1,9 @@
+use std::rc::Rc;
+
 use yew::classes;
 use yew::prelude::*;
 
-use crate::frontend::app::ChoiceState;
-use crate::frontend::app::GameCallbacks;
+use crate::frontend::app::CommonProps;
 use crate::frontend::icons::DoNot;
 use crate::frontend::icons::Timer;
 use crate::frontend::showdown::common::CompletionsView;
@@ -15,20 +16,20 @@ use crate::slay::showdown::offer::OfferChallengesPerspective;
 #[derive(Properties, PartialEq)]
 pub struct OfferModalProps {
 	pub offer: OfferChallengesPerspective,
-	pub callbacks: GameCallbacks,
+	pub common: Rc<CommonProps>,
 }
 
 #[function_component(OfferDescriptionView)]
 pub fn view_offer_context(props: &OfferModalProps) -> Html {
+	// TODO: Could use a username...
 	let description = match &props.offer.reason {
 		ChallengeReason::PlaceHeroCard(spec) => html! {
 			<div class={classes!("row")}>
-				{props.offer.initiator.to_owned()}
+				{props.common.statics.player_name(props.offer.player_index).to_owned()}
 				{"is placing"}
 				<CardSpecView
 					spec={spec.to_owned()}
-					view_card={props.callbacks.view_card.to_owned()}
-					choice_state={ChoiceState::default()}
+					common={props.common.to_owned()}
 					extra_specs={ExtraSpecProps::default()}
 				/>
 				{"In their party."}
@@ -36,25 +37,24 @@ pub fn view_offer_context(props: &OfferModalProps) -> Html {
 		},
 		ChallengeReason::PlaceItem(spec) => html! {
 			<div class={classes!("row")}>
-			{props.offer.initiator.to_owned()}
+			{props.common.statics.player_name(props.offer.player_index).to_owned()}
 			{"wants to place the item"}
 			<CardSpecView
 				spec={spec.to_owned()}
-				view_card={props.callbacks.view_card.to_owned()}
-				choice_state={ChoiceState::default()}
+				common={props.common.to_owned()}
 				extra_specs={ExtraSpecProps::default()}
 			/>
 			</div>
 		},
 		ChallengeReason::CastMagic(spec) => html! {
 			<div class={classes!("row")}>
-			{"wants to cast the magic card"}
-			<CardSpecView
-				spec={spec.to_owned()}
-				view_card={props.callbacks.view_card.to_owned()}
-				choice_state={ChoiceState::default()}
-				extra_specs={ExtraSpecProps::default()}
-			/>
+				{props.common.statics.player_name(props.offer.player_index).to_owned()}
+				{"wants to cast the magic card"}
+				<CardSpecView
+					spec={spec.to_owned()}
+					common={props.common.to_owned()}
+					extra_specs={ExtraSpecProps::default()}
+				/>
 			</div>
 		},
 	};
@@ -70,9 +70,10 @@ pub fn view_offer_context(props: &OfferModalProps) -> Html {
 
 #[function_component(OfferChallengesCoices)]
 fn view_offer_choices(props: &OfferModalProps) -> Html {
-	let choices = props.offer.choices.iter().map(|choice| {
+	let choices = props.offer.choices(props.common.get_choices());
+	let choices = choices.iter().map(|choice| {
 		let choose_this = {
-			let choose = props.callbacks.choose.clone();
+			let choose = props.common.choose.clone();
 			let choice_id = choice.choice_id;
 			move |_| choose.iter().for_each(|c| c.emit(choice_id))
 		};
@@ -83,7 +84,7 @@ fn view_offer_choices(props: &OfferModalProps) -> Html {
 		// 		{choice.label.to_owned()}
 		// 	</div>
 		// }
-		match choice.display_type {
+		match choice.display.display_type {
 			ChoiceDisplayType::Challenge(_) => html! {
 				<div
 					onclick={choose_this}
@@ -123,13 +124,22 @@ pub fn view_roll_modal(props: &OfferModalProps) -> Html {
 	html! {
 		<div class={classes!("modal")}>
 			<div class={classes!("modal-content")}>
-				<OfferDescriptionView offer={props.offer.to_owned()} callbacks={props.callbacks.to_owned()}/>
+				<OfferDescriptionView
+					offer={props.offer.to_owned()}
+					common={props.common.to_owned()}
+				/>
 				<br/>
-				<Timer timeline={props.offer.timeline.to_owned()}/>
+				<Timer timeline={props.offer.completion_tracker.timeline.to_owned()}/>
 				<br/>
-				<OfferChallengesCoices offer={props.offer.to_owned()} callbacks={props.callbacks.to_owned()}/>
+				<OfferChallengesCoices
+					offer={props.offer.to_owned()}
+					common={props.common.to_owned()}
+				/>
 				<br/>
-				<CompletionsView completions={props.offer.completions.to_owned()}/>
+				<CompletionsView
+					completions={props.offer.completion_tracker.completions.to_owned()}
+					common={props.common.to_owned()}
+				/>
 				<br/>
 				<div>
 					<img

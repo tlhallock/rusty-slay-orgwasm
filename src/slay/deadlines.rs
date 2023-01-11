@@ -44,6 +44,14 @@ impl Timeline {
 	pub(crate) fn reset(&mut self) {
 		self.begin_time = chrono::offset::Utc::now();
 	}
+
+	pub(crate) fn is_complete(&self) -> bool {
+		if let Some(deadline) = self.compute_deadline() {
+			chrono::offset::Utc::now() > deadline
+		} else {
+			false
+		}
+	}
 }
 
 pub fn current_time() -> DateTime<Utc> {

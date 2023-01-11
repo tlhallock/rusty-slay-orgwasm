@@ -1,4 +1,4 @@
-use crate::slay::state::game::Turn;
+use crate::slay::state::turn::Turn;
 
 use super::{
 	ids,
@@ -29,7 +29,7 @@ impl ModifierDuration {
 	// }
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum ModifierOrigin {
 	FromMagicCard(MagicSpell),
 	FromHeroAbility(ids::CardId),
@@ -107,8 +107,19 @@ impl PlayerBuffs {
 pub enum PlayerModifier {
 	UndestroyableHeros,
 	PlayMagicOnDraw,
+	PlayItemOnDraw,
 	ExtraActionPoint,
 	AddToAllRolls(i32),
+	AddToRollForAbility,
+	DrawOnSuccessfulAbility,
+	DiscardOnChallenge,
+	DrawOnDestroy,
+	ItemsCannotBeChallenged,
+	DrawOnModify,
+	StealInsteadOfSacrifice,
+	RevealModifiersAndDrawAgain,
+	AddOnModify,
+	AddToRollForChallenge,
 }
 
 // Rename this to card modifier, or hero modifier

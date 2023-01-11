@@ -5,8 +5,7 @@ use yew::prelude::*;
 
 use log;
 
-use crate::frontend::app::ChoiceState;
-use crate::frontend::app::GameCallbacks;
+use crate::frontend::app::CommonProps;
 use crate::frontend::card_modal::CardModalInfo;
 use crate::frontend::card_modal::CardModalView;
 use crate::frontend::choices::ChoicesView;
@@ -17,10 +16,12 @@ use crate::frontend::showdown::offer_modal::OfferChallengesView;
 use crate::frontend::showdown::roll_modal::RollModalView;
 use crate::slay::ids;
 use crate::slay::state::game::GamePerspective;
+use crate::slay::state::game::GameStaticInformation;
 
 #[derive(Properties, PartialEq)]
 pub struct GamePerspectiveProps {
 	pub game: Rc<GamePerspective>,
+	pub statics: Rc<GameStaticInformation>,
 	pub choose: Option<Callback<ids::ChoiceId, ()>>,
 }
 
@@ -31,99 +32,58 @@ pub fn view_game(props: &GamePerspectiveProps) -> Html {
 		let viewed_card = viewed_card.clone();
 		Callback::from(move |m| viewed_card.set(m))
 	};
-	let choice_state = use_state(ChoiceState::default);
-	let set_selected_choice = {
-		let choice_state = choice_state.clone();
-		Callback::from(move |highlighted_choice| {
+	let highlighted_choice = use_state(|| None::<ids::ChoiceId>);
+	let set_highlighted_choice = {
+		let highlighted_choice = highlighted_choice.clone();
+		Callback::from(move |choice: Option<ids::ChoiceId>| {
 			log::info!("Trying to set highlight");
-			choice_state.set(ChoiceState { highlighted_choice })
+			highlighted_choice.set(choice)
 		})
 	};
+	let common = Rc::new(CommonProps {
+		statics: props.statics.to_owned(),
+		perspective: props.game.to_owned(),
+		highlighted_choice: (*highlighted_choice).to_owned(),
+		choose: props.choose.to_owned(),
+		view_card: view_card.to_owned(),
+		set_highlighted_choice: set_highlighted_choice.to_owned(),
+	});
 
-	let rotated = props.game.rotated_players();
+	let rotated = props.game.rotated_players(&props.statics);
 	let players = rotated.iter().map(|player| {
 		html! {
-				<PlayerView
-						player={(*player).to_owned()}
-						view_card={view_card.to_owned()}
-						choice_state={(*choice_state).to_owned()}
-				/>
+				<PlayerView player={(*player).to_owned()} common={common.to_owned()} />
 		}
 	});
 	let decks = props.game.decks.iter().map(|deck| {
 		html! {
-				<DeckView
-						deck={deck.to_owned()}
-						view_card={view_card.to_owned()}
-						choice_state={(*choice_state).to_owned()}
-				/>
+				<DeckView deck={deck.to_owned()} common={common.to_owned()} />
 		}
 	});
 	let card_view = viewed_card.as_ref().map(|m| {
 		html! {
-				<CardModalView info={m.to_owned()} callbacks={GameCallbacks {
-					choose: props.choose.to_owned(),
-					view_card: view_card.to_owned(),
-				}} />
+				<CardModalView info={m.to_owned()} common={common.to_owned()} />
 		}
 	});
 	let choices_instructions = props.game.choices.as_ref().map(|c| {
 		html! {
-				<ChoicesView
-						choices={c.to_owned()}
-						callbacks={GameCallbacks {
-							choose: props.choose.to_owned(),
-							view_card: view_card.to_owned(),
-						}}
-						set_selected_choice={set_selected_choice.to_owned()}
-				/>
+				<ChoicesView choices={c.to_owned()} common={common.to_owned()} />
 		}
 	});
-	let roll = props
-		.game
-		.roll
-		.as_ref()
-		// vec![].iter()
-		.map(|r| {
-			html! {
-					<RollModalView roll={r.to_owned()} callbacks={
-						GameCallbacks {
-							choose: props.choose.to_owned(),
-							view_card: view_card.to_owned(),
-						}
-					}/>
-			}
-		});
-	let offer = props
-		.game
-		.offer
-		.as_ref()
-		// vec![].iter()
-		.map(|o| {
-			html! {
-				<OfferChallengesView
-					offer={o.to_owned()}
-					callbacks={
-						GameCallbacks {
-							choose: props.choose.to_owned(),
-							view_card: view_card.to_owned(),
-						}
-					}
-				/>
-			}
-		});
+	let roll = props.game.roll.as_ref().map(|r| {
+		html! {
+				<RollModalView roll={r.to_owned()} common={common.to_owned()} />
+		}
+	});
+	let offer = props.game.offer.as_ref().map(|o| {
+		html! {
+			<OfferChallengesView offer={o.to_owned()} common={common.to_owned()} />
+		}
+	});
 
 	let challenge = props.game.challenge.as_ref().map(|c| {
 		html! {
-			<ChallengeModalView
-				challenge={c.to_owned()}
-				callbacks={
-					GameCallbacks {
-						choose: props.choose.to_owned(),
-						view_card: view_card.to_owned(),
-					}
-				}
-			/>
+			<ChallengeModalView challenge={c.to_owned()} common={common.to_owned()} />
 		}
 	});
 	html! {

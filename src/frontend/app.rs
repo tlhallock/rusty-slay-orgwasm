@@ -1,14 +1,14 @@
-use std::borrow::BorrowMut;
 use std::collections::VecDeque;
 use std::rc::Rc;
 use yew::Callback;
 
 use super::card_modal::CardModalInfo;
+use crate::slay::choices::ChoicesPerspective;
 use crate::slay::driver::AdvanceGameResult;
 use crate::slay::game_context::GameBookKeeping;
 use crate::slay::ids;
 use crate::slay::message::Notification;
-use crate::slay::state::game::{Game, GamePerspective};
+use crate::slay::state::game::{Game, GamePerspective, GameStaticInformation};
 use crate::slay::state::initialize;
 use crate::slay::{driver, strategy};
 
@@ -40,6 +40,9 @@ impl AppState {
 	pub fn perspective(&self) -> GamePerspective {
 		self.game.to_player_perspective(Some(self.my_player_index))
 	}
+	pub fn get_statics(&self) -> GameStaticInformation {
+		self.game.to_statics(self.my_player_index)
+	}
 
 	fn make_selection(&mut self, choice_id: ids::ChoiceId) -> bool {
 		let new_notifications = &mut Vec::new();
@@ -70,13 +73,21 @@ impl AppState {
 	}
 }
 
-#[derive(Debug, Clone, PartialEq, Default)]
-pub struct ChoiceState {
-	pub highlighted_choice: Option<ids::ChoiceId>,
-}
-
+// Rename this to common props
 #[derive(Clone, PartialEq)]
-pub struct GameCallbacks {
+pub struct CommonProps {
+	// Now that common is rc, these prolly don't have to be?
+	pub statics: Rc<GameStaticInformation>,
+	pub perspective: Rc<GamePerspective>,
+	pub highlighted_choice: Option<ids::ChoiceId>,
+
 	pub choose: Option<Callback<ids::ChoiceId, ()>>,
 	pub view_card: Callback<Option<CardModalInfo>, ()>,
+	pub set_highlighted_choice: Callback<Option<ids::ChoiceId>, ()>,
+}
+
+impl CommonProps {
+	pub fn get_choices(&self) -> &Option<ChoicesPerspective> {
+		&self.perspective.choices
+	}
 }

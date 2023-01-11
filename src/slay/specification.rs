@@ -7,7 +7,7 @@ use super::errors::SlayResult;
 use super::game_context::GameBookKeeping;
 use super::ids;
 use super::modifiers::ItemModifier;
-use super::specs::cards::SlayCardSpec;
+use super::modifiers::PlayerModifier;
 use super::specs::hero::HeroAbility;
 use super::specs::hero::HeroAbilityType;
 use super::specs::magic::MagicSpell;
@@ -101,6 +101,10 @@ impl CardSpec {
 			CardType::Challenge => true,
 			_ => false,
 		}
+	}
+
+	pub(crate) fn get_image_path(&self) -> String {
+		format!("imgs/{}", self.image_path)
 	}
 }
 
@@ -211,6 +215,7 @@ impl PlayerTask for MonsterSlainTask {
 pub struct MonsterSpec {
 	pub consequences: RollConsequences,
 	pub requirements: Vec<MonsterRequirements>,
+	pub modifiers: Vec<PlayerModifier>,
 }
 
 impl MonsterSpec {

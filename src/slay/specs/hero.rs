@@ -9,7 +9,6 @@ use crate::slay::abilities::params::{
 };
 use crate::slay::abilities::pull::PullFromTask;
 use crate::slay::abilities::steal::{self, StealTask};
-use crate::slay::specification::CardType;
 use crate::slay::tasks::{PlayerTask, TaskParamName};
 use enum_iterator::Sequence;
 

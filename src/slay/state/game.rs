@@ -3,12 +3,10 @@ use crate::slay::choices::ChoicesPerspective;
 use crate::slay::errors::SlayError;
 use crate::slay::errors::SlayResult;
 use crate::slay::ids;
-use crate::slay::modifiers::ModifierDuration;
 use crate::slay::showdown::challenge::ChallengePerspective;
 use crate::slay::showdown::current_showdown::CurrentShowdown;
 use crate::slay::showdown::offer::OfferChallengesPerspective;
 use crate::slay::showdown::roll_state::RollPerspective;
-use crate::slay::specification;
 use crate::slay::state::deck::Deck;
 use crate::slay::state::deck::DeckPath;
 use crate::slay::state::deck::DeckPerspective;
@@ -27,70 +25,61 @@ use std::io::Write;
 use std::iter::Iterator;
 
 use super::deck::DeckSpec;
-
-#[derive(Debug, Default, Clone, PartialEq)]
-pub struct Turn {
-	turn_number: u32,
-	round_number: u32,
-	// lol, the one that has to be small is the large one...
-	player_index: usize,
-}
-
-impl Turn {
-	pub(crate) fn for_this_turn(&self) -> ModifierDuration {
-		ModifierDuration::ForThisTurn(self.turn_number)
-	}
-	pub(crate) fn until_next_turn(&self) -> ModifierDuration {
-		ModifierDuration::UntilNextTurn(self.round_number + 1, self.player_index)
-	}
-
-	pub(crate) fn set_active_player(&mut self, player_index: ids::PlayerIndex) {
-		self.player_index = player_index;
-	}
-
-	pub fn still_active(&self, duration: &ModifierDuration) -> bool {
-		match duration {
-			ModifierDuration::ForThisTurn(turn_number) => *turn_number == self.turn_number,
-			ModifierDuration::UntilNextTurn(round_number, player_index) => {
-				self.round_number <= *round_number
-					|| (self.round_number == round_number + 1 && self.player_index < *player_index)
-			}
-		}
-	}
-
-	fn increment(&mut self, number_of_players: usize) {
-		self.player_index += 1;
-		self.turn_number += 1;
-		if self.player_index < number_of_players {
-			log::info!("Incremented turn to {:?}", &self);
-			return;
-		}
-		self.player_index = 0;
-		self.round_number += 1;
-		log::info!("Incremented round to {:?}", &self);
-	}
-
-	pub fn over_the_limit(&self) -> bool {
-		self.round_number >= specification::MAX_TURNS
-	}
-	pub fn active_player_index(&self) -> ids::PlayerIndex {
-		self.player_index as ids::PlayerIndex
-	}
-}
+use super::turn::Turn;
 
 #[derive(Clone, Debug)]
 pub struct Game {
 	pub players: Vec<Player>,
-
 	pub showdown: CurrentShowdown,
 	turn: Turn,
-
 	// decks should reduce visibility and use deckpath...
 	pub draw: Deck,
 	pub discard: Deck,
 	pub monsters: Deck,
 	pub leaders: Deck,
 	pub next_monsters: Deck,
+}
+/*
+	Game <- domain state stored in db
+	GameStaticInformation <- game specific information that only needs to be sent once
+	GamePerspective <- game state with information not known to a given player hidden
+												goes over the network
+	GameDisplayable <- game layed out in a fashion to make displaying easy within a ui
+
+*/
+
+#[derive(Debug, PartialEq, Clone)]
+pub struct PlayerStaticInformation {
+	pub name: String,
+	pub leader: Card, // <-- This is not currently visible...
+}
+
+#[derive(Debug, PartialEq, Clone)]
+pub struct GameStaticInformation {
+	pub players: Vec<PlayerStaticInformation>,
+	pub player_index: usize,
+}
+
+#[derive(Debug, PartialEq, Clone)]
+pub struct GamePerspective {
+	pub players: Vec<PlayerPerspective>,
+	pub decks: Vec<DeckPerspective>,
+	pub choices: Option<ChoicesPerspective>,
+	pub turn: Turn,
+	pub roll: Option<RollPerspective>,
+	pub offer: Option<OfferChallengesPerspective>,
+	pub challenge: Option<ChallengePerspective>,
+}
+
+impl GamePerspective {
+	pub fn rotated_players(&self, statics: &GameStaticInformation) -> Vec<&PlayerPerspective> {
+		let mut ret: Vec<&PlayerPerspective> = self.players.iter().collect();
+		let position = ret.iter().position(|p| p.is_me(statics));
+		if let Some(index) = position {
+			ret.rotate_left(index)
+		}
+		ret
+	}
 }
 
 impl Game {
@@ -166,7 +155,7 @@ impl Game {
 			CardPath::ModifyingCardIn(deck_path, top_card_id, modifier_card_id) => {
 				self.deck(deck_path).modifier(top_card_id, modifier_card_id)
 			}
-			CardPath::Leader(player_index) => Some(&self.players[player_index].leader),
+			CardPath::Leader(player_index, _) => Some(&self.players[player_index].leader),
 		}
 		// self.deck(card_path.deck_path()).stack(card_path.top_id())
 	}
@@ -349,6 +338,19 @@ pub fn get_perspective(
 }
 
 impl Game {
+	pub fn to_statics(&self, player_index: ids::PlayerIndex) -> GameStaticInformation {
+		GameStaticInformation {
+			player_index,
+			players: self
+				.players
+				.iter()
+				.map(|p| PlayerStaticInformation {
+					name: p.name.to_owned(),
+					leader: p.leader.to_owned(),
+				})
+				.collect(),
+		}
+	}
 	pub fn to_player_perspective(&self, viewing_player: Option<ids::PlayerIndex>) -> GamePerspective {
 		let choices = &if let Some(player_index) = viewing_player {
 			self.players[player_index].choices.as_ref()
@@ -376,41 +378,15 @@ impl Game {
 				.collect(),
 			turn: self.get_turn(),
 			choices: choices.map(|c| c.to_perspective()),
-			roll: self
-				.showdown
-				.get_roll()
-				.map(|r| r.to_perspective(self, choices)),
-			offer: self
-				.showdown
-				.get_offer()
-				.map(|o| o.to_perspective(self, choices)),
-			challenge: self
-				.showdown
-				.get_challenge()
-				.map(|o| o.to_perspective(self, choices)),
+			roll: self.showdown.get_roll().map(|r| r.to_perspective()),
+			offer: self.showdown.get_offer().map(|o| o.to_perspective()),
+			challenge: self.showdown.get_challenge().map(|o| o.to_perspective()),
 		}
 	}
 }
 
-#[derive(Debug, PartialEq, Clone)]
-pub struct GamePerspective {
-	pub players: Vec<PlayerPerspective>,
-	pub decks: Vec<DeckPerspective>,
-	pub choices: Option<ChoicesPerspective>,
-	pub turn: Turn,
-
-	pub roll: Option<RollPerspective>,
-	pub offer: Option<OfferChallengesPerspective>,
-	pub challenge: Option<ChallengePerspective>,
-}
-
-impl GamePerspective {
-	pub fn rotated_players(&self) -> Vec<&PlayerPerspective> {
-		let mut ret: Vec<&PlayerPerspective> = self.players.iter().collect();
-		let position = ret.iter().position(|p| p.me);
-		if let Some(index) = position {
-			ret.rotate_left(index)
-		}
-		ret
+impl GameStaticInformation {
+	pub fn player_name(&self, player_index: ids::PlayerIndex) -> &String {
+		&self.players[player_index].name
 	}
 }

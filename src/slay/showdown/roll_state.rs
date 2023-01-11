@@ -1,18 +1,19 @@
+use std::rc::Rc;
 use std::vec;
 
-use crate::slay::choices::{ChoicePerspective, Choices, TasksChoice};
-use crate::slay::deadlines::{self, Timeline};
+use crate::slay::choices::{ChoicePerspective, Choices, ChoicesPerspective, TasksChoice};
+use crate::slay::deadlines;
 use crate::slay::game_context::GameBookKeeping;
 use crate::slay::ids;
+use crate::slay::showdown::common::ModificationPath;
 use crate::slay::showdown::common::Roll;
 use crate::slay::showdown::common::RollModification;
-use crate::slay::showdown::common::{ModificationPath, ModificationPerspective};
-use crate::slay::showdown::completion::{CompletionTracker, PlayerCompletionPerspective};
+use crate::slay::showdown::completion::CompletionTracker;
 use crate::slay::showdown::consequences::RollConsequences;
 use crate::slay::showdown::current_showdown::ShowDown;
 use crate::slay::showdown::roll_choices::{self, create_modify_roll_choice};
 use crate::slay::specs::cards::SlayCardSpec;
-use crate::slay::state::game::Game;
+use crate::slay::state::game::{Game, GameStaticInformation};
 
 use super::consequences::Condition;
 
@@ -32,7 +33,17 @@ pub struct RollState {
 	pub initial: Roll,
 	pub history: Vec<RollModification>,
 	pub completion_tracker: Option<CompletionTracker>,
-	foo: String,
+}
+
+#[derive(Debug, PartialEq, Clone)]
+pub struct RollPerspective {
+	pub roller_index: ids::PlayerIndex,
+	pub reason: RollReason,
+	pub win_condition: Condition,
+	pub loss_condition: Option<Condition>,
+	pub initial: Roll,
+	pub history: Vec<RollModification>,
+	pub completion_tracker: CompletionTracker,
 }
 
 impl RollState {
@@ -60,7 +71,6 @@ impl RollState {
 			consequences,
 			completion_tracker: None,
 			reason,
-			foo: String::from("foo"),
 		}
 	}
 
@@ -190,58 +200,51 @@ pub fn list_modification_choices(
 	choices
 }
 
-#[derive(Debug, PartialEq, Clone)]
-pub struct RollPerspective {
-	pub roller_name: String,
-	pub initial: Roll,
-	pub history: Vec<ModificationPerspective>,
-	pub completions: Vec<PlayerCompletionPerspective>,
-	pub timeline: Timeline,
-	pub reason: RollReason,
-	pub choices: Vec<ChoicePerspective>,
-
-	pub roll_total: i32,
-
-	pub win_condition: Condition,
-	pub won: bool,
-	pub loss_condition: Option<Condition>,
-	pub lossed: Option<bool>,
-}
-
 impl RollState {
-	pub fn to_perspective(&self, game: &Game, choices: &Option<&Choices>) -> RollPerspective {
-		let roll_total = self.calculate_roll_total();
+	pub fn to_perspective(&self) -> RollPerspective {
 		RollPerspective {
-			roller_name: game.get_player_name(self.roller_index),
-			initial: self.initial.to_owned(),
-			history: self
-				.history
-				.iter()
-				.map(|m| m.to_perspective(game))
-				.collect(),
-			completions: self.tracker().to_perspective(game),
-
-			timeline: self.tracker().timeline.to_owned(),
-			reason: self.reason.to_owned(),
-			choices: if let Some(choices) = choices {
-				choices.choice_perspetives()
-			} else {
-				Vec::new()
-			},
-
-			roll_total,
+			roller_index: self.roller_index,
+			reason: self.reason,
 			win_condition: self.consequences.success.condition.to_owned(),
-			won: self.consequences.success.condition.applies_to(roll_total),
 			loss_condition: self
 				.consequences
 				.loss
 				.as_ref()
-				.map(|rc| rc.condition.to_owned()),
-			lossed: self
-				.consequences
-				.loss
-				.as_ref()
-				.map(|rc| rc.condition.applies_to(roll_total)),
+				.map(|c| c.condition.to_owned()),
+			initial: self.initial.to_owned(),
+			history: self.history.to_vec(),
+			completion_tracker: self.completion_tracker.as_ref().unwrap().to_owned(),
+		}
+	}
+}
+
+impl RollPerspective {
+	pub fn roller_name<'a>(&self, statics: &'a Rc<GameStaticInformation>) -> &'a String {
+		&statics.players[self.roller_index].name
+		// statics.player_name(self.roller_index)
+	}
+	pub fn won(&self) -> bool {
+		self.win_condition.applies_to(self.calculate_roll_total())
+	}
+	pub fn lossed(&self) -> Option<bool> {
+		self
+			.loss_condition
+			.as_ref()
+			.map(|loss| loss.applies_to(self.calculate_roll_total()))
+	}
+	pub fn calculate_roll_total(&self) -> i32 {
+		self.initial.calculate_total(&self.history)
+	}
+	pub fn choices(&self, choices: &Option<ChoicesPerspective>) -> Vec<ChoicePerspective> {
+		if let Some(choices) = choices {
+			choices
+				.options
+				.iter()
+				.filter(|choice| choice.display.display_type.belongs_to_roll())
+				.map(|choice| choice.to_owned())
+				.collect()
+		} else {
+			Vec::new()
 		}
 	}
 }

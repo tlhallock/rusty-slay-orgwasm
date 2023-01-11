@@ -1,9 +1,7 @@
 use crate::slay::ids;
 use crate::slay::modifiers::ModifierOrigin;
-use crate::slay::specification::CardSpec;
 use crate::slay::specs::cards::SlayCardSpec;
 use crate::slay::specs::modifier::ModifierKinds;
-use crate::slay::state::game::Game;
 
 use rand::Rng;
 
@@ -29,8 +27,18 @@ impl Roll {
 			die2: rng.gen_range(1..=6),
 		}
 	}
+
+	pub fn calculate_total(&self, modifications: &Vec<RollModification>) -> i32 {
+		(self.die1 as i32)
+			+ (self.die2 as i32)
+			+ modifications
+				.iter()
+				.map(|m| m.modification_amount)
+				.sum::<i32>()
+	}
 }
 
+// TODO: rename to Roll....
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum ModificationPath {
 	Roll,
@@ -38,33 +46,17 @@ pub enum ModificationPath {
 	Initiator,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum ModificationOrigin {
 	FromPlayer(ids::PlayerIndex, ModifierKinds),
 	FromBuff(ModifierOrigin),
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct RollModification {
+	// Rename these: it is already within a modification...
 	pub modification_origin: ModificationOrigin,
 	pub modification_amount: i32,
-}
-
-impl RollModification {
-	pub fn to_perspective(&self, game: &Game) -> ModificationPerspective {
-		// TODO: reference count the game and pass it all the way down the ui tree.
-		// Then we can fill in information like the player names as we go...
-		// Perspective =/= ui
-		// Static Perspective Information...
-		// Dynamic Perspective information...
-
-		// let modifying_card = game.find_card(self.card_id).unwrap();
-		ModificationPerspective {
-			modifier_name: None,       // game.get_player_name(self.modifying_player_index),
-			modifying_card_spec: None, // modifying_card.card_type,
-			modification_amount: self.modification_amount,
-		}
-	}
 }
 
 #[derive(Debug, PartialEq, Clone)]
@@ -94,12 +86,4 @@ impl RollModificationChoiceType {
 pub struct RollModificationChoice {
 	pub choice_id: ids::ChoiceId,
 	pub choice_type: RollModificationChoiceType,
-}
-
-#[derive(Debug, PartialEq, Clone)]
-pub struct ModificationPerspective {
-	// TODO: refactoring this
-	pub modifier_name: Option<String>,
-	pub modifying_card_spec: Option<SlayCardSpec>,
-	pub modification_amount: i32,
 }

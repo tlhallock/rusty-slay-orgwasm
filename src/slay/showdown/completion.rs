@@ -1,8 +1,5 @@
-use std::collections::HashMap;
-
 use crate::slay::deadlines::Timeline;
 use crate::slay::ids;
-use crate::slay::state::game::Game;
 
 // #[derive(Debug, Clone, PartialEq, Eq, Copy)]
 // pub enum CompletionPath {
@@ -36,9 +33,9 @@ impl Completion {
 	}
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct CompletionTracker {
-	pub player_completions: HashMap<ids::PlayerIndex, Completion>,
+	pub completions: Vec<Completion>,
 	pub timeline: Timeline,
 }
 
@@ -46,9 +43,7 @@ impl CompletionTracker {
 	pub fn new(num_players: ids::PlayerIndex, timeline: Timeline) -> Self {
 		Self {
 			timeline,
-			player_completions: (0..num_players)
-				.map(|index| (index, Completion::Thinking))
-				.collect(),
+			completions: vec![Completion::Thinking; num_players],
 		}
 	}
 
@@ -57,22 +52,18 @@ impl CompletionTracker {
 	}
 
 	pub fn is_complete(&self) -> bool {
+		let ret = self.completions.iter().all(|rc| rc.done()) || self.timeline.is_complete();
 		// Check the deadline!?
-		let all_done = self.player_completions.values().all(|rc| rc.done());
-		log::info!("showdown completion: {}", all_done);
-		all_done
+		log::info!("showdown completion: {}", ret);
+		ret
 	}
 
 	pub fn set_player_completion(&mut self, player_index: ids::PlayerIndex, completion: Completion) {
-		self.player_completions.insert(player_index, completion);
+		self.completions[player_index] = completion;
 	}
 
 	pub fn should_offer_modifications_again(&self, player_index: ids::PlayerIndex) -> bool {
-		self
-			.player_completions
-			.get(&player_index)
-			.unwrap()
-			.offer_on_modify()
+		self.completions[player_index].offer_on_modify()
 	}
 
 	pub(crate) fn reset_timeline(&mut self) {
@@ -80,21 +71,21 @@ impl CompletionTracker {
 	}
 }
 
-#[derive(Debug, PartialEq, Clone)]
-pub struct PlayerCompletionPerspective {
-	pub player_name: String,
-	pub completion: Completion,
-}
+// #[derive(Debug, PartialEq, Clone)]
+// pub struct PlayerCompletionPerspective {
+// 	pub player_name: String,
+// 	pub completion: Completion,
+// }
 
-impl CompletionTracker {
-	pub fn to_perspective(&self, game: &Game) -> Vec<PlayerCompletionPerspective> {
-		self
-			.player_completions
-			.iter()
-			.map(|(player_index, completion)| PlayerCompletionPerspective {
-				player_name: game.players[*player_index].name.to_owned(),
-				completion: *completion,
-			})
-			.collect()
-	}
-}
+// impl CompletionTracker {
+// 	pub fn to_perspective(&self, game: &Game) -> Vec<PlayerCompletionPerspective> {
+// 		self
+// 			.player_completions
+// 			.iter()
+// 			.map(|(player_index, completion)| PlayerCompletionPerspective {
+// 				player_name: game.players[*player_index].name.to_owned(),
+// 				completion: *completion,
+// 			})
+// 			.collect()
+// 	}
+// }

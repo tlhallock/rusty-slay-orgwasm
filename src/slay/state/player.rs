@@ -1,7 +1,7 @@
-use crate::slay::choices;
-use crate::slay::choices::CardPath;
-use crate::slay::choices::ChoiceAssociation;
+use crate::slay::choices::ChoicePerspective;
 use crate::slay::choices::Choices;
+use crate::slay::choices::ChoicesPerspective;
+use crate::slay::choices::DisplayPath;
 use crate::slay::errors;
 use crate::slay::ids;
 use crate::slay::modifiers::PlayerBuffs;
@@ -12,10 +12,9 @@ use crate::slay::state::deck::Deck;
 use crate::slay::state::deck::DeckPath;
 use crate::slay::state::deck::DeckPerspective;
 use crate::slay::state::game::Game;
-use crate::slay::state::game::Turn;
 use crate::slay::state::stack::Card;
-use crate::slay::state::stack::CardPerspective;
 use crate::slay::state::summarizable::Summarizable;
+use crate::slay::state::turn::Turn;
 use crate::slay::tasks;
 use crate::slay::tasks::PlayerTasks;
 use crate::slay::visibility::Perspective;
@@ -27,8 +26,11 @@ use std::fmt::Debug;
 use std::io::BufWriter;
 use std::io::Write;
 use std::iter::Iterator;
+use std::rc::Rc;
 
 use super::deck::DeckSpec;
+use super::game::GamePerspective;
+use super::game::GameStaticInformation;
 
 pub struct HeroTypeCounter {
 	counts: HashMap<HeroType, u32>,
@@ -119,7 +121,7 @@ impl Player {
 	}
 
 	pub fn turn_begin(&mut self) {
-		self.remaining_action_points = 3;
+		self.remaining_action_points = self.calculate_total_action_points();
 	}
 
 	pub fn action_points_used(&mut self, amount: u32) {
@@ -164,11 +166,53 @@ impl Player {
 	pub(crate) fn get_remaining_action_points(&self) -> u32 {
 		self.remaining_action_points
 	}
+	pub(crate) fn calculate_total_action_points(&self) -> u32 {
+		3 + self
+			.slain_monsters
+			.tops()
+			.map(|card| {
+				if let Some(monster) = card.card_type.get_card_spec_creation().monster {
+					monster
+						.create_spec()
+						.modifiers
+						.iter()
+						.map(|modifier| match modifier {
+							ExtraActionPoint => 1,
+							_ => 0,
+						})
+						.sum::<u32>()
+				} else {
+					unreachable!()
+				}
+			})
+			.sum::<u32>()
+	}
 
 	pub(crate) fn collect_roll_buffs(&self, reason: RollReason, ret: &mut Vec<RollModification>) {
 		self.temporary_buffs.collect_roll_buffs(ret);
 
 		todo!()
+	}
+
+	pub fn to_perspective(
+		&self,
+		game: &Game,
+		choices: &Option<&Choices>,
+		active: bool,
+		perspective: &Perspective,
+	) -> PlayerPerspective {
+		PlayerPerspective {
+			player_index: self.player_index,
+			remaining_action_points: self.get_remaining_action_points(),
+			// Could be calculated...
+			total_action_points: self.calculate_total_action_points(),
+			decks: self
+				.decks()
+				.iter()
+				.filter(|d| d.is_visible(perspective))
+				.map(|d| d.to_perspective(game, choices, Some(self.player_index), perspective))
+				.collect(),
+		}
 	}
 }
 
@@ -197,53 +241,31 @@ impl Summarizable for Player {
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct PlayerPerspective {
-	// List the hero types they have
-	// Are they active player?
-	// Is this you?
-	// action points
-	pub name: String,
-	pub me: bool,
-	pub active: bool,
-	// pub choices: Option<Choices>,
 	pub remaining_action_points: u32,
 	pub total_action_points: u32,
-
-	pub leader: CardPerspective,
 	pub decks: Vec<DeckPerspective>,
-
-	pub choice_associations: Vec<ChoiceAssociation>,
+	player_index: usize,
 }
 
-impl Player {
-	pub fn to_perspective(
-		&self,
-		game: &Game,
-		choices: &Option<&Choices>,
-		active: bool,
-		perspective: &Perspective,
-	) -> PlayerPerspective {
-		PlayerPerspective {
-			name: self.name.to_owned(),
-			remaining_action_points: self.get_remaining_action_points(),
-			leader: self.leader.to_perspective(
-				game,
-				choices,
-				Some(self.player_index),
-				CardPath::Leader(self.player_index).display(),
-			),
-			decks: self
-				.decks()
-				.iter()
-				.filter(|d| d.is_visible(perspective))
-				.map(|d| d.to_perspective(game, choices, Some(self.player_index), perspective))
-				.collect(),
-			me: perspective == &Perspective::Owner,
-			active,
-			choice_associations: ChoiceAssociation::create_from_choices(
-				choices,
-				choices::DisplayPath::Player(self.player_index),
-			),
-			total_action_points: 3,
+impl PlayerPerspective {
+	// List the hero types they have
+	// Maybe this -> pub choices: Option<Choices>,
+
+	pub fn name<'a>(&self, statics: &'a GameStaticInformation) -> &'a String {
+		&statics.players[self.player_index].name
+	}
+
+	pub fn is_me(&self, statics: &GameStaticInformation) -> bool {
+		self.player_index == statics.player_index
+	}
+	pub fn is_active(&self, game: &GamePerspective) -> bool {
+		self.player_index == game.turn.active_player_index()
+	}
+	pub fn choices(&self, choices: &Option<ChoicesPerspective>) -> Vec<ChoicePerspective> {
+		if let Some(choices) = choices {
+			choices.represented_by(&DisplayPath::Player(self.player_index))
+		} else {
+			Vec::new()
 		}
 	}
 }

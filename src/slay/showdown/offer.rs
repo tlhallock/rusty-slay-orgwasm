@@ -1,16 +1,13 @@
-use crate::slay::choices::{ChoicePerspective, Choices, TasksChoice};
-use crate::slay::deadlines::Timeline;
+use crate::slay::choices::{ChoicePerspective, Choices, ChoicesPerspective, TasksChoice};
 use crate::slay::errors::SlayResult;
 use crate::slay::game_context::GameBookKeeping;
 use crate::slay::ids;
 use crate::slay::showdown::challenge::ChallengeState;
 use crate::slay::showdown::common::ChallengeReason;
 use crate::slay::showdown::completion::CompletionTracker;
-use crate::slay::showdown::completion::PlayerCompletionPerspective;
 use crate::slay::showdown::consequences::RollConsequences;
 use crate::slay::showdown::current_showdown::ShowDown;
 use crate::slay::showdown::roll_choices::{self, create_challenge_choice};
-use crate::slay::specification::CardType;
 use crate::slay::state::game::Game;
 
 #[derive(Debug, Clone)]
@@ -19,6 +16,28 @@ pub struct OfferChallengesState {
 	pub reason: ChallengeReason,
 	pub completion_tracker: Option<CompletionTracker>,
 	consequences: RollConsequences,
+}
+
+#[derive(Debug, PartialEq, Clone)]
+pub struct OfferChallengesPerspective {
+	pub player_index: ids::PlayerIndex,
+	pub reason: ChallengeReason,
+	pub completion_tracker: CompletionTracker,
+}
+
+impl OfferChallengesPerspective {
+	pub fn choices(&self, choices: &Option<ChoicesPerspective>) -> Vec<ChoicePerspective> {
+		if let Some(choices) = choices {
+			choices
+				.options
+				.iter()
+				.filter(|choice| choice.display.display_type.belongs_to_offer())
+				.map(|choice| choice.to_owned())
+				.collect()
+		} else {
+			Vec::new()
+		}
+	}
 }
 
 impl OfferChallengesState {
@@ -32,6 +51,14 @@ impl OfferChallengesState {
 			completion_tracker: None,
 			consequences,
 			reason,
+		}
+	}
+
+	pub fn to_perspective(&self) -> OfferChallengesPerspective {
+		OfferChallengesPerspective {
+			player_index: self.player_index,
+			completion_tracker: self.completion_tracker.as_ref().unwrap().to_owned(),
+			reason: self.reason.to_owned(),
 		}
 	}
 
@@ -100,34 +127,5 @@ impl ShowDown for OfferChallengesState {
 
 	fn finish(&mut self, context: &mut GameBookKeeping, game: &mut Game) {
 		self.consequences.proceed(context, game, self.player_index);
-	}
-}
-
-#[derive(Debug, PartialEq, Clone)]
-pub struct OfferChallengesPerspective {
-	pub initiator: String,
-	pub completions: Vec<PlayerCompletionPerspective>,
-	pub reason: ChallengeReason,
-	pub choices: Vec<ChoicePerspective>,
-	pub timeline: Timeline,
-}
-
-impl OfferChallengesState {
-	pub fn to_perspective(
-		&self,
-		game: &Game,
-		choices: &Option<&Choices>,
-	) -> OfferChallengesPerspective {
-		OfferChallengesPerspective {
-			initiator: game.players[self.player_index].name.to_owned(),
-			completions: self.tracker().to_perspective(game),
-			reason: self.reason.to_owned(),
-			choices: if let Some(choices) = choices {
-				choices.choice_perspetives()
-			} else {
-				Vec::new()
-			},
-			timeline: self.tracker().timeline.to_owned(),
-		}
 	}
 }

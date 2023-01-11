@@ -1,19 +1,17 @@
 // use super::ids::{CardId, ChallengeId, ChoiceId, DeckId, ElementId, IdGenerator, PlayerId, RollId};
 
 use crate::slay::choices::CardPath;
-use crate::slay::choices::ChoiceAssociation;
+use crate::slay::choices::ChoicePerspective;
 use crate::slay::choices::Choices;
+use crate::slay::choices::ChoicesPerspective;
 use crate::slay::choices::DisplayPath;
 use crate::slay::errors;
 use crate::slay::errors::SlayResult;
 use crate::slay::ids;
-use crate::slay::specification;
-use crate::slay::specification::CardType;
 use crate::slay::specification::HeroType;
 use crate::slay::state::game::Game;
 use crate::slay::state::stack::Card;
 use crate::slay::state::stack::Stack;
-use crate::slay::state::stack::StackPerspective;
 use crate::slay::state::summarizable::Summarizable;
 use crate::slay::visibility::Perspective;
 use crate::slay::visibility::Visibility;
@@ -28,27 +26,13 @@ use std::iter::Iterator;
 use std::ops::RangeBounds;
 
 use super::player::HeroTypeCounter;
+use super::stack::StackPerspective;
 
 // Move this to the decks file?
 #[derive(Debug, Clone)]
 pub struct DeckSpec {
 	pub visibility: VisibilitySpec,
 	pub path: DeckPath,
-}
-
-impl DeckSpec {
-	pub fn get_label(&self) -> String {
-		match self.path {
-			DeckPath::Draw => "Draw pile".to_string(),
-			DeckPath::Discard => "Discard pile".to_string(),
-			DeckPath::PartyLeaders => "Unused Party leaders".to_string(),
-			DeckPath::ActiveMonsters => "Monsters".to_string(),
-			DeckPath::NextMonsters => "Next monsters".to_string(),
-			DeckPath::Hand(player_index) => format!("Player {}'s hand", player_index),
-			DeckPath::Party(player_index) => format!("Player {}'s party", player_index),
-			DeckPath::SlainMonsters(player_index) => format!("Player {}'s monsters", player_index),
-		}
-	}
 }
 
 // Lol, tried of looking for the deck by id...
@@ -79,6 +63,19 @@ impl DeckPath {
 			DeckPath::Hand(player_index) => Some(*player_index),
 			DeckPath::Party(player_index) => Some(*player_index),
 			DeckPath::SlainMonsters(player_index) => Some(*player_index),
+		}
+	}
+
+	pub fn get_label(&self) -> String {
+		match self {
+			DeckPath::Draw => "Draw pile".to_string(),
+			DeckPath::Discard => "Discard pile".to_string(),
+			DeckPath::PartyLeaders => "Unused Party leaders".to_string(),
+			DeckPath::ActiveMonsters => "Monsters".to_string(),
+			DeckPath::NextMonsters => "Next monsters".to_string(),
+			DeckPath::Hand(player_index) => format!("Player {}'s hand", player_index),
+			DeckPath::Party(player_index) => format!("Player {}'s party", player_index),
+			DeckPath::SlainMonsters(player_index) => format!("Player {}'s monsters", player_index),
 		}
 	}
 }
@@ -131,6 +128,13 @@ pub struct Deck {
 	pub spec: DeckSpec,
 }
 
+#[derive(Debug, PartialEq, Clone)]
+pub struct DeckPerspective {
+	pub count: usize,
+	pub path: DeckPath,
+	pub stacks: Option<Vec<StackPerspective>>,
+}
+
 impl Deck {
 	pub fn new(spec: DeckSpec) -> Self {
 		Self {
@@ -150,26 +154,18 @@ impl Deck {
 		match visibility {
 			Visibility::Visible => DeckPerspective {
 				count: self.num_top_cards(),
-				label: self.spec.get_label(),
+				path: self.spec.path,
 				stacks: Some(
 					self
 						.stacks()
 						.map(|s| s.to_perspective(game, choices, player_index, self.spec.path))
 						.collect(),
 				),
-				choice_associations: ChoiceAssociation::create_from_choices(
-					choices,
-					DisplayPath::DeckAt(self.spec.path),
-				),
 			},
 			Visibility::Summary => DeckPerspective {
 				count: self.num_top_cards(),
-				label: self.spec.get_label(),
+				path: self.spec.path,
 				stacks: None,
-				choice_associations: ChoiceAssociation::create_from_choices(
-					choices,
-					DisplayPath::DeckAt(self.spec.path),
-				),
 			},
 			Visibility::Invisible => {
 				unreachable!();
@@ -364,7 +360,7 @@ impl Summarizable for Deck {
 		for _ in 0..indentation_level {
 			write!(f, "  ")?;
 		}
-		write!(f, "{}: ", self.spec.get_label())?;
+		write!(f, "{}: ", self.spec.path.get_label())?;
 		let num_stacks = self.stacks.len();
 		if num_stacks > 8 {
 			for stack in self.stacks.range(0..4) {
@@ -384,11 +380,12 @@ impl Summarizable for Deck {
 	}
 }
 
-#[derive(Debug, PartialEq, Clone)]
-pub struct DeckPerspective {
-	pub label: String,
-	pub count: usize,
-	pub stacks: Option<Vec<StackPerspective>>,
-
-	pub choice_associations: Vec<ChoiceAssociation>,
+impl DeckPerspective {
+	pub fn choices(&self, choices: &Option<ChoicesPerspective>) -> Vec<ChoicePerspective> {
+		if let Some(choices) = choices {
+			choices.represented_by(&DisplayPath::DeckAt(self.path))
+		} else {
+			Vec::new()
+		}
+	}
 }

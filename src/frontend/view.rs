@@ -25,7 +25,11 @@ fn app() -> Html {
 					<h1>{ "Here to Slay!" }</h1>
 					<div>
 							<button class={classes!("border-blink")} onclick={restart}>{ "Restart" } </button>
-							<GamePerspectiveView game={Rc::new(current_game.perspective())} choose={choose.to_owned()}/>
+							<GamePerspectiveView
+								game={Rc::new(current_game.perspective())}
+								statics={Rc::new(current_game.get_statics())}
+								choose={choose.to_owned()}
+							/>
 					</div>
 			</>
 	}

@@ -1,10 +1,12 @@
+use std::rc::Rc;
+
 use yew::classes;
 use yew::prelude::*;
 
-use crate::frontend::app::ChoiceState;
-use crate::frontend::card_modal::CardModalInfo;
 use crate::frontend::deck::DeckView;
 use crate::slay::state::player::PlayerPerspective;
+
+use super::app::CommonProps;
 
 #[derive(Properties, PartialEq)]
 struct ActionPointsProps {
@@ -37,14 +39,13 @@ fn view_action_points(props: &ActionPointsProps) -> Html {
 #[derive(Properties, PartialEq)]
 pub struct PlayerProps {
 	pub player: PlayerPerspective,
-	pub view_card: Callback<Option<CardModalInfo>, ()>,
-	pub choice_state: ChoiceState,
+	pub common: Rc<CommonProps>,
 }
 
 #[function_component(PlayerView)]
 pub fn view_player(props: &PlayerProps) -> Html {
 	let mut is_choice = None;
-	if !props.player.choice_associations.is_empty() {
+	if !props.player.choices(props.common.get_choices()).is_empty() {
 		is_choice = Some("is-choice".to_owned());
 	}
 
@@ -52,12 +53,11 @@ pub fn view_player(props: &PlayerProps) -> Html {
 		html! {
 				<DeckView
 						deck={deck.to_owned()}
-						view_card={props.view_card.to_owned()}
-						choice_state={props.choice_state.to_owned()}
+						common={props.common.to_owned()}
 				/>
 		}
 	});
-	let clazz = if props.player.active {
+	let clazz = if props.player.is_active(&props.common.perspective) {
 		"active-player"
 	} else {
 		"inactive-player"
@@ -65,14 +65,19 @@ pub fn view_player(props: &PlayerProps) -> Html {
 
 	let title = format!(
 		"{} {} {}",
-		props.player.name.to_owned(),
-		if props.player.active {
+		props.player.name(&props.common.statics).to_owned(),
+		if props.player.is_active(props.common.perspective.as_ref()) {
 			"(active player)"
 		} else {
 			""
 		},
-		if props.player.me { "(that's you!)" } else { "" },
+		if props.player.is_me(props.common.statics.as_ref()) {
+			"(that's you!)"
+		} else {
+			""
+		},
 	);
+	// TODO: Show the leader card!!
 	html! {
 			<div class={classes!(clazz, is_choice)}>
 					<div class={classes!("player-status")}>

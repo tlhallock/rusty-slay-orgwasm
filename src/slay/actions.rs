@@ -13,7 +13,6 @@ use crate::slay::game_context::GameBookKeeping;
 use crate::slay::ids;
 use crate::slay::modifiers::ItemModifier;
 use crate::slay::showdown::common::ChallengeReason;
-use crate::slay::showdown::common::Roll;
 use crate::slay::showdown::completion::Completion;
 use crate::slay::showdown::completion::CompletionTracker;
 use crate::slay::showdown::consequences::Condition;
@@ -482,9 +481,12 @@ pub fn assign_action_choices(context: &mut GameBookKeeping, game: &mut Game) {
 		}
 	}
 	{
-		if let Some(hand_choice) =
-			create_party_action_choice(context, game, player_index, CardPath::Leader(player_index))
-		{
+		if let Some(hand_choice) = create_party_action_choice(
+			context,
+			game,
+			player_index,
+			CardPath::Leader(player_index, game.players[player_index].leader.id),
+		) {
 			options.push(hand_choice);
 		}
 	}
