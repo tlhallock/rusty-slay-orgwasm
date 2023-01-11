@@ -23,6 +23,9 @@ wasm-logger = "0.2.0"
 yew = { version = "0.20.0", features = ["csr"] }
 
 
+strum = "0.24.1"
+enum-iterator = "1.2.0"
+
 
 
 
