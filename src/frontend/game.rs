@@ -1,3 +1,5 @@
+use std::rc::Rc;
+
 use yew::classes;
 use yew::prelude::*;
 
@@ -18,7 +20,7 @@ use crate::slay::state::game::GamePerspective;
 
 #[derive(Properties, PartialEq)]
 pub struct GamePerspectiveProps {
-	pub game: GamePerspective,
+	pub game: Rc<GamePerspective>,
 	pub choose: Option<Callback<ids::ChoiceId, ()>>,
 }
 

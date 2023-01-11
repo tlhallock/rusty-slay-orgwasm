@@ -24,7 +24,8 @@ impl PullFromTask {
 		}) as Box<dyn PlayerTask>
 	}
 	pub fn record_pulled(
-		victim_param: TaskParamName, output_param: Option<TaskParamName>,
+		victim_param: TaskParamName,
+		output_param: Option<TaskParamName>,
 	) -> Box<dyn PlayerTask> {
 		Box::new(Self {
 			victim_param,
@@ -34,7 +35,9 @@ impl PullFromTask {
 }
 
 pub fn pull_a_random_card(
-	context: &mut GameBookKeeping, game: &mut Game, puller_index: ids::PlayerIndex,
+	context: &mut GameBookKeeping,
+	game: &mut Game,
+	puller_index: ids::PlayerIndex,
 	victim_index: ids::PlayerIndex,
 ) -> Option<ids::CardId> {
 	let destination = DeckPath::Hand(puller_index);
@@ -52,7 +55,10 @@ pub fn pull_a_random_card(
 
 impl PlayerTask for PullFromTask {
 	fn make_progress(
-		&mut self, context: &mut GameBookKeeping, game: &mut Game, puller_index: ids::PlayerIndex,
+		&mut self,
+		context: &mut GameBookKeeping,
+		game: &mut Game,
+		puller_index: ids::PlayerIndex,
 	) -> SlayResult<TaskProgressResult> {
 		let victim_index = game.players[puller_index]
 			.tasks

@@ -2,7 +2,7 @@ use enum_iterator::Sequence;
 
 use crate::slay::specification::HeroType;
 
-#[derive(Debug, Clone, Sequence)]
+#[derive(Debug, Clone, Sequence, PartialEq, Copy)]
 pub enum Item {
 	DecoyDoll,
 	ReallyBigRing,
@@ -18,7 +18,7 @@ impl Item {
 	}
 }
 
-#[derive(Debug, Clone, Sequence)]
+#[derive(Debug, Clone, Sequence, PartialEq, Copy)]
 pub enum AnotherItemType {
 	MaskCard(HeroType),
 	NotMask(Item),

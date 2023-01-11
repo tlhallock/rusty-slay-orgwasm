@@ -3,7 +3,7 @@ use yew::prelude::*;
 
 use crate::frontend::app::GameCallbacks;
 use crate::slay::choices::ChoiceAssociation;
-use crate::slay::state::stack::CardSpecPerspective;
+use crate::slay::specification::CardSpec;
 
 #[derive(Properties, PartialEq)]
 pub struct CardModalProps {
@@ -66,7 +66,7 @@ pub struct CardModalInfo {
 	pub represented: Vec<ChoiceAssociation>,
 }
 
-impl CardSpecPerspective {
+impl CardSpec {
 	pub fn to_card_modal(&self, represented: Vec<ChoiceAssociation>) -> CardModalInfo {
 		CardModalInfo {
 			image_path: self.image_path.to_owned(),

@@ -82,7 +82,9 @@ pub fn initialize_game(context: &mut GameBookKeeping, game: &mut Game) {
 }
 
 fn randomly_initialize_hand(
-	context: &mut GameBookKeeping, game: &mut Game, player_index: ids::PlayerIndex,
+	context: &mut GameBookKeeping,
+	game: &mut Game,
+	player_index: ids::PlayerIndex,
 ) {
 	let number_of_hand_cards = context.rng.gen_range(0..10);
 	let drain = game.draw.drain(0..number_of_hand_cards);
@@ -90,7 +92,9 @@ fn randomly_initialize_hand(
 }
 
 fn randomly_initialize_monsters(
-	context: &mut GameBookKeeping, game: &mut Game, player_index: ids::PlayerIndex,
+	context: &mut GameBookKeeping,
+	game: &mut Game,
+	player_index: ids::PlayerIndex,
 ) {
 	let number_of_monsters = context.rng.gen_range(0..3);
 	let drain = game.next_monsters.drain(0..number_of_monsters);
@@ -100,13 +104,17 @@ fn randomly_initialize_monsters(
 }
 
 fn randomly_initialize_modifiers(
-	_context: &mut GameBookKeeping, _game: &mut Game, _player_index: ids::PlayerIndex,
+	_context: &mut GameBookKeeping,
+	_game: &mut Game,
+	_player_index: ids::PlayerIndex,
 ) {
 	// TODO!
 }
 
 fn adding_card_would_mean_player_wins(
-	game: &mut Game, player_index: ids::PlayerIndex, stack: &Stack,
+	game: &mut Game,
+	player_index: ids::PlayerIndex,
+	stack: &Stack,
 ) -> bool {
 	if let Some(hero_type) = stack.get_hero_type() {
 		let hero_types = &mut HashSet::new();
@@ -119,7 +127,9 @@ fn adding_card_would_mean_player_wins(
 }
 
 fn randomly_initialize_party(
-	context: &mut GameBookKeeping, game: &mut Game, player_index: ids::PlayerIndex,
+	context: &mut GameBookKeeping,
+	game: &mut Game,
+	player_index: ids::PlayerIndex,
 ) {
 	let number_of_party_cards = context.rng.gen_range(0..10);
 	for _ in 0..number_of_party_cards {

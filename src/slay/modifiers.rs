@@ -1,12 +1,17 @@
 use crate::slay::state::game::Turn;
 
-use super::{ids, specification::HeroType, specs::magic::MagicSpell};
+use super::{
+	ids,
+	showdown::common::{ModificationOrigin, RollModification},
+	specification::HeroType,
+	specs::magic::MagicSpell,
+};
 
 #[derive(Debug, Clone, Copy)]
 pub enum ModifierDuration {
 	ForThisTurn(u32),
 	UntilNextTurn(u32, usize),
-	Forever,
+	// Forever,
 }
 impl ModifierDuration {
 	pub fn until_next_turn(turn: Turn) -> ModifierDuration {
@@ -51,33 +56,50 @@ impl PlayerBuff {
 
 #[derive(Clone, Debug, Default)]
 pub struct PlayerBuffs {
-	buffs: Vec<PlayerBuff>,
+	temporary_buffs: Vec<PlayerBuff>,
 }
 impl PlayerBuffs {
 	pub(crate) fn clear_expired_modifiers(&mut self, turn: &Turn) {
-		self.buffs.retain(|b| turn.still_active(&b.duration))
+		self
+			.temporary_buffs
+			.retain(|b| turn.still_active(&b.duration))
 	}
 	pub fn add_buff(
-		&mut self, duration: ModifierDuration, modifier: PlayerModifier, origin: ModifierOrigin,
+		&mut self,
+		duration: ModifierDuration,
+		modifier: PlayerModifier,
+		origin: ModifierOrigin,
 	) {
-		self.buffs.push(PlayerBuff {
+		self.temporary_buffs.push(PlayerBuff {
 			duration,
 			modifier,
 			origin,
 		});
 	}
 	pub fn add(&mut self, buff: PlayerBuff) {
-		self.buffs.push(buff);
+		self.temporary_buffs.push(buff);
 	}
 	// pub fn add(&mut self, duration: ModifierDuration, modifier: PlayerModifier) {
 	// 	self.buffs.push(PlayerBuff { duration, modifier });
 	// }
-	pub fn add_forever(&mut self, modifier: PlayerModifier, origin: ModifierOrigin) {
-		self.add(PlayerBuff {
-			duration: ModifierDuration::Forever,
-			modifier,
-			origin,
-		});
+	// pub fn add_forever(&mut self, modifier: PlayerModifier, origin: ModifierOrigin) {
+	// 	self.add(PlayerBuff {
+	// 		duration: ModifierDuration::Forever,
+	// 		modifier,
+	// 		origin,
+	// 	});
+	// }
+
+	pub(crate) fn collect_roll_buffs(&self, ret: &mut Vec<RollModification>) {
+		for modifier in self.temporary_buffs.iter() {
+			match &modifier.modifier {
+				PlayerModifier::AddToAllRolls(amount) => ret.push(RollModification {
+					modification_origin: ModificationOrigin::FromBuff(modifier.origin),
+					modification_amount: *amount,
+				}),
+				_ => {}
+			}
+		}
 	}
 }
 

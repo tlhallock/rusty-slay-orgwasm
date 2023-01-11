@@ -5,7 +5,7 @@ use crate::frontend::app::ChoiceState;
 use crate::frontend::card_modal::CardModalInfo;
 use crate::slay::choices::ChoiceAssociation;
 use crate::slay::choices::ChoiceAssociationType;
-use crate::slay::state::stack::CardSpecPerspective;
+use crate::slay::specs::cards::SlayCardSpec;
 use crate::slay::state::stack::StackPerspective;
 
 #[derive(Properties, PartialEq, Default)]
@@ -28,7 +28,7 @@ impl ExtraSpecProps {
 
 #[derive(Properties, PartialEq)]
 pub struct SpecProps {
-	pub spec: CardSpecPerspective,
+	pub spec: SlayCardSpec,
 	pub view_card: Callback<Option<CardModalInfo>, ()>,
 	pub choice_state: ChoiceState,
 	pub extra_specs: ExtraSpecProps,
@@ -40,6 +40,7 @@ pub fn view_spec(props: &SpecProps) -> Html {
 		let view_card = props.view_card.clone();
 		let modal = props
 			.spec
+			.get_card_spec_creation()
 			.to_card_modal(props.extra_specs.represented_choices.to_owned());
 		move |_| view_card.emit(Some(modal.clone()))
 	};
@@ -50,7 +51,7 @@ pub fn view_spec(props: &SpecProps) -> Html {
 			<div
 					class={classes!("card", c)}
 			>
-					{ props.spec.label.to_owned() }
+					{ props.spec.get_card_spec_creation().label.to_owned() }
 			</div>
 		}
 	} else {
@@ -59,7 +60,7 @@ pub fn view_spec(props: &SpecProps) -> Html {
 				class={classes!("card", c)}
 				onclick={view_this_card}
 			>
-				{ props.spec.label.to_owned() }
+				{ props.spec.get_card_spec_creation().label.to_owned() }
 			</div>
 		}
 	}

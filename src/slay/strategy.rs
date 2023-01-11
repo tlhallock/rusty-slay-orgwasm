@@ -8,7 +8,8 @@ use rand::Rng;
 // Emit logs like "Waiting for challenges..."
 
 pub fn pick_a_random_choice(
-	context: &mut GameBookKeeping, game: &mut Game,
+	context: &mut GameBookKeeping,
+	game: &mut Game,
 ) -> SlayResult<(ids::PlayerIndex, ids::ChoiceId)> {
 	// reservoir sampling
 	let mut count = 0;

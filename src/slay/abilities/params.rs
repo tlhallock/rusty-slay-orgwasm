@@ -1,4 +1,3 @@
-use crate::slay::choices::CardPath;
 use crate::slay::choices::ChoiceDisplay;
 use crate::slay::choices::ChoiceDisplayType;
 use crate::slay::choices::Choices;
@@ -12,18 +11,19 @@ use crate::slay::ids;
 use crate::slay::state::deck::Deck;
 use crate::slay::state::deck::PartialDeckPath;
 use crate::slay::state::game::Game;
-use crate::slay::state::stack::CardSpecPerspective;
+use crate::slay::state::stack::Card;
 use crate::slay::tasks::PlayerTask;
 use crate::slay::tasks::TaskParamName;
 use crate::slay::tasks::TaskProgressResult;
 
-#[derive(Clone, Debug)]
-pub struct CardChoiceInformation {
-	pub card_id: ids::CardId,
-	pub display_path: DisplayPath, // This has an unnessesary clone...
-	pub card_label: String,        // This has an unnessesary clone...
-	pub perspective: CardSpecPerspective,
-}
+// // TODO: remove this class...
+// #[derive(Clone, Debug)]
+// pub struct CardChoiceInformation {
+// 	pub card_id: ids::CardId,
+// 	pub display_path: DisplayPath, // This has an unnessesary clone...
+// 	pub card_label: String,        // This has an unnessesary clone...
+// 	pub perspective: SlayCardSpec,
+// }
 
 // #[derive(Clone, Debug)]
 // pub struct ChooseCardParameterTask {
@@ -57,7 +57,8 @@ pub struct ChoosePlayerParameterTask {
 
 impl ChoosePlayerParameterTask {
 	pub fn exclude_self(
-		param_name: TaskParamName, instructions: &'static str,
+		param_name: TaskParamName,
+		instructions: &'static str,
 	) -> Box<dyn PlayerTask> {
 		Box::new(Self {
 			param_name,
@@ -67,7 +68,8 @@ impl ChoosePlayerParameterTask {
 		}) as Box<dyn PlayerTask>
 	}
 	pub fn include_self(
-		param_name: TaskParamName, instructions: &'static str,
+		param_name: TaskParamName,
+		instructions: &'static str,
 	) -> Box<dyn PlayerTask> {
 		Box::new(Self {
 			param_name,
@@ -77,7 +79,9 @@ impl ChoosePlayerParameterTask {
 		}) as Box<dyn PlayerTask>
 	}
 	pub fn one_of(
-		param_name: TaskParamName, instructions: &'static str, players: Vec<ids::PlayerIndex>,
+		param_name: TaskParamName,
+		instructions: &'static str,
+		players: Vec<ids::PlayerIndex>,
 	) -> Box<dyn PlayerTask> {
 		Box::new(Self {
 			param_name,
@@ -87,7 +91,9 @@ impl ChoosePlayerParameterTask {
 		}) as Box<dyn PlayerTask>
 	}
 	fn get_player_indices(
-		&self, game: &Game, player_index: ids::PlayerIndex,
+		&self,
+		game: &Game,
+		player_index: ids::PlayerIndex,
 	) -> Vec<ids::PlayerIndex> {
 		if let Some(player_indices) = self.players.as_ref() {
 			player_indices.to_owned()
@@ -105,7 +111,10 @@ impl ChoosePlayerParameterTask {
 
 impl PlayerTask for ChoosePlayerParameterTask {
 	fn make_progress(
-		&mut self, context: &mut GameBookKeeping, game: &mut Game, player_index: ids::PlayerIndex,
+		&mut self,
+		context: &mut GameBookKeeping,
+		game: &mut Game,
+		player_index: ids::PlayerIndex,
 	) -> SlayResult<TaskProgressResult> {
 		game.players[player_index].choices = Some(Choices {
 			options: self
@@ -174,7 +183,9 @@ impl SetParameterTask {
 
 impl PlayerTask for SetParameterTask {
 	fn make_progress(
-		&mut self, _context: &mut GameBookKeeping, game: &mut Game,
+		&mut self,
+		_context: &mut GameBookKeeping,
+		game: &mut Game,
 		chooser_player_index: ids::PlayerIndex,
 	) -> SlayResult<TaskProgressResult> {
 		let tasks = &mut game.players[chooser_player_index].tasks;
@@ -214,7 +225,10 @@ impl ClearParamsTask {
 
 impl PlayerTask for ClearParamsTask {
 	fn make_progress(
-		&mut self, _context: &mut GameBookKeeping, game: &mut Game, player_index: ids::PlayerIndex,
+		&mut self,
+		_context: &mut GameBookKeeping,
+		game: &mut Game,
+		player_index: ids::PlayerIndex,
 	) -> SlayResult<TaskProgressResult> {
 		game.players[player_index].tasks.clear_params();
 		Ok(TaskProgressResult::TaskComplete)
@@ -243,7 +257,9 @@ pub struct ChooseCardFromPlayerParameterTask {
 
 impl ChooseCardFromPlayerParameterTask {
 	pub fn create(
-		victim_param: TaskParamName, card_param: TaskParamName, deck_path: PartialDeckPath,
+		victim_param: TaskParamName,
+		card_param: TaskParamName,
+		deck_path: PartialDeckPath,
 		instructions: &'static str,
 	) -> Box<dyn PlayerTask> {
 		Box::new(Self {
@@ -256,7 +272,9 @@ impl ChooseCardFromPlayerParameterTask {
 	}
 
 	pub fn modifying_cards(
-		victim_param: TaskParamName, card_param: TaskParamName, deck_path: PartialDeckPath,
+		victim_param: TaskParamName,
+		card_param: TaskParamName,
+		deck_path: PartialDeckPath,
 		instructions: &'static str,
 	) -> Box<dyn PlayerTask> {
 		Box::new(Self {
@@ -269,7 +287,9 @@ impl ChooseCardFromPlayerParameterTask {
 	}
 
 	pub fn from_party(
-		victim_param: TaskParamName, card_param: TaskParamName, instructions: &'static str,
+		victim_param: TaskParamName,
+		card_param: TaskParamName,
+		instructions: &'static str,
 	) -> Box<dyn PlayerTask> {
 		Box::new(Self {
 			victim_param,
@@ -280,35 +300,18 @@ impl ChooseCardFromPlayerParameterTask {
 		}) as Box<dyn PlayerTask>
 	}
 
-	fn create_card_choices(&self, deck: &Deck) -> Vec<CardChoiceInformation> {
+	fn create_card_choices(&self, deck: &Deck) -> Vec<Card> {
 		// I was over here...
 		match self.card_filter {
-			ChooseCardFilter::AllTopCards => deck
-				.tops()
-				.map(|card| CardChoiceInformation {
-					card_id: card.id,
-					display_path: DisplayPath::CardAt(CardPath::TopCardIn(deck.spec.path, card.id)),
-					card_label: card.get_spec().label.to_owned(),
-					perspective: card.as_perspective(),
-				})
-				.collect(),
+			ChooseCardFilter::AllTopCards => deck.tops().map(|card| card.to_owned()).collect(),
 			ChooseCardFilter::Modifying => deck
 				.stacks()
 				.flat_map(|stack| {
 					stack
 						.modifiers
 						.iter()
-						.map(|card| CardChoiceInformation {
-							card_id: card.id,
-							display_path: DisplayPath::CardAt(CardPath::ModifyingCardIn(
-								deck.spec.path,
-								stack.top.id,
-								card.id,
-							)),
-							card_label: card.get_spec().label.to_owned(),
-							perspective: card.as_perspective(),
-						})
-						.collect::<Vec<CardChoiceInformation>>()
+						.map(|card| card.to_owned())
+						.collect::<Vec<_>>()
 				})
 				.collect(),
 		}
@@ -317,7 +320,10 @@ impl ChooseCardFromPlayerParameterTask {
 
 impl PlayerTask for ChooseCardFromPlayerParameterTask {
 	fn make_progress(
-		&mut self, context: &mut GameBookKeeping, game: &mut Game, chooser_index: ids::PlayerIndex,
+		&mut self,
+		context: &mut GameBookKeeping,
+		game: &mut Game,
+		chooser_index: ids::PlayerIndex,
 	) -> SlayResult<TaskProgressResult> {
 		let victim_param = game.players[chooser_index]
 			.tasks
@@ -325,7 +331,7 @@ impl PlayerTask for ChooseCardFromPlayerParameterTask {
 			.ok_or_else(|| SlayError::new("The parameter must be set."))?;
 
 		let deck_path = self.deck_path.to_deck_path(victim_param);
-		let card_choices: Vec<CardChoiceInformation> = self.create_card_choices(game.deck(deck_path));
+		let card_choices: Vec<Card> = self.create_card_choices(game.deck(deck_path));
 
 		if card_choices.is_empty() {
 			game.players[chooser_index]
@@ -340,13 +346,13 @@ impl PlayerTask for ChooseCardFromPlayerParameterTask {
 					TasksChoice::prepend(
 						context.id_generator.generate(),
 						ChoiceDisplay {
-							display_type: ChoiceDisplayType::Card(card_choice.perspective.to_owned()),
-							label: card_choice.card_label.to_owned(),
+							display_type: card_choice.as_choice(),
+							label: card_choice.card_type.get_card_spec_creation().label,
 						},
-						vec![Box::new(SetParameterTask::set_card(
-							self.card_param,
-							card_choice.card_id,
-						)) as Box<dyn PlayerTask>],
+						vec![
+							Box::new(SetParameterTask::set_card(self.card_param, card_choice.id))
+								as Box<dyn PlayerTask>,
+						],
 					)
 				})
 				.collect(),
@@ -375,7 +381,10 @@ impl SetParameterToMyself {
 
 impl PlayerTask for SetParameterToMyself {
 	fn make_progress(
-		&mut self, _context: &mut GameBookKeeping, game: &mut Game, player_index: ids::PlayerIndex,
+		&mut self,
+		_context: &mut GameBookKeeping,
+		game: &mut Game,
+		player_index: ids::PlayerIndex,
 	) -> SlayResult<TaskProgressResult> {
 		game.players[player_index]
 			.tasks

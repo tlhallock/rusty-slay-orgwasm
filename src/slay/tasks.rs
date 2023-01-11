@@ -59,7 +59,9 @@ impl TaskParams {
 
 impl Summarizable for TaskParams {
 	fn summarize<W: Write>(
-		&self, f: &mut BufWriter<W>, indentation_level: u32,
+		&self,
+		f: &mut BufWriter<W>,
+		indentation_level: u32,
 	) -> Result<(), std::io::Error> {
 		if !self.cards.is_empty() {
 			for _ in 0..indentation_level {
@@ -107,7 +109,10 @@ dyn_clone::clone_trait_object!(PlayerTask);
 
 pub trait PlayerTask: Debug + dyn_clone::DynClone {
 	fn make_progress(
-		&mut self, context: &mut GameBookKeeping, game: &mut Game, player_index: ids::PlayerIndex,
+		&mut self,
+		context: &mut GameBookKeeping,
+		game: &mut Game,
+		player_index: ids::PlayerIndex,
 	) -> SlayResult<TaskProgressResult>;
 
 	fn label(&self) -> String;
@@ -133,7 +138,9 @@ pub struct PlayerTasks {
 
 impl Summarizable for PlayerTasks {
 	fn summarize<W: Write>(
-		&self, f: &mut BufWriter<W>, indentation_level: u32,
+		&self,
+		f: &mut BufWriter<W>,
+		indentation_level: u32,
 	) -> Result<(), std::io::Error> {
 		if self.upcoming.is_empty() && self.current.is_none() {
 			return Ok(());
@@ -225,7 +232,9 @@ impl PlayerTasks {
 	}
 
 	pub(crate) fn set_player_value(
-		&mut self, param_name: TaskParamName, player_index: ids::PlayerIndex,
+		&mut self,
+		param_name: TaskParamName,
+		player_index: ids::PlayerIndex,
 	) -> SlayResult<()> {
 		if self
 			.params
@@ -240,7 +249,9 @@ impl PlayerTasks {
 	}
 
 	pub(crate) fn set_card_value(
-		&mut self, param_name: TaskParamName, card_id: Option<ids::CardId>,
+		&mut self,
+		param_name: TaskParamName,
+		card_id: Option<ids::CardId>,
 	) -> SlayResult<()> {
 		if let Some(previous) = self.params.cards.insert(param_name, card_id) {
 			log::error!(
@@ -281,11 +292,14 @@ impl ReceiveModifier {
 
 impl PlayerTask for ReceiveModifier {
 	fn make_progress(
-		&mut self, _context: &mut GameBookKeeping, game: &mut Game, player_index: ids::PlayerIndex,
+		&mut self,
+		_context: &mut GameBookKeeping,
+		game: &mut Game,
+		player_index: ids::PlayerIndex,
 	) -> SlayResult<TaskProgressResult> {
-		game.players[player_index]
-			.buffs
-			.add_forever(self.modifier.to_owned(), self.origin);
+		// game.players[player_index]
+		// 	.temporary_buffs
+		// 	.add_forever(self.modifier.to_owned(), self.origin);
 		Ok(TaskProgressResult::TaskComplete)
 	}
 
@@ -323,7 +337,9 @@ impl PlayerTask for ReceiveModifier {
 // }
 
 pub(crate) fn continue_tasks(
-	context: &mut GameBookKeeping, game: &mut Game, player_index: ids::PlayerIndex,
+	context: &mut GameBookKeeping,
+	game: &mut Game,
+	player_index: ids::PlayerIndex,
 ) -> SlayResult<TaskProgressResult> {
 	let mut result = TaskProgressResult::NothingDone;
 	loop {
@@ -367,7 +383,10 @@ pub struct MoveCardTask {
 
 impl PlayerTask for MoveCardTask {
 	fn make_progress(
-		&mut self, _context: &mut GameBookKeeping, game: &mut Game, _player_index: ids::PlayerIndex,
+		&mut self,
+		_context: &mut GameBookKeeping,
+		game: &mut Game,
+		_player_index: ids::PlayerIndex,
 	) -> SlayResult<TaskProgressResult> {
 		game.move_card(self.source, self.destination, self.card_id)?;
 		Ok(TaskProgressResult::TaskComplete)

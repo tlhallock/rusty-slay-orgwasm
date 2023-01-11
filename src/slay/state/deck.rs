@@ -140,7 +140,10 @@ impl Deck {
 	}
 
 	pub fn to_perspective(
-		&self, game: &Game, choices: &Option<&Choices>, player_index: Option<ids::PlayerIndex>,
+		&self,
+		game: &Game,
+		choices: &Option<&Choices>,
+		player_index: Option<ids::PlayerIndex>,
 		perspective: &Perspective,
 	) -> DeckPerspective {
 		let visibility = self.spec.visibility.get(perspective);
@@ -175,7 +178,10 @@ impl Deck {
 	}
 
 	pub fn to_spectator_perspective(
-		&self, game: &Game, choices: &Option<&Choices>, player_index: Option<ids::PlayerIndex>,
+		&self,
+		game: &Game,
+		choices: &Option<&Choices>,
+		player_index: Option<ids::PlayerIndex>,
 	) -> DeckPerspective {
 		self.to_perspective(game, choices, player_index, &Perspective::Spectator)
 	}
@@ -351,7 +357,9 @@ impl Deck {
 
 impl Summarizable for Deck {
 	fn summarize<W: Write>(
-		&self, f: &mut BufWriter<W>, indentation_level: u32,
+		&self,
+		f: &mut BufWriter<W>,
+		indentation_level: u32,
 	) -> Result<(), std::io::Error> {
 		for _ in 0..indentation_level {
 			write!(f, "  ")?;

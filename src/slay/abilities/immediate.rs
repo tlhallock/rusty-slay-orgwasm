@@ -41,7 +41,10 @@ impl OfferPlayImmediately {
 
 impl PlayerTask for OfferPlayImmediately {
 	fn make_progress(
-		&mut self, context: &mut GameBookKeeping, game: &mut Game, player_index: ids::PlayerIndex,
+		&mut self,
+		context: &mut GameBookKeeping,
+		game: &mut Game,
+		player_index: ids::PlayerIndex,
 	) -> SlayResult<TaskProgressResult> {
 		/////////////////
 		let card_id = game.card_param(player_index, &self.card_param)?;

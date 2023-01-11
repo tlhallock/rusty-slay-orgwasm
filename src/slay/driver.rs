@@ -66,7 +66,8 @@ fn run_tasks(context: &mut GameBookKeeping, game: &mut Game) -> SlayResult<TaskP
 }
 
 pub fn advance_game(
-	context: &mut GameBookKeeping, game: &mut Game,
+	context: &mut GameBookKeeping,
+	game: &mut Game,
 ) -> SlayResult<AdvanceGameResult> {
 	// TODO: We never check if the choices have expired!
 
@@ -101,7 +102,9 @@ pub fn advance_game(
 }
 
 pub fn make_selection(
-	game: &mut Game, player_index: ids::PlayerIndex, choice_id: ids::ElementId,
+	game: &mut Game,
+	player_index: ids::PlayerIndex,
+	choice_id: ids::ElementId,
 	notify: &mut dyn FnMut(Notification),
 ) -> SlayResult<()> {
 	// TODO: this doesn't copy a Choices on the stack does it?

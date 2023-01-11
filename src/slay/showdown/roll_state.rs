@@ -1,3 +1,5 @@
+use std::vec;
+
 use crate::slay::choices::{ChoicePerspective, Choices, TasksChoice};
 use crate::slay::deadlines::{self, Timeline};
 use crate::slay::game_context::GameBookKeeping;
@@ -9,17 +11,17 @@ use crate::slay::showdown::completion::{CompletionTracker, PlayerCompletionPersp
 use crate::slay::showdown::consequences::RollConsequences;
 use crate::slay::showdown::current_showdown::ShowDown;
 use crate::slay::showdown::roll_choices::{self, create_modify_roll_choice};
+use crate::slay::specs::cards::SlayCardSpec;
 use crate::slay::state::game::Game;
-use crate::slay::state::stack::CardSpecPerspective;
 
 use super::consequences::Condition;
 
 // Only the party needs stacks...
 
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, PartialEq, Clone, Copy)]
 pub enum RollReason {
-	UseHeroAbility(CardSpecPerspective),
-	AttackMonster(CardSpecPerspective),
+	UseHeroAbility(SlayCardSpec),
+	AttackMonster(SlayCardSpec),
 }
 
 #[derive(Debug, Clone)]
@@ -30,22 +32,53 @@ pub struct RollState {
 	pub initial: Roll,
 	pub history: Vec<RollModification>,
 	pub completion_tracker: Option<CompletionTracker>,
+	foo: String,
 }
 
 impl RollState {
-	pub fn new(
-		roller_index: ids::PlayerIndex, consequences: RollConsequences, initial: Roll,
+	pub fn create_roll_history(
+		game: &Game,
+		player_index: ids::PlayerIndex,
+		reason: RollReason,
+	) -> Vec<RollModification> {
+		let mut ret = Vec::new();
+		game.players[player_index].collect_roll_buffs(reason, &mut ret);
+		ret
+	}
+
+	pub fn create(
+		context: &mut GameBookKeeping,
+		game: &Game,
+		roller_index: ids::PlayerIndex,
+		consequences: RollConsequences,
 		reason: RollReason,
 	) -> Self {
 		Self {
 			roller_index,
-			initial,
-			history: Default::default(),
+			initial: Roll::create_from(&mut context.rng),
+			history: RollState::create_roll_history(game, roller_index, reason),
 			consequences,
 			completion_tracker: None,
 			reason,
+			foo: String::from("foo"),
 		}
 	}
+
+	// pub fn new(
+	// 	roller_index: ids::PlayerIndex,
+	// 	consequences: RollConsequences,
+	// 	initial: Roll,
+	// 	reason: RollReason,
+	// ) -> Self {
+	// 	Self {
+	// 		roller_index,
+	// 		initial,
+	// 		history: Default::default(),
+	// 		consequences,
+	// 		completion_tracker: None,
+	// 		reason,
+	// 	}
+	// }
 
 	pub fn add_modification(&mut self, modification: RollModification) {
 		self.tracker_mut().timeline = deadlines::get_roll_deadline();
@@ -73,7 +106,10 @@ impl ShowDown for RollState {
 	}
 
 	fn create_choice_for(
-		&self, context: &mut GameBookKeeping, game: &Game, player_index: ids::PlayerIndex,
+		&self,
+		context: &mut GameBookKeeping,
+		game: &Game,
+		player_index: ids::PlayerIndex,
 	) -> Choices {
 		let default_choice = context.id_generator.generate();
 		Choices {
@@ -100,8 +136,11 @@ impl ShowDown for RollState {
 }
 
 pub fn list_modification_choices(
-	context: &mut GameBookKeeping, game: &Game, player_index: ids::PlayerIndex,
-	default_choice: ids::ChoiceId, rolls: Vec<ModificationPath>,
+	context: &mut GameBookKeeping,
+	game: &Game,
+	player_index: ids::PlayerIndex,
+	default_choice: ids::ChoiceId,
+	rolls: Vec<ModificationPath>,
 ) -> Vec<TasksChoice> {
 	let mut choices: Vec<TasksChoice> = vec![
 		roll_choices::create_set_completion_done(default_choice),
@@ -109,16 +148,18 @@ pub fn list_modification_choices(
 	];
 
 	for card in game.players[player_index].hand.tops() {
-		for modification_amount in card.get_spec().modifiers.iter() {
+		if let SlayCardSpec::ModifierCard(kind) = card.card_type {
 			for modification_path in rolls.iter() {
-				choices.push(create_modify_roll_choice(
-					context,
-					game,
-					player_index,
-					card,
-					*modification_amount,
-					modification_path,
-				))
+				for modification_amount in kind.list_amounts() {
+					choices.push(create_modify_roll_choice(
+						context,
+						player_index,
+						card.id,
+						&kind,
+						modification_amount,
+						modification_path,
+					));
+				}
 			}
 		}
 	}

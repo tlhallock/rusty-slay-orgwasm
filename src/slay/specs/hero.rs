@@ -32,7 +32,7 @@ impl HeroAbility {
 }
 
 // Some renaming is appropriate...
-#[derive(Clone, Debug, Sequence)]
+#[derive(Clone, Debug, Sequence, PartialEq, Copy)]
 pub enum HeroAbilityType {
 	PlunderingPuma,
 	SlipperyPaws,

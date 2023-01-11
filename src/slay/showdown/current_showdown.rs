@@ -202,7 +202,9 @@ impl CurrentShowdown {
 	}
 
 	pub(crate) fn add_modification(
-		&mut self, modification_path: ModificationPath, modification: RollModification,
+		&mut self,
+		modification_path: ModificationPath,
+		modification: RollModification,
 	) -> SlayResult<()> {
 		match modification_path {
 			ModificationPath::Roll => match self.show_down_type {
@@ -239,7 +241,9 @@ impl CurrentShowdown {
 	}
 
 	pub(crate) fn get_modification_task(
-		&self, context: &mut GameBookKeeping, game: &Game,
+		&self,
+		context: &mut GameBookKeeping,
+		game: &Game,
 	) -> ModificationTask {
 		let current = self.current().unwrap();
 		ModificationTask {
@@ -260,7 +264,9 @@ impl CurrentShowdown {
 	}
 
 	pub(crate) fn set_player_completion(
-		&mut self, player_index: ids::PlayerIndex, persist: Completion,
+		&mut self,
+		player_index: ids::PlayerIndex,
+		persist: Completion,
 	) -> SlayResult<()> {
 		log::info!(
 			"Updating the player completion for {} to {:?}",
@@ -296,7 +302,10 @@ pub trait ShowDown: Debug + dyn_clone::DynClone {
 	// );
 
 	fn create_choice_for(
-		&self, context: &mut GameBookKeeping, game: &Game, player_index: ids::PlayerIndex,
+		&self,
+		context: &mut GameBookKeeping,
+		game: &Game,
+		player_index: ids::PlayerIndex,
 	) -> Choices;
 
 	fn finish(&mut self, _context: &mut GameBookKeeping, game: &mut Game);

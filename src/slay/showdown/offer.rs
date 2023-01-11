@@ -23,7 +23,9 @@ pub struct OfferChallengesState {
 
 impl OfferChallengesState {
 	pub fn new(
-		player_index: ids::PlayerIndex, consequences: RollConsequences, reason: ChallengeReason,
+		player_index: ids::PlayerIndex,
+		consequences: RollConsequences,
+		reason: ChallengeReason,
 	) -> Self {
 		Self {
 			player_index,
@@ -58,7 +60,9 @@ impl OfferChallengesState {
 	}
 
 	pub fn to_challenge(
-		&self, rng: &mut rand::rngs::ThreadRng, challenger_index: ids::PlayerIndex,
+		&self,
+		rng: &mut rand::rngs::ThreadRng,
+		challenger_index: ids::PlayerIndex,
 	) -> SlayResult<ChallengeState> {
 		Ok(ChallengeState::new(
 			rng,
@@ -80,7 +84,10 @@ impl ShowDown for OfferChallengesState {
 	}
 
 	fn create_choice_for(
-		&self, context: &mut GameBookKeeping, game: &Game, player_index: ids::PlayerIndex,
+		&self,
+		context: &mut GameBookKeeping,
+		game: &Game,
+		player_index: ids::PlayerIndex,
 	) -> Choices {
 		let default_choice = context.id_generator.generate();
 		Choices {
@@ -107,7 +114,9 @@ pub struct OfferChallengesPerspective {
 
 impl OfferChallengesState {
 	pub fn to_perspective(
-		&self, game: &Game, choices: &Option<&Choices>,
+		&self,
+		game: &Game,
+		choices: &Option<&Choices>,
 	) -> OfferChallengesPerspective {
 		OfferChallengesPerspective {
 			initiator: game.players[self.player_index].name.to_owned(),

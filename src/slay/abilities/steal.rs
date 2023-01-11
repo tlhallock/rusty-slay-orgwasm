@@ -24,7 +24,10 @@ impl StealTask {
 
 impl PlayerTask for StealTask {
 	fn make_progress(
-		&mut self, _context: &mut GameBookKeeping, game: &mut Game, thief_index: ids::PlayerIndex,
+		&mut self,
+		_context: &mut GameBookKeeping,
+		game: &mut Game,
+		thief_index: ids::PlayerIndex,
 	) -> SlayResult<TaskProgressResult> {
 		game.players[thief_index].tasks.prepend_from(&mut vec![
 			ChoosePlayerParameterTask::exclude_self(TaskParamName::PlayerToStealFrom, "to steal from"),
@@ -65,7 +68,10 @@ impl StealCardFromTask {
 
 impl PlayerTask for StealCardFromTask {
 	fn make_progress(
-		&mut self, _context: &mut GameBookKeeping, game: &mut Game, stealer_index: ids::PlayerIndex,
+		&mut self,
+		_context: &mut GameBookKeeping,
+		game: &mut Game,
+		stealer_index: ids::PlayerIndex,
 	) -> SlayResult<TaskProgressResult> {
 		let victim_player_index = game.player_param(stealer_index, &self.victim_param)?;
 		let card_id = game.card_param(stealer_index, &self.card_param)?;
@@ -100,7 +106,10 @@ impl UnStealCardFromTask {
 
 impl PlayerTask for UnStealCardFromTask {
 	fn make_progress(
-		&mut self, _context: &mut GameBookKeeping, game: &mut Game, stealer_index: ids::PlayerIndex,
+		&mut self,
+		_context: &mut GameBookKeeping,
+		game: &mut Game,
+		stealer_index: ids::PlayerIndex,
 	) -> SlayResult<TaskProgressResult> {
 		let victim_player_index = game.player_param(stealer_index, &self.victim_param)?;
 		let card_id = game.card_param(stealer_index, &self.card_param)?;

@@ -22,7 +22,10 @@ impl SlipperyPaws {
 
 impl PlayerTask for SlipperyPaws {
 	fn make_progress(
-		&mut self, _context: &mut GameBookKeeping, game: &mut Game, player_index: ids::PlayerIndex,
+		&mut self,
+		_context: &mut GameBookKeeping,
+		game: &mut Game,
+		player_index: ids::PlayerIndex,
 	) -> SlayResult<TaskProgressResult> {
 		let first_card =
 			game.card_param(player_index, &TaskParamName::SlipperyPawsVictimPulledCard1)?;
@@ -60,7 +63,10 @@ impl Mimimeow {
 
 impl PlayerTask for Mimimeow {
 	fn make_progress(
-		&mut self, context: &mut GameBookKeeping, game: &mut Game, player_index: ids::PlayerIndex,
+		&mut self,
+		context: &mut GameBookKeeping,
+		game: &mut Game,
+		player_index: ids::PlayerIndex,
 	) -> SlayResult<TaskProgressResult> {
 		for victim_index in 0..game.number_of_players() {
 			if player_index == victim_index {
@@ -266,7 +272,10 @@ impl VictimDraws {
 
 impl PlayerTask for VictimDraws {
 	fn make_progress(
-		&mut self, _context: &mut GameBookKeeping, game: &mut Game, player_index: ids::PlayerIndex,
+		&mut self,
+		_context: &mut GameBookKeeping,
+		game: &mut Game,
+		player_index: ids::PlayerIndex,
 	) -> SlayResult<TaskProgressResult> {
 		let victim_index = game.players[player_index]
 			.tasks

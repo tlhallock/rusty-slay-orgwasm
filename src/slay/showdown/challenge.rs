@@ -56,8 +56,11 @@ impl ChallengeState {
 	}
 
 	pub fn new(
-		rng: &mut rand::rngs::ThreadRng, player_index: ids::PlayerIndex,
-		challenger_index: ids::PlayerIndex, consequences: RollConsequences, reason: ChallengeReason,
+		rng: &mut rand::rngs::ThreadRng,
+		player_index: ids::PlayerIndex,
+		challenger_index: ids::PlayerIndex,
+		consequences: RollConsequences,
+		reason: ChallengeReason,
 	) -> Self {
 		Self {
 			initiator: ChallengeRoll::new(rng, player_index),
@@ -69,7 +72,9 @@ impl ChallengeState {
 	}
 
 	pub fn add_modification(
-		&mut self, modification_path: ModificationPath, modification: RollModification,
+		&mut self,
+		modification_path: ModificationPath,
+		modification: RollModification,
 	) {
 		self.tracker_mut().timeline = deadlines::get_challenge_deadline();
 		match modification_path {
@@ -97,7 +102,10 @@ impl ShowDown for ChallengeState {
 	}
 
 	fn create_choice_for(
-		&self, context: &mut GameBookKeeping, game: &Game, player_index: ids::PlayerIndex,
+		&self,
+		context: &mut GameBookKeeping,
+		game: &Game,
+		player_index: ids::PlayerIndex,
 	) -> Choices {
 		let default_choice = context.id_generator.generate();
 		Choices {
@@ -124,7 +132,10 @@ impl ShowDown for ChallengeState {
 
 impl ChallengeRoll {
 	pub fn to_perspective(
-		&self, game: &Game, choices: &Option<&Choices>, path: ModificationPath,
+		&self,
+		game: &Game,
+		choices: &Option<&Choices>,
+		path: ModificationPath,
 	) -> ChallengeRollPerspective {
 		ChallengeRollPerspective {
 			roller_name: game.players[self.player_index].name.to_owned(),

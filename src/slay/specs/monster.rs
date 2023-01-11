@@ -11,7 +11,8 @@ use crate::slay::{
 };
 
 pub fn player_satisfies_requirements(
-	hero_type_counts: &HeroTypeCounter, requirements: &Vec<MonsterRequirements>,
+	hero_type_counts: &HeroTypeCounter,
+	requirements: &Vec<MonsterRequirements>,
 ) -> bool {
 	let remaining_heros = 3;
 
@@ -23,7 +24,7 @@ pub fn player_satisfies_requirements(
 	false
 }
 
-#[derive(Debug, Clone, Sequence)]
+#[derive(Debug, Clone, Sequence, PartialEq, Copy)]
 pub enum Monster {
 	AnuranCauldron,
 	TitanWyvern,

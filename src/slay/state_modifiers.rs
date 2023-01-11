@@ -7,7 +7,10 @@ pub fn deal(source: &mut Deck, destination: &mut Deck, num: usize) {
 }
 
 pub fn replentish(
-	source: &mut Deck, destination: &mut Deck, sources_source: &mut Deck, num: usize,
+	source: &mut Deck,
+	destination: &mut Deck,
+	sources_source: &mut Deck,
+	num: usize,
 ) {
 	let mut amount_to_drain = cmp::min(num, source.num_top_cards());
 	destination.extend(source.drain(0..amount_to_drain));

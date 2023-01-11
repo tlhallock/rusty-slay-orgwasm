@@ -1,27 +1,13 @@
+use std::rc::Rc;
+
 use yew::prelude::*;
 
 use crate::frontend::app::AppState;
 use crate::frontend::game::GamePerspectiveView;
 
-// let (player_id, choice_id) = strategy::pick_a_random_choice(context, game)?;
-
 #[function_component(App)]
 fn app() -> Html {
-	// let notifications = use_state(|| VecDeque::new());
-	// let notify = {
-	// 	let notifications = notifications.clone();
-	// 	let mut prev = (*notifications).to_owned();
-
-	// 	Callback::from(move |notification: Notification| {
-	// 		prev.push_back(notification);
-	// 		if prev.len() > 50 {
-	// 			prev.pop_front();
-	// 		}
-	// 		notifications.set(prev);
-	// 	});
-	// };
-
-	let current_game = use_state(AppState::new);
+	let current_game: UseStateHandle<AppState> = use_state(AppState::new);
 	let _player_index = use_state(|| 0usize);
 
 	let restart = {
@@ -39,7 +25,7 @@ fn app() -> Html {
 					<h1>{ "Here to Slay!" }</h1>
 					<div>
 							<button class={classes!("border-blink")} onclick={restart}>{ "Restart" } </button>
-							<GamePerspectiveView game={current_game.perspective()} choose={choose.to_owned()}/>
+							<GamePerspectiveView game={Rc::new(current_game.perspective())} choose={choose.to_owned()}/>
 					</div>
 			</>
 	}

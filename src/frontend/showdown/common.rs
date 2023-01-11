@@ -1,4 +1,5 @@
 use yew::classes;
+use yew::html::IntoPropValue;
 use yew::prelude::*;
 
 use crate::frontend::app::ChoiceState;
@@ -14,6 +15,8 @@ use crate::slay::showdown::common::ModificationPerspective;
 use crate::slay::showdown::common::RollModificationChoiceType;
 use crate::slay::showdown::completion::Completion;
 use crate::slay::showdown::completion::PlayerCompletionPerspective;
+use crate::slay::specs::cards::SlayCardSpec;
+use crate::slay::specs::modifier::ModifierKinds;
 
 #[derive(Properties, PartialEq)]
 pub struct CompletionsProps {
@@ -58,12 +61,12 @@ pub fn view_roll_history(props: &RollHistoryProps) -> Html {
 				 <div class={classes!("username")}>
 					 {m.modifier_name.to_owned()}
 				</div>
-				<CardSpecView
-					spec={m.modifying_card_spec.to_owned()}
-					view_card={props.callbacks.view_card.to_owned()}
-					choice_state={ChoiceState::default()}
-					extra_specs={ExtraSpecProps::default()}
-				/>
+				// <CardSpecView
+				// 	spec={m.modifying_card_spec.to_owned()}
+				// 	view_card={props.callbacks.view_card.to_owned()}
+				// 	choice_state={ChoiceState::default()}
+				// 	extra_specs={ExtraSpecProps::default()}
+				// />
 				{
 				 if m.modification_amount < 0 {
 					 html! {
@@ -102,6 +105,10 @@ pub struct RollChoicesProps {
 	pub callbacks: GameCallbacks,
 }
 
+// impl IntoPropValue<SlayCardSpec> for ModifierKinds {
+
+// }
+
 #[function_component(RollChoices)]
 pub fn view_roll_choices(props: &RollChoicesProps) -> Html {
 	let choices = props.choices.iter().map(|choice| {
@@ -112,13 +119,13 @@ pub fn view_roll_choices(props: &RollChoicesProps) -> Html {
 		};
 		match &choice.display_type {
 			ChoiceDisplayType::Modify(modi) => match modi {
-				RollModificationChoiceType::AddToRoll(spec, amount, _) => html! {
+				RollModificationChoiceType::AddToRoll(kind, amount, _) => html! {
 					<div
 						onclick={choose_this}
 						title={format!("Modify this card by {}", amount)}
 					>
 						<CardSpecView
-							spec={spec.to_owned()}
+							spec={SlayCardSpec::ModifierCard(*kind)}
 							view_card={props.callbacks.view_card.to_owned()}
 							choice_state={ChoiceState::default()}
 							extra_specs={
@@ -131,13 +138,13 @@ pub fn view_roll_choices(props: &RollChoicesProps) -> Html {
 						<div class={classes!("roll-choice-plus")}>{ format!("+{}", amount) } </div>
 					</div>
 				},
-				RollModificationChoiceType::RemoveFromRoll(spec, amount, _) => html! {
+				RollModificationChoiceType::RemoveFromRoll(kind, amount, _) => html! {
 					<div
 						onclick={choose_this}
 						title={format!("Modify this card by {}", amount)}
 					>
 						<CardSpecView
-							spec={spec.to_owned()}
+							spec={SlayCardSpec::ModifierCard(*kind)}
 							view_card={props.callbacks.view_card.to_owned()}
 							choice_state={ChoiceState::default()}
 							extra_specs={

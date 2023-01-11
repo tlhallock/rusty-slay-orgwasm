@@ -1,7 +1,9 @@
 use crate::slay::ids;
+use crate::slay::modifiers::ModifierOrigin;
 use crate::slay::specification::CardSpec;
+use crate::slay::specs::cards::SlayCardSpec;
+use crate::slay::specs::modifier::ModifierKinds;
 use crate::slay::state::game::Game;
-use crate::slay::state::stack::CardSpecPerspective;
 
 use rand::Rng;
 
@@ -15,9 +17,9 @@ pub struct Roll {
 
 #[derive(Debug, PartialEq, Clone)]
 pub enum ChallengeReason {
-	PlaceHeroCard(CardSpecPerspective),
-	PlaceItem(CardSpecPerspective),
-	CastMagic(CardSpecPerspective),
+	PlaceHeroCard(SlayCardSpec),
+	PlaceItem(SlayCardSpec),
+	CastMagic(SlayCardSpec),
 }
 
 impl Roll {
@@ -37,20 +39,29 @@ pub enum ModificationPath {
 }
 
 #[derive(Debug, Clone)]
+pub enum ModificationOrigin {
+	FromPlayer(ids::PlayerIndex, ModifierKinds),
+	FromBuff(ModifierOrigin),
+}
+
+#[derive(Debug, Clone)]
 pub struct RollModification {
-	pub modifying_player_index: ids::PlayerIndex,
-	pub card_id: ids::CardId,
-	// This cannot be a card path: because it starts in the hand and ends in the discard pile...
-	// pub card_path: CardPath,
+	pub modification_origin: ModificationOrigin,
 	pub modification_amount: i32,
 }
 
 impl RollModification {
 	pub fn to_perspective(&self, game: &Game) -> ModificationPerspective {
-		let modifying_card = game.find_card(self.card_id).unwrap();
+		// TODO: reference count the game and pass it all the way down the ui tree.
+		// Then we can fill in information like the player names as we go...
+		// Perspective =/= ui
+		// Static Perspective Information...
+		// Dynamic Perspective information...
+
+		// let modifying_card = game.find_card(self.card_id).unwrap();
 		ModificationPerspective {
-			modifier_name: game.get_player_name(self.modifying_player_index),
-			modifying_card_spec: CardSpecPerspective::new(&modifying_card.get_spec()),
+			modifier_name: None,       // game.get_player_name(self.modifying_player_index),
+			modifying_card_spec: None, // modifying_card.card_type,
 			modification_amount: self.modification_amount,
 		}
 	}
@@ -58,8 +69,8 @@ impl RollModification {
 
 #[derive(Debug, PartialEq, Clone)]
 pub enum RollModificationChoiceType {
-	AddToRoll(CardSpecPerspective, i32, ModificationPath),
-	RemoveFromRoll(CardSpecPerspective, i32, ModificationPath),
+	AddToRoll(ModifierKinds, i32, ModificationPath),
+	RemoveFromRoll(ModifierKinds, i32, ModificationPath),
 }
 
 impl RollModificationChoiceType {
@@ -69,11 +80,11 @@ impl RollModificationChoiceType {
 			RollModificationChoiceType::RemoveFromRoll(_, _, path) => *path,
 		}
 	}
-	pub fn from_card(spec: &CardSpec, amount: i32, path: ModificationPath) -> Self {
+	pub fn from_card(spec: &ModifierKinds, amount: i32, path: ModificationPath) -> Self {
 		if amount < 0 {
-			RollModificationChoiceType::RemoveFromRoll(CardSpecPerspective::new(spec), amount, path)
+			RollModificationChoiceType::RemoveFromRoll(*spec, amount, path)
 		} else {
-			RollModificationChoiceType::AddToRoll(CardSpecPerspective::new(spec), amount, path)
+			RollModificationChoiceType::AddToRoll(*spec, amount, path)
 		}
 	}
 }
@@ -87,7 +98,8 @@ pub struct RollModificationChoice {
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct ModificationPerspective {
-	pub modifier_name: String,
-	pub modifying_card_spec: CardSpecPerspective,
+	// TODO: refactoring this
+	pub modifier_name: Option<String>,
+	pub modifying_card_spec: Option<SlayCardSpec>,
 	pub modification_amount: i32,
 }

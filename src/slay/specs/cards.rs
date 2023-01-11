@@ -8,7 +8,7 @@ use crate::slay::specs::monster::Monster;
 
 use super::hero::HeroAbilityType;
 
-#[derive(Debug, Clone, Sequence)]
+#[derive(Debug, Clone, Sequence, PartialEq, Copy)]
 pub enum SlayCardSpec {
 	HeroCard(HeroAbilityType),
 	PartyLeader(HeroType),

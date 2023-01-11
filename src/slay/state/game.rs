@@ -50,7 +50,6 @@ impl Turn {
 
 	pub fn still_active(&self, duration: &ModifierDuration) -> bool {
 		match duration {
-			ModifierDuration::Forever => true,
 			ModifierDuration::ForThisTurn(turn_number) => *turn_number == self.turn_number,
 			ModifierDuration::UntilNextTurn(round_number, player_index) => {
 				self.round_number <= *round_number
@@ -95,15 +94,6 @@ pub struct Game {
 }
 
 impl Game {
-	// pub fn get_element_id(&self, display_path: &Option<DisplayPath>) -> Option<ids::ElementId> {
-	// 	display_path.as_ref().and_then(|p| match p {
-	// 		DisplayPath::DeckAt(d) => Some(self.deck(*d).id),
-	// 		DisplayPath::TopCardIn(_, id) => Some(*id),
-	// 		DisplayPath::Player(player_index) => Some(self.players[*player_index].id),
-	// 		DisplayPath::Roll(_) => None,
-	// 	})
-	// }
-
 	pub fn clear_expired_modifiers(&mut self) {
 		self
 			.players
@@ -219,57 +209,12 @@ impl Game {
 	}
 
 	pub fn take_current_task(
-		&mut self, player_index: ids::PlayerIndex,
+		&mut self,
+		player_index: ids::PlayerIndex,
 	) -> Option<Box<dyn PlayerTask>> {
 		self.players[player_index].take_current_task()
 		// None
 	}
-
-	// pub(crate) fn get_completion_tracker(
-	//     &self,
-	//     path: rolls::CompletionPath,
-	// ) -> SlayResult<&rolls::CompletionTracker> {
-	//     match path {
-	//         rolls::CompletionPath::Roll => Ok(&self
-	//             .roll
-	//             .as_ref()
-	//             .ok_or_else(|| SlayError::new("No active roll"))?
-	//             .completion_tracker),
-	//         rolls::CompletionPath::OfferChallenges => Ok(&self
-	//             .challenges_offer
-	//             .as_ref()
-	//             .ok_or_else(|| SlayError::new("No active challenge offers"))?
-	//             .completion_tracker),
-	//         rolls::CompletionPath::Challege => Ok(&self
-	//             .challenge
-	//             .as_ref()
-	//             .ok_or_else(|| SlayError::new("No active challenge"))?
-	//             .completion_tracker),
-	//     }
-	// }
-
-	// pub(crate) fn get_completion_tracker_mut(
-	//     &mut self,
-	//     path: rolls::CompletionPath,
-	// ) -> SlayResult<&mut rolls::CompletionTracker> {
-	//     match path {
-	//         rolls::CompletionPath::Roll => Ok(&mut self
-	//             .roll
-	//             .as_mut()
-	//             .ok_or_else(|| SlayError::new("No active roll"))?
-	//             .completion_tracker),
-	//         rolls::CompletionPath::OfferChallenges => Ok(&mut self
-	//             .challenges_offer
-	//             .as_mut()
-	//             .ok_or_else(|| SlayError::new("No active challenge offers"))?
-	//             .completion_tracker),
-	//         rolls::CompletionPath::Challege => Ok(&mut self
-	//             .challenge
-	//             .as_mut()
-	//             .ok_or_else(|| SlayError::new("No active challenge"))?
-	//             .completion_tracker),
-	//     }
-	// }
 
 	pub fn deck(&self, deck_path: DeckPath) -> &Deck {
 		match deck_path {
@@ -297,7 +242,10 @@ impl Game {
 	}
 
 	pub fn move_card(
-		&mut self, source: DeckPath, destination: DeckPath, card_id: ids::CardId,
+		&mut self,
+		source: DeckPath,
+		destination: DeckPath,
+		card_id: ids::CardId,
 	) -> SlayResult<()> {
 		let stack = self.deck_mut(source).take_card(card_id)?;
 		self.deck_mut(destination).add(stack);
@@ -324,7 +272,9 @@ impl Game {
 	}
 
 	pub(crate) fn player_param(
-		&self, player_index: ids::PlayerIndex, param: &TaskParamName,
+		&self,
+		player_index: ids::PlayerIndex,
+		param: &TaskParamName,
 	) -> SlayResult<ids::PlayerIndex> {
 		self.players[player_index]
 			.tasks
@@ -332,7 +282,9 @@ impl Game {
 			.ok_or_else(|| SlayError::n(format!("Missing required player parameter: {:?}", param)))
 	}
 	pub(crate) fn card_param(
-		&self, player_index: ids::PlayerIndex, param: &TaskParamName,
+		&self,
+		player_index: ids::PlayerIndex,
+		param: &TaskParamName,
 	) -> SlayResult<Option<ids::CardId>> {
 		self.players[player_index]
 			.tasks
@@ -361,7 +313,9 @@ impl Game {
 // Summarize the roll...
 impl Summarizable for Game {
 	fn summarize<W: Write>(
-		&self, f: &mut BufWriter<W>, indentation_level: u32,
+		&self,
+		f: &mut BufWriter<W>,
+		indentation_level: u32,
 	) -> Result<(), std::io::Error> {
 		for _ in 0..indentation_level {
 			write!(f, "  ")?;
@@ -380,7 +334,8 @@ impl Summarizable for Game {
 }
 
 pub fn get_perspective(
-	owner_id: ids::PlayerIndex, viewer_id: Option<ids::PlayerIndex>,
+	owner_id: ids::PlayerIndex,
+	viewer_id: Option<ids::PlayerIndex>,
 ) -> &'static Perspective {
 	if let Some(player_id) = viewer_id {
 		if owner_id == player_id {

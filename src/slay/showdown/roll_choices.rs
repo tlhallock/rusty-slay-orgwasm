@@ -12,10 +12,13 @@ use crate::slay::showdown::common::RollModification;
 use crate::slay::showdown::common::RollModificationChoiceType;
 use crate::slay::showdown::completion::{Completion, CompletionTracker};
 use crate::slay::showdown::current_showdown::ShowDown;
+use crate::slay::specs::modifier::ModifierKinds;
 use crate::slay::state::deck::DeckPath;
 use crate::slay::state::game::Game;
 use crate::slay::state::stack::Card;
 use crate::slay::tasks::{MoveCardTask, PlayerTask, TaskProgressResult};
+
+use super::common::ModificationOrigin;
 
 #[derive(Debug, Clone)]
 pub struct ModifyRollTask {
@@ -33,7 +36,10 @@ impl ModifyRollTask {
 
 impl PlayerTask for ModifyRollTask {
 	fn make_progress(
-		&mut self, context: &mut GameBookKeeping, game: &mut Game, _player_index: ids::PlayerIndex,
+		&mut self,
+		context: &mut GameBookKeeping,
+		game: &mut Game,
+		_player_index: ids::PlayerIndex,
 	) -> SlayResult<TaskProgressResult> {
 		let modification = self.modification.to_owned();
 
@@ -53,36 +59,38 @@ impl PlayerTask for ModifyRollTask {
 }
 
 pub fn create_modify_roll_choice(
-	context: &mut GameBookKeeping, _game: &Game, player_index: ids::PlayerIndex, card: &Card,
-	modification_amount: i32, modification_path: &ModificationPath,
+	context: &mut GameBookKeeping,
+	player_index: ids::PlayerIndex,
+	card_id: ids::CardId,
+	modifier_kind: &ModifierKinds,
+	modification_amount: i32,
+	modification_path: &ModificationPath,
 ) -> TasksChoice {
 	let choice_id = context.id_generator.generate();
 	let _display_path =
-		DisplayPath::CardAt(CardPath::TopCardIn(DeckPath::Hand(player_index), card.id));
+		DisplayPath::CardAt(CardPath::TopCardIn(DeckPath::Hand(player_index), card_id));
 	TasksChoice::new(
 		choice_id,
 		ChoiceDisplay {
 			display_type: ChoiceDisplayType::Modify(RollModificationChoiceType::from_card(
-				&card.get_spec(),
+				modifier_kind,
 				modification_amount,
 				*modification_path,
 			)),
 			label: format!(
 				"Use {} to modify {}'s roll by {}",
-				card.id, "somebody", modification_amount,
+				card_id, "somebody", modification_amount,
 			),
 		},
 		vec![
 			Box::new(MoveCardTask {
 				source: DeckPath::Hand(player_index),
 				destination: DeckPath::Discard,
-				card_id: card.id,
+				card_id: card_id,
 			}) as Box<dyn PlayerTask>,
 			Box::new(ModifyRollTask::new(
 				RollModification {
-					modifying_player_index: player_index,
-					// card_path: CardPath::TopCardIn(DeckPath::Hand(player_index), card.id),
-					card_id: card.id,
+					modification_origin: ModificationOrigin::FromPlayer(player_index, *modifier_kind),
 					modification_amount,
 				},
 				*modification_path,
@@ -176,7 +184,10 @@ impl SetCompleteTask {
 
 impl PlayerTask for SetCompleteTask {
 	fn make_progress(
-		&mut self, _context: &mut GameBookKeeping, game: &mut Game, player_index: ids::PlayerIndex,
+		&mut self,
+		_context: &mut GameBookKeeping,
+		game: &mut Game,
+		player_index: ids::PlayerIndex,
 	) -> SlayResult<TaskProgressResult> {
 		game
 			.showdown
@@ -190,7 +201,9 @@ impl PlayerTask for SetCompleteTask {
 }
 
 fn create_set_complete_choice(
-	id: ids::ChoiceId, persist: Completion, label: String,
+	id: ids::ChoiceId,
+	persist: Completion,
+	label: String,
 ) -> TasksChoice {
 	TasksChoice::new(
 		id,
@@ -215,12 +228,14 @@ pub fn create_set_completion_until_modification(id: ids::ChoiceId) -> TasksChoic
 }
 
 pub fn create_challenge_choice(
-	player_index: ids::PlayerIndex, id: ids::ChoiceId, challenge_card: &Card,
+	player_index: ids::PlayerIndex,
+	id: ids::ChoiceId,
+	challenge_card: &Card,
 ) -> TasksChoice {
 	TasksChoice::new(
 		id,
 		ChoiceDisplay {
-			display_type: ChoiceDisplayType::Challenge(challenge_card.as_perspective()),
+			display_type: ChoiceDisplayType::Challenge(challenge_card.card_type),
 			label: "Challenge!".to_string(),
 		},
 		vec![
@@ -243,7 +258,9 @@ impl ChallengeTask {
 }
 impl PlayerTask for ChallengeTask {
 	fn make_progress(
-		&mut self, context: &mut GameBookKeeping, game: &mut Game,
+		&mut self,
+		context: &mut GameBookKeeping,
+		game: &mut Game,
 		challenging_player_index: ids::PlayerIndex,
 	) -> SlayResult<TaskProgressResult> {
 		let offer = game.showdown.take_current_offer()?;

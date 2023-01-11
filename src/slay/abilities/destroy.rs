@@ -22,7 +22,10 @@ impl DestroyTask {
 
 impl PlayerTask for DestroyTask {
 	fn make_progress(
-		&mut self, _context: &mut GameBookKeeping, game: &mut Game, thief_index: ids::PlayerIndex,
+		&mut self,
+		_context: &mut GameBookKeeping,
+		game: &mut Game,
+		thief_index: ids::PlayerIndex,
 	) -> SlayResult<TaskProgressResult> {
 		game.players[thief_index].tasks.prepend_from(&mut vec![
 			ChoosePlayerParameterTask::exclude_self(
@@ -64,7 +67,8 @@ pub struct DestroyCardTask {
 
 impl DestroyCardTask {
 	pub fn create(
-		victim_param: TaskParamName, card_param: TaskParamName,
+		victim_param: TaskParamName,
+		card_param: TaskParamName,
 		destination: DestroyModifiersDestination,
 	) -> Box<dyn PlayerTask> {
 		Box::new(Self {
@@ -84,7 +88,10 @@ impl DestroyCardTask {
 
 impl PlayerTask for DestroyCardTask {
 	fn make_progress(
-		&mut self, _context: &mut GameBookKeeping, game: &mut Game, stealer_index: ids::PlayerIndex,
+		&mut self,
+		_context: &mut GameBookKeeping,
+		game: &mut Game,
+		stealer_index: ids::PlayerIndex,
 	) -> SlayResult<TaskProgressResult> {
 		let victim_player_index = game.player_param(stealer_index, &self.victim_param)?;
 		let card_id = game.card_param(stealer_index, &self.card_param)?;

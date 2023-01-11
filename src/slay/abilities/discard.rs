@@ -44,7 +44,10 @@ impl Discard {
 
 impl PlayerTask for Discard {
 	fn make_progress(
-		&mut self, context: &mut GameBookKeeping, game: &mut Game, player_index: ids::PlayerIndex,
+		&mut self,
+		context: &mut GameBookKeeping,
+		game: &mut Game,
+		player_index: ids::PlayerIndex,
 	) -> SlayResult<TaskProgressResult> {
 		if self.num == 0 {
 			return Ok(TaskProgressResult::TaskComplete);

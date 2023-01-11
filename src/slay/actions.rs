@@ -27,7 +27,6 @@ use crate::slay::specification::MonsterSpec;
 use crate::slay::state::deck::DeckPath;
 use crate::slay::state::game::Game;
 use crate::slay::state::stack::Card;
-use crate::slay::state::stack::CardSpecPerspective;
 use crate::slay::tasks;
 use crate::slay::tasks::MoveCardTask;
 use crate::slay::tasks::PlayerTask;
@@ -46,7 +45,10 @@ pub struct AddTasks {
 
 impl PlayerTask for AddTasks {
 	fn make_progress(
-		&mut self, _context: &mut GameBookKeeping, game: &mut Game, player_index: ids::PlayerIndex,
+		&mut self,
+		_context: &mut GameBookKeeping,
+		game: &mut Game,
+		player_index: ids::PlayerIndex,
 	) -> SlayResult<TaskProgressResult> {
 		game.players[player_index]
 			.tasks
@@ -60,23 +62,31 @@ impl PlayerTask for AddTasks {
 }
 
 fn create_roll_for_ability_task(
-	context: &mut GameBookKeeping, player_index: ids::PlayerIndex, card: &Card, ability: &HeroAbility,
+	context: &mut GameBookKeeping,
+	game: &Game,
+	player_index: ids::PlayerIndex,
+	card: &Card,
+	ability: &HeroAbility,
 ) -> Box<dyn PlayerTask> {
 	Box::new(AddTasks {
 		tasks: vec![
 			Box::new(CardUsedTask::new(player_index, card.id)),
-			Box::new(DoRollTask::new(RollState::new(
+			Box::new(DoRollTask::new(RollState::create(
+				context,
+				game,
 				player_index,
 				ability.to_consequences(),
-				Roll::create_from(&mut context.rng),
-				RollReason::UseHeroAbility(card.as_perspective()),
+				RollReason::UseHeroAbility(card.card_type),
 			))) as Box<dyn PlayerTask>,
 		],
 	})
 }
 
 fn create_place_hero_choice(
-	context: &mut GameBookKeeping, game: &Game, player_index: ids::PlayerIndex, card_path: CardPath,
+	context: &mut GameBookKeeping,
+	game: &Game,
+	player_index: ids::PlayerIndex,
+	card_path: CardPath,
 	ability: &HeroAbility,
 ) -> TasksChoice {
 	TasksChoice::new(
@@ -97,7 +107,13 @@ fn create_place_hero_choice(
 						condition: Condition::challenge_denied(),
 						tasks: vec![
 							card_path.get_place_task(),
-							create_roll_for_ability_task(context, player_index, game.card(card_path), ability),
+							create_roll_for_ability_task(
+								context,
+								game,
+								player_index,
+								game.card(card_path),
+								ability,
+							),
 						],
 					},
 					loss: Some(RollConsequence {
@@ -105,14 +121,16 @@ fn create_place_hero_choice(
 						tasks: vec![card_path.get_discard_task()],
 					}),
 				},
-				ChallengeReason::PlaceHeroCard(game.card(card_path).as_perspective()),
+				ChallengeReason::PlaceHeroCard(game.card(card_path).card_type),
 			))) as Box<dyn PlayerTask>,
 		],
 	)
 }
 
 pub fn create_place_item_challenge_offer(
-	player_index: ids::PlayerIndex, card: &Card, _item_modifier: &ItemModifier,
+	player_index: ids::PlayerIndex,
+	card: &Card,
+	_item_modifier: &ItemModifier,
 	players_with_stacks: Vec<ids::PlayerIndex>,
 ) -> Box<dyn PlayerTask> {
 	Box::new(OfferChallengesTask::new(OfferChallengesState::new(
@@ -138,13 +156,17 @@ pub fn create_place_item_challenge_offer(
 				}) as Box<dyn tasks::PlayerTask>],
 			}),
 		},
-		ChallengeReason::PlaceHeroCard(CardSpecPerspective::new(&card.get_spec())),
+		ChallengeReason::PlaceHeroCard(card.card_type),
 	))) as Box<dyn PlayerTask>
 }
 
 pub fn create_place_item_choice(
-	placer_index: ids::PlayerIndex, id: ids::ChoiceId, card: &Card, display_type: ChoiceDisplayType,
-	item_modifier: &ItemModifier, players_with_stacks: Vec<ids::PlayerIndex>,
+	placer_index: ids::PlayerIndex,
+	id: ids::ChoiceId,
+	card: &Card,
+	display_type: ChoiceDisplayType,
+	item_modifier: &ItemModifier,
+	players_with_stacks: Vec<ids::PlayerIndex>,
 ) -> TasksChoice {
 	TasksChoice::new(
 		id,
@@ -160,7 +182,10 @@ pub fn create_place_item_choice(
 }
 
 fn create_cast_magic_choice(
-	game: &Game, player_index: ids::PlayerIndex, id: ids::ChoiceId, card_path: CardPath,
+	game: &Game,
+	player_index: ids::PlayerIndex,
+	id: ids::ChoiceId,
+	card_path: CardPath,
 	spell: MagicSpell,
 ) -> TasksChoice {
 	TasksChoice::new(
@@ -181,7 +206,7 @@ fn create_cast_magic_choice(
 					},
 					loss: None,
 				},
-				ChallengeReason::CastMagic(game.card(card_path).as_perspective()),
+				ChallengeReason::CastMagic(game.card(card_path).card_type),
 			))) as Box<dyn PlayerTask>,
 		],
 	)
@@ -242,7 +267,10 @@ impl DrawTask {
 
 impl PlayerTask for DrawTask {
 	fn make_progress(
-		&mut self, _context: &mut GameBookKeeping, game: &mut Game, player_index: ids::PlayerIndex,
+		&mut self,
+		_context: &mut GameBookKeeping,
+		game: &mut Game,
+		player_index: ids::PlayerIndex,
 	) -> SlayResult<TaskProgressResult> {
 		game.replentish_for(self.number_to_draw);
 		game.players[player_index]
@@ -275,7 +303,10 @@ struct ReplaceHandTask {}
 
 impl PlayerTask for ReplaceHandTask {
 	fn make_progress(
-		&mut self, _context: &mut GameBookKeeping, game: &mut Game, player_index: ids::PlayerIndex,
+		&mut self,
+		_context: &mut GameBookKeeping,
+		game: &mut Game,
+		player_index: ids::PlayerIndex,
 	) -> SlayResult<TaskProgressResult> {
 		game
 			.discard
@@ -293,7 +324,9 @@ impl PlayerTask for ReplaceHandTask {
 }
 
 fn create_forfeit_choice(
-	game: &mut Game, player_index: ids::PlayerIndex, id: ids::ChoiceId,
+	game: &mut Game,
+	player_index: ids::PlayerIndex,
+	id: ids::ChoiceId,
 ) -> TasksChoice {
 	let current_amount_remaining = game.players[player_index].get_remaining_action_points();
 	TasksChoice::new(
@@ -307,7 +340,10 @@ fn create_forfeit_choice(
 }
 
 fn create_roll_for_ability_choice(
-	context: &mut GameBookKeeping, game: &Game, player_index: ids::PlayerIndex, card_path: CardPath,
+	context: &mut GameBookKeeping,
+	game: &Game,
+	player_index: ids::PlayerIndex,
+	card_path: CardPath,
 	ability: &HeroAbility,
 ) -> TasksChoice {
 	TasksChoice::new(
@@ -318,13 +354,16 @@ fn create_roll_for_ability_choice(
 		},
 		vec![
 			Box::new(RemoveActionPointsTask::new(1)),
-			create_roll_for_ability_task(context, player_index, game.card(card_path), ability),
+			create_roll_for_ability_task(context, game, player_index, game.card(card_path), ability),
 		],
 	)
 }
 
 fn create_attack_monster_choice(
-	context: &mut GameBookKeeping, game: &Game, player_index: ids::PlayerIndex, card_path: CardPath,
+	context: &mut GameBookKeeping,
+	game: &Game,
+	player_index: ids::PlayerIndex,
+	card_path: CardPath,
 	monster: &MonsterSpec,
 ) -> TasksChoice {
 	TasksChoice::new(
@@ -335,18 +374,22 @@ fn create_attack_monster_choice(
 		},
 		vec![
 			Box::new(RemoveActionPointsTask::new(2)) as Box<dyn PlayerTask>,
-			Box::new(DoRollTask::new(RollState::new(
+			Box::new(DoRollTask::new(RollState::create(
+				context,
+				game,
 				player_index,
 				monster.get_consequences(card_path.get_card_id()),
-				Roll::create_from(&mut context.rng),
-				RollReason::AttackMonster(game.card(card_path).as_perspective()),
+				RollReason::AttackMonster(game.card(card_path).card_type),
 			))) as Box<dyn PlayerTask>,
 		],
 	)
 }
 
 fn create_hand_action_choice(
-	context: &mut GameBookKeeping, game: &Game, player_index: ids::PlayerIndex, card_path: CardPath,
+	context: &mut GameBookKeeping,
+	game: &Game,
+	player_index: ids::PlayerIndex,
+	card_path: CardPath,
 ) -> Option<TasksChoice> {
 	if let Some(spell) = game.card(card_path).get_spec().spell.as_ref() {
 		return Some(create_cast_magic_choice(
@@ -383,7 +426,10 @@ fn create_hand_action_choice(
 }
 
 fn create_party_action_choice(
-	context: &mut GameBookKeeping, game: &Game, player_index: ids::PlayerIndex, card_path: CardPath,
+	context: &mut GameBookKeeping,
+	game: &Game,
+	player_index: ids::PlayerIndex,
+	card_path: CardPath,
 ) -> Option<TasksChoice> {
 	if game.players[player_index].was_card_played(&game.card(card_path).id) {
 		return None;
@@ -474,7 +520,10 @@ impl UseAbility {
 }
 impl PlayerTask for UseAbility {
 	fn make_progress(
-		&mut self, _context: &mut GameBookKeeping, _game: &mut Game, _player_index: ids::PlayerIndex,
+		&mut self,
+		_context: &mut GameBookKeeping,
+		_game: &mut Game,
+		_player_index: ids::PlayerIndex,
 	) -> SlayResult<TaskProgressResult> {
 		log::info!("TODO: Implement using a hero ability.");
 		Ok(TaskProgressResult::TaskComplete)
@@ -497,7 +546,10 @@ impl RemoveActionPointsTask {
 }
 impl PlayerTask for RemoveActionPointsTask {
 	fn make_progress(
-		&mut self, _context: &mut GameBookKeeping, game: &mut Game, player_index: ids::PlayerIndex,
+		&mut self,
+		_context: &mut GameBookKeeping,
+		game: &mut Game,
+		player_index: ids::PlayerIndex,
 	) -> SlayResult<TaskProgressResult> {
 		game.players[player_index].action_points_used(self.amount);
 		Ok(TaskProgressResult::TaskComplete)
@@ -519,7 +571,10 @@ impl OfferChallengesTask {
 }
 impl PlayerTask for OfferChallengesTask {
 	fn make_progress(
-		&mut self, context: &mut GameBookKeeping, game: &mut Game, _player_index: ids::PlayerIndex,
+		&mut self,
+		context: &mut GameBookKeeping,
+		game: &mut Game,
+		_player_index: ids::PlayerIndex,
 	) -> SlayResult<tasks::TaskProgressResult> {
 		log::info!("making progress");
 		if let Some(mut offer) = self.offer.take() {
@@ -555,7 +610,10 @@ impl DoRollTask {
 }
 impl PlayerTask for DoRollTask {
 	fn make_progress(
-		&mut self, context: &mut GameBookKeeping, game: &mut Game, _player_index: ids::PlayerIndex,
+		&mut self,
+		context: &mut GameBookKeeping,
+		game: &mut Game,
+		_player_index: ids::PlayerIndex,
 	) -> SlayResult<tasks::TaskProgressResult> {
 		if let Some(mut roll) = self.roll.take() {
 			roll.completion_tracker = Some(CompletionTracker::new(
@@ -586,7 +644,10 @@ impl CardUsedTask {
 }
 impl PlayerTask for CardUsedTask {
 	fn make_progress(
-		&mut self, _context: &mut GameBookKeeping, game: &mut Game, player_index: ids::PlayerIndex,
+		&mut self,
+		_context: &mut GameBookKeeping,
+		game: &mut Game,
+		player_index: ids::PlayerIndex,
 	) -> SlayResult<tasks::TaskProgressResult> {
 		game.players[player_index].set_card_played(self.card_id);
 		Ok(tasks::TaskProgressResult::TaskComplete)

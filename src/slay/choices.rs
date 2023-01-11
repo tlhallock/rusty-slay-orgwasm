@@ -9,10 +9,11 @@ use crate::slay::showdown::common::RollModificationChoiceType;
 use crate::slay::showdown::completion::Completion;
 use crate::slay::state::deck::DeckPath;
 use crate::slay::state::game::Game;
-use crate::slay::state::stack::CardSpecPerspective;
 use crate::slay::state::summarizable::Summarizable;
 use crate::slay::tasks::MoveCardTask;
 use crate::slay::tasks::PlayerTask;
+
+use super::specs::cards::SlayCardSpec;
 
 #[derive(Clone, Debug)]
 pub struct Choices {
@@ -24,7 +25,9 @@ pub struct Choices {
 
 impl Choices {
 	pub fn new(
-		options: Vec<TasksChoice>, default_choice: Option<ids::ChoiceId>, timeline: Timeline,
+		options: Vec<TasksChoice>,
+		default_choice: Option<ids::ChoiceId>,
+		timeline: Timeline,
 		instructions: String,
 	) -> Self {
 		Self {
@@ -54,7 +57,9 @@ impl Choices {
 
 impl Summarizable for Choices {
 	fn summarize<W: Write>(
-		&self, f: &mut BufWriter<W>, indentation_level: u32,
+		&self,
+		f: &mut BufWriter<W>,
+		indentation_level: u32,
 	) -> Result<(), std::io::Error> {
 		for _ in 0..indentation_level {
 			write!(f, "  ")?;
@@ -233,7 +238,9 @@ impl TasksChoice {
 		}
 	}
 	pub fn prepend(
-		id: ids::ChoiceId, display: ChoiceDisplay, tasks: Vec<Box<dyn PlayerTask>>,
+		id: ids::ChoiceId,
+		display: ChoiceDisplay,
+		tasks: Vec<Box<dyn PlayerTask>>,
 	) -> Self {
 		Self {
 			id,
@@ -244,7 +251,9 @@ impl TasksChoice {
 	}
 
 	pub fn select(
-		&mut self, game: &mut Game, player_index: ids::PlayerIndex,
+		&mut self,
+		game: &mut Game,
+		player_index: ids::PlayerIndex,
 	) -> super::errors::SlayResult<()> {
 		if self.prepend {
 			game.players[player_index]
@@ -339,10 +348,10 @@ impl ChoiceAssociation {
 pub enum ChoiceDisplayType {
 	HighlightPath(DisplayPath),
 	Modify(RollModificationChoiceType),
-	Challenge(CardSpecPerspective),
+	Challenge(SlayCardSpec),
 	SetCompletion(Completion),
 	Text(&'static str),
-	Card(CardSpecPerspective),
+	Card_(SlayCardSpec),
 	Yes,
 	No,
 	Forfeit,

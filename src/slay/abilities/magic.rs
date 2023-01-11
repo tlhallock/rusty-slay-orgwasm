@@ -31,7 +31,9 @@ impl SearchDiscardFilters {
 }
 
 pub fn create_search_discard_choices(
-	context: &mut GameBookKeeping, game: &mut Game, player_index: ids::PlayerIndex,
+	context: &mut GameBookKeeping,
+	game: &mut Game,
+	player_index: ids::PlayerIndex,
 	filter: SearchDiscardFilters,
 ) -> Option<Choices> {
 	let options = game
@@ -42,7 +44,7 @@ pub fn create_search_discard_choices(
 			TasksChoice::new(
 				context.id_generator.generate(),
 				ChoiceDisplay {
-					display_type: ChoiceDisplayType::Card(card.as_perspective()),
+					display_type: card.as_choice(),
 					label: card.get_spec().label.to_owned(),
 				},
 				vec![Box::new(MoveCardTask {
@@ -77,7 +79,10 @@ impl MagicTask {
 
 impl PlayerTask for MagicTask {
 	fn make_progress(
-		&mut self, context: &mut GameBookKeeping, game: &mut Game, player_index: ids::PlayerIndex,
+		&mut self,
+		context: &mut GameBookKeeping,
+		game: &mut Game,
+		player_index: ids::PlayerIndex,
 	) -> SlayResult<TaskProgressResult> {
 		match self.spell {
 			MagicSpell::EnganglingTrap => {
@@ -103,7 +108,7 @@ impl PlayerTask for MagicTask {
 			}
 			MagicSpell::EnchangedSpell => {
 				let duration = game.get_turn().for_this_turn();
-				game.players[player_index].buffs.add_buff(
+				game.players[player_index].temporary_buffs.add_buff(
 					duration,
 					PlayerModifier::AddToAllRolls(2),
 					ModifierOrigin::FromMagicCard(self.spell),
@@ -177,7 +182,10 @@ impl ReturnModifierTask {
 
 impl PlayerTask for ReturnModifierTask {
 	fn make_progress(
-		&mut self, context: &mut GameBookKeeping, game: &mut Game, chooser_index: ids::PlayerIndex,
+		&mut self,
+		context: &mut GameBookKeeping,
+		game: &mut Game,
+		chooser_index: ids::PlayerIndex,
 	) -> SlayResult<TaskProgressResult> {
 		let mut options = Vec::new();
 		for player_index in 0..game.number_of_players() {
@@ -186,7 +194,7 @@ impl PlayerTask for ReturnModifierTask {
 					options.push(TasksChoice::new(
 						context.id_generator.generate(),
 						ChoiceDisplay {
-							display_type: ChoiceDisplayType::Card(modifier.as_perspective()),
+							display_type: ChoiceDisplayType::Card_(modifier.card_type),
 							label: format!(
 								"{} from {}",
 								modifier.get_spec().label,

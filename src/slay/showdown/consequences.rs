@@ -86,13 +86,19 @@ impl RollConsequences {
 	}
 
 	pub(crate) fn proceed(
-		&mut self, _context: &mut GameBookKeeping, game: &mut Game, player_index: ids::PlayerIndex,
+		&mut self,
+		_context: &mut GameBookKeeping,
+		game: &mut Game,
+		player_index: ids::PlayerIndex,
 	) {
 		self.apply_roll_sum(game, 1, player_index);
 	}
 
 	pub(crate) fn apply_roll_sum(
-		&mut self, game: &mut Game, roll_sum: i32, player_index: ids::PlayerIndex,
+		&mut self,
+		game: &mut Game,
+		roll_sum: i32,
+		player_index: ids::PlayerIndex,
 	) {
 		game.players.iter_mut().for_each(|p| p.choices = None);
 		// TODO: An extra copy here...

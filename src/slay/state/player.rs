@@ -5,6 +5,8 @@ use crate::slay::choices::Choices;
 use crate::slay::errors;
 use crate::slay::ids;
 use crate::slay::modifiers::PlayerBuffs;
+use crate::slay::showdown::common::RollModification;
+use crate::slay::showdown::roll_state::RollReason;
 use crate::slay::specification::HeroType;
 use crate::slay::state::deck::Deck;
 use crate::slay::state::deck::DeckPath;
@@ -61,7 +63,7 @@ pub struct Player {
 	pub player_index: ids::PlayerIndex,
 	pub name: String,
 
-	pub buffs: PlayerBuffs,
+	pub temporary_buffs: PlayerBuffs,
 	pub choices: Option<Choices>,
 	pub tasks: PlayerTasks,
 
@@ -79,7 +81,8 @@ pub struct Player {
 
 impl Player {
 	pub fn put_current_task_back(
-		&mut self, task: Box<dyn tasks::PlayerTask>,
+		&mut self,
+		task: Box<dyn tasks::PlayerTask>,
 	) -> errors::SlayResult<()> {
 		self.tasks.put_current_task_back(task)?;
 		Ok(())
@@ -98,7 +101,7 @@ impl Player {
 			tasks: Default::default(),
 			remaining_action_points: 0,
 			leader,
-			buffs: Default::default(),
+			temporary_buffs: Default::default(),
 			hand: Deck::new(DeckSpec {
 				visibility: VisibilitySpec::summary(),
 				path: DeckPath::Hand(player_index),
@@ -155,17 +158,25 @@ impl Player {
 	}
 
 	pub fn clear_expired_modifiers(&mut self, turn: &Turn) {
-		self.buffs.clear_expired_modifiers(turn);
+		self.temporary_buffs.clear_expired_modifiers(turn);
 	}
 
 	pub(crate) fn get_remaining_action_points(&self) -> u32 {
 		self.remaining_action_points
 	}
+
+	pub(crate) fn collect_roll_buffs(&self, reason: RollReason, ret: &mut Vec<RollModification>) {
+		self.temporary_buffs.collect_roll_buffs(ret);
+
+		todo!()
+	}
 }
 
 impl Summarizable for Player {
 	fn summarize<W: Write>(
-		&self, f: &mut BufWriter<W>, indentation_level: u32,
+		&self,
+		f: &mut BufWriter<W>,
+		indentation_level: u32,
 	) -> Result<(), std::io::Error> {
 		for _ in 0..indentation_level {
 			write!(f, "  ")?;
@@ -205,7 +216,11 @@ pub struct PlayerPerspective {
 
 impl Player {
 	pub fn to_perspective(
-		&self, game: &Game, choices: &Option<&Choices>, active: bool, perspective: &Perspective,
+		&self,
+		game: &Game,
+		choices: &Option<&Choices>,
+		active: bool,
+		perspective: &Perspective,
 	) -> PlayerPerspective {
 		PlayerPerspective {
 			name: self.name.to_owned(),
