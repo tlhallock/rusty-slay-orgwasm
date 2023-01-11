@@ -2,7 +2,7 @@
 max_width = 100
 tab_spaces = 2
 fn_args_density = "Tall"
-fn_args_layout = "Compressed"
+fn_args_layout = "Tall"
 struct_trailing_comma = "Always"
 struct_lit_trailing_comma = "Always"
 enum_trailing_comma = "Always"
