@@ -5,6 +5,7 @@ use crate::slay::choices::DisplayPath;
 use crate::slay::errors;
 use crate::slay::ids;
 use crate::slay::modifiers::PlayerBuffs;
+use crate::slay::modifiers::PlayerModifier;
 use crate::slay::showdown::common::RollModification;
 use crate::slay::showdown::roll_state::RollReason;
 use crate::slay::specification::HeroType;
@@ -26,7 +27,7 @@ use std::fmt::Debug;
 use std::io::BufWriter;
 use std::io::Write;
 use std::iter::Iterator;
-use std::rc::Rc;
+
 
 use super::deck::DeckSpec;
 use super::game::GamePerspective;
@@ -177,7 +178,7 @@ impl Player {
 						.modifiers
 						.iter()
 						.map(|modifier| match modifier {
-							ExtraActionPoint => 1,
+							PlayerModifier::ExtraActionPoint => 1,
 							_ => 0,
 						})
 						.sum::<u32>()
@@ -188,7 +189,7 @@ impl Player {
 			.sum::<u32>()
 	}
 
-	pub(crate) fn collect_roll_buffs(&self, reason: RollReason, ret: &mut Vec<RollModification>) {
+	pub(crate) fn collect_roll_buffs(&self, _reason: RollReason, ret: &mut Vec<RollModification>) {
 		self.temporary_buffs.collect_roll_buffs(ret);
 
 		todo!()
@@ -197,8 +198,6 @@ impl Player {
 	pub fn to_perspective(
 		&self,
 		game: &Game,
-		choices: &Option<&Choices>,
-		active: bool,
 		perspective: &Perspective,
 	) -> PlayerPerspective {
 		PlayerPerspective {
@@ -210,7 +209,7 @@ impl Player {
 				.decks()
 				.iter()
 				.filter(|d| d.is_visible(perspective))
-				.map(|d| d.to_perspective(game, choices, Some(self.player_index), perspective))
+				.map(|d| d.to_perspective(game, Some(self.player_index), perspective))
 				.collect(),
 		}
 	}

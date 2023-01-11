@@ -10,10 +10,10 @@ use crate::slay::{
 };
 
 pub fn player_satisfies_requirements(
-	hero_type_counts: &HeroTypeCounter,
-	requirements: &Vec<MonsterRequirements>,
+	_hero_type_counts: &HeroTypeCounter,
+	_requirements: &Vec<MonsterRequirements>,
 ) -> bool {
-	let remaining_heros = 3;
+	let _remaining_heros = 3;
 
 	// This information is not enough: The party leader is not a hero...
 

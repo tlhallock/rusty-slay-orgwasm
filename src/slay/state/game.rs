@@ -241,9 +241,9 @@ impl Game {
 		Ok(())
 	}
 
-	pub(crate) fn get_player_name(&self, player_index: ids::PlayerIndex) -> String {
-		self.players[player_index].name.to_owned()
-	}
+	// pub(crate) fn get_player_name(&self, player_index: ids::PlayerIndex) -> String {
+	// 	self.players[player_index].name.to_owned()
+	// }
 
 	pub(crate) fn set_active_player(&mut self, player_index: ids::PlayerIndex) {
 		self.turn.set_active_player(player_index);
@@ -364,8 +364,6 @@ impl Game {
 				.map(|p| {
 					p.to_perspective(
 						&self,
-						choices,
-						p.player_index == self.active_player_index(),
 						get_perspective(p.player_index, viewing_player),
 					)
 				})
@@ -374,7 +372,7 @@ impl Game {
 				.decks()
 				.iter()
 				.filter(|d| d.visible_to_spectator())
-				.map(|d| d.to_spectator_perspective(self, choices, None))
+				.map(|d| d.to_spectator_perspective(self, None))
 				.collect(),
 			turn: self.get_turn(),
 			choices: choices.map(|c| c.to_perspective()),

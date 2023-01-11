@@ -1,7 +1,4 @@
-use crate::slay::choices::CardPath;
 use crate::slay::choices::ChoiceDisplayType;
-use crate::slay::choices::Choices;
-use crate::slay::choices::DisplayPath;
 use crate::slay::ids;
 use crate::slay::modifiers::ItemModifier;
 use crate::slay::specification::CardSpec;
@@ -9,7 +6,6 @@ use crate::slay::specification::HeroType;
 use crate::slay::specification::MonsterSpec;
 use crate::slay::specs::cards::SlayCardSpec;
 use crate::slay::specs::hero::HeroAbility;
-use crate::slay::state::deck::DeckPath;
 use crate::slay::state::game::Game;
 use crate::slay::state::summarizable::Summarizable;
 
@@ -53,16 +49,10 @@ impl Card {
 		Card { id, card_type }
 	}
 
-	pub fn to_perspective(
-		&self,
-		game: &Game,
-		choices: &Option<&Choices>,
-		player_index: Option<ids::PlayerIndex>,
-		card_path: DisplayPath,
-	) -> CardPerspective {
+	pub fn to_perspective(&self, played_this_turn: bool) -> CardPerspective {
 		CardPerspective {
 			id: self.id,
-			played_this_turn: game.was_card_played(player_index, self.id),
+			played_this_turn,
 			spec: self.card_type,
 		}
 	}
@@ -166,27 +156,18 @@ impl Stack {
 	pub fn to_perspective(
 		&self,
 		game: &Game,
-		choices: &Option<&Choices>,
 		player_index: Option<ids::PlayerIndex>,
-		deck_path: DeckPath,
 	) -> StackPerspective {
 		StackPerspective {
 			top: self.top.to_perspective(
-				game,
-				choices,
-				player_index,
-				DisplayPath::CardAt(CardPath::TopCardIn(deck_path, self.top.id)),
+				game.was_card_played(player_index, self.top.id)
+				// DisplayPath::CardAt(CardPath::TopCardIn(deck_path, self.top.id)),
 			),
 			modifiers: self
 				.modifiers
 				.iter()
 				.map(|s| {
-					s.to_perspective(
-						game,
-						choices,
-						player_index,
-						DisplayPath::CardAt(CardPath::ModifyingCardIn(deck_path, self.top.id, s.id)),
-					)
+					s.to_perspective(false)
 				})
 				.collect(),
 		}

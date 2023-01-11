@@ -6,8 +6,8 @@ use rand::Rng;
 
 use crate::slay::specs::cards::SlayCardSpec;
 use crate::slay::state::game::Game;
-use crate::slay::{actions, ids, specification};
-use crate::slay::{game_context::GameBookKeeping, specification::CardType};
+use crate::slay::{actions, ids};
+use crate::slay::{game_context::GameBookKeeping};
 
 use super::deck::DeckPath;
 use super::player::Player;

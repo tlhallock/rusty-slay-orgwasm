@@ -294,8 +294,8 @@ impl PlayerTask for ReceiveModifier {
 	fn make_progress(
 		&mut self,
 		_context: &mut GameBookKeeping,
-		game: &mut Game,
-		player_index: ids::PlayerIndex,
+		_game: &mut Game,
+		_player_index: ids::PlayerIndex,
 	) -> SlayResult<TaskProgressResult> {
 		// game.players[player_index]
 		// 	.temporary_buffs

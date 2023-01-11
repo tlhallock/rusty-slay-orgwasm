@@ -2,7 +2,6 @@
 
 use crate::slay::choices::CardPath;
 use crate::slay::choices::ChoicePerspective;
-use crate::slay::choices::Choices;
 use crate::slay::choices::ChoicesPerspective;
 use crate::slay::choices::DisplayPath;
 use crate::slay::errors;
@@ -146,7 +145,6 @@ impl Deck {
 	pub fn to_perspective(
 		&self,
 		game: &Game,
-		choices: &Option<&Choices>,
 		player_index: Option<ids::PlayerIndex>,
 		perspective: &Perspective,
 	) -> DeckPerspective {
@@ -158,7 +156,7 @@ impl Deck {
 				stacks: Some(
 					self
 						.stacks()
-						.map(|s| s.to_perspective(game, choices, player_index, self.spec.path))
+						.map(|s| s.to_perspective(game, player_index))
 						.collect(),
 				),
 			},
@@ -176,10 +174,9 @@ impl Deck {
 	pub fn to_spectator_perspective(
 		&self,
 		game: &Game,
-		choices: &Option<&Choices>,
 		player_index: Option<ids::PlayerIndex>,
 	) -> DeckPerspective {
-		self.to_perspective(game, choices, player_index, &Perspective::Spectator)
+		self.to_perspective(game, player_index, &Perspective::Spectator)
 	}
 
 	pub fn num_top_cards(&self) -> usize {
