@@ -60,7 +60,7 @@ impl PlayerTask for Discard {
 					context.id_generator.generate(),
 					ChoiceDisplay {
 						display_type: card.as_choice(),
-						label: format!("Discard {}", card.spec.label),
+						label: format!("Discard {}", card.get_spec().label),
 					},
 					vec![Box::new(MoveCardTask {
 						source: DeckPath::Hand(player_index),

@@ -1,3 +1,5 @@
+use enum_iterator::Sequence;
+
 use crate::slay::{
 	abilities::{discard::Discard, sacrifice::Sacrifice},
 	actions::DrawTask,
@@ -21,7 +23,7 @@ pub fn player_satisfies_requirements(
 	false
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Sequence)]
 pub enum Monster {
 	AnuranCauldron,
 	TitanWyvern,
@@ -272,17 +274,5 @@ impl Monster {
 				requirements: vec![MonsterRequirements::Hero],
 			},
 		}
-	}
-
-	pub(crate) fn label(&self) -> String {
-		todo!()
-	}
-
-	pub(crate) fn description(&self) -> String {
-		todo!()
-	}
-
-	pub(crate) fn image_path(&self) -> String {
-		todo!()
 	}
 }

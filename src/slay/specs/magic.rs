@@ -1,4 +1,6 @@
-#[derive(Debug, Clone, Copy)]
+use enum_iterator::Sequence;
+
+#[derive(Debug, Clone, Copy, Sequence)]
 pub enum MagicSpell {
 	EnganglingTrap,
 	CriticalBoost,
@@ -9,16 +11,4 @@ pub enum MagicSpell {
 	ForcefulWinds,
 	CallToTheFallen,
 }
-impl MagicSpell {
-	pub(crate) fn label(&self) -> String {
-		todo!()
-	}
-
-	pub(crate) fn description(&self) -> String {
-		todo!()
-	}
-
-	pub(crate) fn image_path(&self) -> String {
-		todo!()
-	}
-}
+impl MagicSpell {}

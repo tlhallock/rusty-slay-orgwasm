@@ -23,7 +23,6 @@ use crate::slay::showdown::current_showdown::ShowDown;
 use crate::slay::showdown::offer::OfferChallengesState;
 use crate::slay::showdown::roll_state::RollReason;
 use crate::slay::showdown::roll_state::RollState;
-use crate::slay::specification::HeroAbility;
 use crate::slay::specification::MonsterSpec;
 use crate::slay::state::deck::DeckPath;
 use crate::slay::state::game::Game;
@@ -35,6 +34,7 @@ use crate::slay::tasks::PlayerTask;
 use crate::slay::tasks::TaskParamName;
 use crate::slay::tasks::TaskProgressResult;
 
+use super::specs::hero::HeroAbility;
 use super::specs::magic::MagicSpell;
 
 // Emit logs like "Waiting for challenges..."
@@ -83,7 +83,10 @@ fn create_place_hero_choice(
 		context.id_generator.generate(),
 		ChoiceDisplay {
 			display_type: card_path.display().to_highlight(),
-			label: format!("Place {} in your party.", game.card(card_path).spec.label),
+			label: format!(
+				"Place {} in your party.",
+				game.card(card_path).get_spec().label
+			),
 		},
 		vec![
 			Box::new(RemoveActionPointsTask::new(1)),
@@ -135,7 +138,7 @@ pub fn create_place_item_challenge_offer(
 				}) as Box<dyn tasks::PlayerTask>],
 			}),
 		},
-		ChallengeReason::PlaceHeroCard(CardSpecPerspective::new(&card.spec)),
+		ChallengeReason::PlaceHeroCard(CardSpecPerspective::new(&card.get_spec())),
 	))) as Box<dyn PlayerTask>
 }
 
@@ -164,7 +167,7 @@ fn create_cast_magic_choice(
 		id,
 		ChoiceDisplay {
 			display_type: card_path.display().to_highlight(),
-			label: format!("Cast {}", game.card(card_path).spec.label),
+			label: format!("Cast {}", game.card(card_path).get_spec().label),
 		},
 		vec![
 			Box::new(RemoveActionPointsTask::new(1)),
@@ -311,7 +314,7 @@ fn create_roll_for_ability_choice(
 		context.id_generator.generate(),
 		ChoiceDisplay {
 			display_type: card_path.display().to_highlight(),
-			label: format!("Use {}'s ability", game.card(card_path).spec.label),
+			label: format!("Use {}'s ability", game.card(card_path).get_spec().label),
 		},
 		vec![
 			Box::new(RemoveActionPointsTask::new(1)),
@@ -328,7 +331,7 @@ fn create_attack_monster_choice(
 		context.id_generator.generate(),
 		ChoiceDisplay {
 			display_type: card_path.display().to_highlight(),
-			label: format!("Attack {}", game.card(card_path).spec.label),
+			label: format!("Attack {}", game.card(card_path).get_spec().label),
 		},
 		vec![
 			Box::new(RemoveActionPointsTask::new(2)) as Box<dyn PlayerTask>,
@@ -345,7 +348,7 @@ fn create_attack_monster_choice(
 fn create_hand_action_choice(
 	context: &mut GameBookKeeping, game: &Game, player_index: ids::PlayerIndex, card_path: CardPath,
 ) -> Option<TasksChoice> {
-	if let Some(spell) = game.card(card_path).spec.spell.as_ref() {
+	if let Some(spell) = game.card(card_path).get_spec().spell.as_ref() {
 		return Some(create_cast_magic_choice(
 			game,
 			player_index,
@@ -354,7 +357,7 @@ fn create_hand_action_choice(
 			*spell,
 		));
 	}
-	if let Some(ability) = game.card(card_path).spec.hero_ability.as_ref() {
+	if let Some(ability) = game.card(card_path).get_spec().hero_ability.as_ref() {
 		return Some(create_place_hero_choice(
 			context,
 			game,
@@ -363,7 +366,7 @@ fn create_hand_action_choice(
 			ability,
 		));
 	}
-	if let Some(modifier) = game.card(card_path).spec.card_modifier.as_ref() {
+	if let Some(modifier) = game.card(card_path).get_spec().card_modifier.as_ref() {
 		let players_with_stacks = game.players_with_stacks();
 		if !players_with_stacks.is_empty() {
 			return Some(create_place_item_choice(
@@ -385,7 +388,7 @@ fn create_party_action_choice(
 	if game.players[player_index].was_card_played(&game.card(card_path).id) {
 		return None;
 	}
-	if let Some(ability) = game.card(card_path).spec.hero_ability.as_ref() {
+	if let Some(ability) = game.card(card_path).get_spec().hero_ability.as_ref() {
 		return Some(create_roll_for_ability_choice(
 			context,
 			game,

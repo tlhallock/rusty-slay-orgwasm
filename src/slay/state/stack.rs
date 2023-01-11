@@ -8,9 +8,10 @@ use crate::slay::modifiers::ItemModifier;
 use crate::slay::specification;
 use crate::slay::specification::CardSpec;
 use crate::slay::specification::CardType;
-use crate::slay::specification::HeroAbility;
 use crate::slay::specification::HeroType;
 use crate::slay::specification::MonsterSpec;
+use crate::slay::specs::cards::SlayCardSpec;
+use crate::slay::specs::hero::HeroAbility;
 use crate::slay::state::deck::DeckPath;
 use crate::slay::state::game::Game;
 use crate::slay::state::summarizable::Summarizable;
@@ -23,41 +24,45 @@ use std::iter::Iterator;
 #[derive(Debug, Clone)]
 pub struct Card {
 	pub id: ids::CardId,
-	pub spec: CardSpec,
+	card_type: SlayCardSpec,
 }
 
 impl Card {
-	pub fn new(id: ids::CardId, spec: CardSpec) -> Self {
-		Card { id, spec }
+	pub fn get_spec(&self) -> CardSpec {
+		self.card_type.get_card_spec_creation()
+	}
+
+	pub fn new(id: ids::CardId, card_type: SlayCardSpec) -> Self {
+		Card { id, card_type }
 	}
 
 	pub(crate) fn is_magic(&self) -> bool {
-		self.spec.is_magic()
+		self.get_spec().is_magic()
 	}
 
 	pub fn modification_amounts(&self) -> Vec<i32> {
-		self.spec.modifiers.to_vec() // ::<Vec<(ids::CardId, i32)>>()
+		self.get_spec().modifiers.to_vec() // ::<Vec<(ids::CardId, i32)>>()
 	}
 
 	pub fn label(&self) -> String {
-		self.spec.label.to_string()
+		self.get_spec().label.to_string()
 	}
 
 	pub fn monster_spec(&self) -> Option<MonsterSpec> {
-		if let Some(monster) = &self.spec.monster {
+		if let Some(monster) = &self.get_spec().monster {
 			Some(monster.create_spec())
 		} else {
 			None
 		}
 	}
 
-	pub fn hero_ability(&self) -> &Option<HeroAbility> {
-		&self.spec.hero_ability
+	pub fn hero_ability(&self) -> Option<HeroAbility> {
+		self.get_spec().hero_ability
 	}
 
 	// Should be part of the spec...
 	pub fn as_perspective(&self) -> CardSpecPerspective {
-		CardSpecPerspective::new(&self.spec)
+		CardSpecPerspective::new(&self.get_spec())
 	}
 
 	pub fn as_choice(&self) -> ChoiceDisplayType {
@@ -65,15 +70,15 @@ impl Card {
 	}
 
 	pub(crate) fn is_hero(&self) -> bool {
-		self.spec.is_hero()
+		self.get_spec().is_hero()
 	}
 
 	pub(crate) fn is_challenge(&self) -> bool {
-		self.spec.is_challenge()
+		self.get_spec().is_challenge()
 	}
 
 	pub(crate) fn get_unmodified_hero_type(&self) -> Option<HeroType> {
-		self.spec.get_unmodified_hero_type()
+		self.get_spec().get_unmodified_hero_type()
 	}
 }
 
@@ -97,10 +102,10 @@ impl Stack {
 	}
 
 	pub(crate) fn get_hero_type(&self) -> Option<HeroType> {
-		if let Some(hero_type) = self.top.spec.get_unmodified_hero_type() {
+		if let Some(hero_type) = self.top.get_spec().get_unmodified_hero_type() {
 			let mut ret = hero_type;
 			for modifier in self.modifiers.iter() {
-				if let Some(ItemModifier::Mask(hero_type)) = modifier.spec.card_modifier.as_ref() {
+				if let Some(ItemModifier::Mask(hero_type)) = modifier.get_spec().card_modifier.as_ref() {
 					ret = *hero_type;
 				}
 			}
@@ -119,7 +124,7 @@ impl Summarizable for Card {
 			f,
 			"({}) {}",
 			self.id,
-			self.spec.label,
+			self.get_spec().label,
 			//  if self.played_this_turn { "X" } else { "" }
 		)
 	}
@@ -142,7 +147,7 @@ impl Card {
 		CardPerspective {
 			id: self.id,
 			played_this_turn: game.was_card_played(player_index, self.id),
-			spec: CardSpecPerspective::new(&self.spec),
+			spec: CardSpecPerspective::new(&self.get_spec()),
 			choice_associations: ChoiceAssociation::create_from_choices(choices, card_path),
 		}
 	}
@@ -176,6 +181,7 @@ impl Stack {
 	}
 }
 
+// Remove this class...
 #[derive(Debug, PartialEq, Clone)]
 pub struct CardSpecPerspective {
 	// pub card_type: CardType,

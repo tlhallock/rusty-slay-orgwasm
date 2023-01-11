@@ -1,8 +1,10 @@
 use std::collections::HashSet;
 
+use enum_iterator::all;
 use rand::prelude::SliceRandom;
 use rand::Rng;
 
+use crate::slay::specs::cards::SlayCardSpec;
 use crate::slay::state::game::Game;
 use crate::slay::{actions, ids, specification};
 use crate::slay::{game_context::GameBookKeeping, specification::CardType};
@@ -16,9 +18,14 @@ fn initialize_global_decks(context: &mut GameBookKeeping, game: &mut Game) {
 	let mut draw = Vec::with_capacity(draw_capacity);
 	let mut leaders = Vec::with_capacity(leaders_capacity);
 	let mut monsters = Vec::with_capacity(monsters_capacity);
-	specification::get_card_specs().iter().for_each(|spec| {
+	all::<SlayCardSpec>().for_each(|spec_type| {
+		let spec = spec_type.get_card_spec_creation();
+
 		for _ in 0..spec.repeat {
-			let stack = Stack::new(Card::new(context.id_generator.generate(), spec.to_owned()));
+			let stack = Stack::new(Card::new(
+				context.id_generator.generate(),
+				spec_type.to_owned(),
+			));
 
 			match spec.get_initial_deck() {
 				DeckPath::Draw => draw.push(stack),

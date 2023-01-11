@@ -50,7 +50,7 @@ impl RollModification {
 		let modifying_card = game.find_card(self.card_id).unwrap();
 		ModificationPerspective {
 			modifier_name: game.get_player_name(self.modifying_player_index),
-			modifying_card_spec: CardSpecPerspective::new(&modifying_card.spec),
+			modifying_card_spec: CardSpecPerspective::new(&modifying_card.get_spec()),
 			modification_amount: self.modification_amount,
 		}
 	}

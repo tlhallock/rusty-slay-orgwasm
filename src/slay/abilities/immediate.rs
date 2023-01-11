@@ -61,7 +61,7 @@ impl PlayerTask for OfferPlayImmediately {
 
 		// TODO: refactor this into a player_from_hand...
 		let mut play_immediately_tasks = Vec::new();
-		if let Some(item_modifier) = card.spec.card_modifier.as_ref() {
+		if let Some(item_modifier) = card.get_spec().card_modifier.as_ref() {
 			// src/slay/actions.rs:452
 			let players_with_stacks = game.players_with_stacks();
 			if players_with_stacks.is_empty() {

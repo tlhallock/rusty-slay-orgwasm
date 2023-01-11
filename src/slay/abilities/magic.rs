@@ -43,7 +43,7 @@ pub fn create_search_discard_choices(
 				context.id_generator.generate(),
 				ChoiceDisplay {
 					display_type: ChoiceDisplayType::Card(card.as_perspective()),
-					label: card.spec.label.to_owned(),
+					label: card.get_spec().label.to_owned(),
 				},
 				vec![Box::new(MoveCardTask {
 					source: DeckPath::Discard,
@@ -189,7 +189,8 @@ impl PlayerTask for ReturnModifierTask {
 							display_type: ChoiceDisplayType::Card(modifier.as_perspective()),
 							label: format!(
 								"{} from {}",
-								modifier.spec.label, game.players[player_index].name
+								modifier.get_spec().label,
+								game.players[player_index].name
 							),
 						},
 						vec![Box::new(MoveCardTask {

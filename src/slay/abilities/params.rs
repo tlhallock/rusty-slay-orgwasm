@@ -288,7 +288,7 @@ impl ChooseCardFromPlayerParameterTask {
 				.map(|card| CardChoiceInformation {
 					card_id: card.id,
 					display_path: DisplayPath::CardAt(CardPath::TopCardIn(deck.spec.path, card.id)),
-					card_label: card.spec.label.to_owned(),
+					card_label: card.get_spec().label.to_owned(),
 					perspective: card.as_perspective(),
 				})
 				.collect(),
@@ -305,7 +305,7 @@ impl ChooseCardFromPlayerParameterTask {
 								stack.top.id,
 								card.id,
 							)),
-							card_label: card.spec.label.to_owned(),
+							card_label: card.get_spec().label.to_owned(),
 							perspective: card.as_perspective(),
 						})
 						.collect::<Vec<CardChoiceInformation>>()

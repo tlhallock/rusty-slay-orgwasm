@@ -63,7 +63,7 @@ pub fn create_modify_roll_choice(
 		choice_id,
 		ChoiceDisplay {
 			display_type: ChoiceDisplayType::Modify(RollModificationChoiceType::from_card(
-				&card.spec,
+				&card.get_spec(),
 				modification_amount,
 				*modification_path,
 			)),

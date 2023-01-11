@@ -1,12 +1,15 @@
 use std::collections::HashSet;
 use std::vec;
 
+use enum_iterator::Sequence;
+
 use super::errors::SlayResult;
 use super::game_context::GameBookKeeping;
-use super::hero_abilities::HeroAbilityType;
 use super::ids;
 use super::modifiers::ItemModifier;
 use super::specs::cards::SlayCardSpec;
+use super::specs::hero::HeroAbility;
+use super::specs::hero::HeroAbilityType;
 use super::specs::magic::MagicSpell;
 use super::specs::monster::Monster;
 use super::state::game::Game;
@@ -44,30 +47,12 @@ use crate::slay::tasks::PlayerTask;
 
 pub const MAX_TURNS: u32 = 1000;
 
-#[derive(Debug, Clone)]
-pub struct HeroAbility {
-	pub condition: Condition,
-	pub ability: HeroAbilityType,
-}
-
-impl HeroAbility {
-	pub fn to_consequences(&self) -> RollConsequences {
-		RollConsequences {
-			success: RollConsequence {
-				condition: self.condition.to_owned(),
-				tasks: self.ability.create_tasks(),
-			},
-			loss: None,
-		}
-	}
-}
-
 // type ActionsCreator = Box<dyn Fn(ids::PlayerIndex) -> Vec<Box<TasksChoice>>>;
 
 // Rename this to generation spec...
 #[derive(Debug, Clone)]
 pub struct CardSpec {
-	card_type: CardType,
+	pub(crate) card_type: CardType,
 	pub repeat: u32,
 	pub label: String,
 	pub description: String,
@@ -79,10 +64,6 @@ pub struct CardSpec {
 	pub hero_ability: Option<HeroAbility>,
 	pub spell: Option<MagicSpell>,
 	pub card_modifier: Option<ItemModifier>,
-
-	pub real_spec: SlayCardSpec,
-	// pub hand_actions: ActionsCreator,
-	// pub party_actions: ActionsCreator,
 }
 
 impl CardSpec {
@@ -136,8 +117,6 @@ impl Default for CardSpec {
 			hero_ability: None,
 			spell: None,
 			card_modifier: None,
-
-			real_spec: SlayCardSpec::Challenge,
 		}
 	}
 }
@@ -170,7 +149,7 @@ impl CardType {
 	}
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Copy)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Copy, Sequence)]
 pub enum HeroType {
 	Bard,
 	Wizard,

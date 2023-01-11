@@ -1,13 +1,17 @@
-use crate::slay::modifiers::ItemModifier;
-use crate::slay::specification::CardType;
-use crate::slay::specification::HeroAbility;
+use enum_iterator::Sequence;
+
+use crate::slay::specification::HeroType;
 use crate::slay::specs::items::AnotherItemType;
 use crate::slay::specs::magic::MagicSpell;
 use crate::slay::specs::modifier::ModifierKinds;
 use crate::slay::specs::monster::Monster;
 
-#[derive(Debug, Clone)]
+use super::hero::HeroAbilityType;
+
+#[derive(Debug, Clone, Sequence)]
 pub enum SlayCardSpec {
+	HeroCard(HeroAbilityType),
+	PartyLeader(HeroType),
 	MonsterCard(Monster),
 	MagicCard(MagicSpell),
 	ModifierCard(ModifierKinds),
@@ -17,30 +21,24 @@ pub enum SlayCardSpec {
 
 impl SlayCardSpec {
 	pub fn label(&self) -> String {
-		match self {
-			SlayCardSpec::MonsterCard(c) => c.label(),
-			SlayCardSpec::MagicCard(c) => c.label(),
-			SlayCardSpec::ModifierCard(c) => c.label(),
-			SlayCardSpec::Item(c) => c.label(),
-			SlayCardSpec::Challenge => String::from("Challenge"),
-		}
+		String::from("")
 	}
 	pub fn description(&self) -> String {
-		match self {
-        SlayCardSpec::MonsterCard(c) => c.description(),
-        SlayCardSpec::MagicCard(c) => c.description(),
-        SlayCardSpec::ModifierCard(c) => c.description(),
-        SlayCardSpec::Item(c) => c.description(),
-        SlayCardSpec::Challenge => String::from("You may play this card when another player attempts to play a Hero, Item, or Magic card. CHALLENGE that card."),
-    }
+		String::from("")
 	}
 	pub fn image_path(&self) -> String {
-		match self {
-			SlayCardSpec::MonsterCard(c) => c.image_path(),
-			SlayCardSpec::MagicCard(c) => c.image_path(),
-			SlayCardSpec::ModifierCard(c) => c.image_path(),
-			SlayCardSpec::Item(c) => c.image_path(),
-			SlayCardSpec::Challenge => String::from("cards/challenge/challenge.jpg"),
-		}
+		String::from("")
 	}
 }
+
+// // This should be done automatically...
+// pub fn cards() -> [SlayCardSpec; 3] {
+// 	[
+// 	MonsterC
+// 	MonsterCard(Monster),
+// 	MagicCard(MagicSpell),
+// 	ModifierCard(ModifierKinds),
+// 	Item(AnotherItemType),
+// 	Challenge,
+// 	]
+// }

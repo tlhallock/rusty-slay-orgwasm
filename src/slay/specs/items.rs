@@ -1,6 +1,8 @@
+use enum_iterator::Sequence;
+
 use crate::slay::specification::HeroType;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Sequence)]
 pub enum Item {
 	DecoyDoll,
 	ReallyBigRing,
@@ -10,21 +12,15 @@ pub enum Item {
 	CurseOfTheSnakesEyes,
 }
 
-#[derive(Debug, Clone)]
+impl Item {
+	pub fn item_type(&self) {
+		//
+	}
+}
+
+#[derive(Debug, Clone, Sequence)]
 pub enum AnotherItemType {
 	MaskCard(HeroType),
-	NotMask(Item, bool),
+	NotMask(Item),
 }
-impl AnotherItemType {
-	pub(crate) fn label(&self) -> String {
-		todo!()
-	}
-
-	pub(crate) fn description(&self) -> String {
-		todo!()
-	}
-
-	pub(crate) fn image_path(&self) -> String {
-		todo!()
-	}
-}
+impl AnotherItemType {}

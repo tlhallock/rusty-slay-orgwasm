@@ -109,7 +109,7 @@ pub fn list_modification_choices(
 	];
 
 	for card in game.players[player_index].hand.tops() {
-		for modification_amount in card.spec.modifiers.iter() {
+		for modification_amount in card.get_spec().modifiers.iter() {
 			for modification_path in rolls.iter() {
 				choices.push(create_modify_roll_choice(
 					context,

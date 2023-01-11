@@ -1,4 +1,6 @@
-#[derive(Debug, Clone)]
+use enum_iterator::Sequence;
+
+#[derive(Debug, Clone, Sequence)]
 pub enum ModifierKinds {
 	Plus4,
 	Plus3Minus1,
@@ -6,16 +8,4 @@ pub enum ModifierKinds {
 	Plus1Minus3,
 	Minus4,
 }
-impl ModifierKinds {
-	pub(crate) fn label(&self) -> String {
-		todo!()
-	}
-
-	pub(crate) fn description(&self) -> String {
-		todo!()
-	}
-
-	pub(crate) fn image_path(&self) -> String {
-		todo!()
-	}
-}
+impl ModifierKinds {}
