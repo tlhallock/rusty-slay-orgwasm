@@ -28,7 +28,6 @@ use std::io::BufWriter;
 use std::io::Write;
 use std::iter::Iterator;
 
-
 use super::deck::DeckSpec;
 use super::game::GamePerspective;
 use super::game::GameStaticInformation;
@@ -195,11 +194,7 @@ impl Player {
 		todo!()
 	}
 
-	pub fn to_perspective(
-		&self,
-		game: &Game,
-		perspective: &Perspective,
-	) -> PlayerPerspective {
+	pub fn to_perspective(&self, game: &Game, perspective: &Perspective) -> PlayerPerspective {
 		PlayerPerspective {
 			player_index: self.player_index,
 			remaining_action_points: self.get_remaining_action_points(),

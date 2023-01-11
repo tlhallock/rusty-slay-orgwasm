@@ -83,24 +83,15 @@ impl CardSpec {
 	}
 
 	pub(crate) fn is_magic(&self) -> bool {
-		match &self.card_type {
-			CardType::Magic => true,
-			_ => false,
-		}
+		matches!(&self.card_type, CardType::Magic)
 	}
 
 	pub(crate) fn is_hero(&self) -> bool {
-		match &self.card_type {
-			CardType::Hero(_) => true,
-			_ => false,
-		}
+		matches!(&self.card_type, CardType::Hero(_))
 	}
 
 	pub(crate) fn is_challenge(&self) -> bool {
-		match &self.card_type {
-			CardType::Challenge => true,
-			_ => false,
-		}
+		matches!(&self.card_type, CardType::Challenge)
 	}
 
 	pub(crate) fn get_image_path(&self) -> String {
@@ -138,11 +129,7 @@ pub enum CardType {
 
 impl CardType {
 	pub fn is_hero_card(&self) -> bool {
-		// Supposed to be a matches!()...
-		match self {
-			CardType::Hero(_) => true,
-			_ => false,
-		}
+		matches!(self, CardType::Hero(_))
 	}
 
 	pub fn item_types() -> HashSet<CardType> {

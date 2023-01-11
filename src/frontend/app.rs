@@ -73,6 +73,12 @@ impl AppState {
 	}
 }
 
+impl Default for AppState {
+	fn default() -> Self {
+		Self::new()
+	}
+}
+
 // Rename this to common props
 #[derive(Clone, PartialEq)]
 pub struct CommonProps {

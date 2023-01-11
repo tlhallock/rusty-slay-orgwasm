@@ -434,11 +434,7 @@ impl ChoiceDisplayType {
 	}
 
 	fn belongs_to_all_showdowns(&self) -> bool {
-		if let ChoiceDisplayType::SetCompletion(_) = self {
-			true
-		} else {
-			false
-		}
+		matches!(self, ChoiceDisplayType::SetCompletion(_))
 	}
 
 	// He he, I wonder how many ways I could say that.

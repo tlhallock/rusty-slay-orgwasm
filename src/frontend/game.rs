@@ -45,8 +45,8 @@ pub fn view_game(props: &GamePerspectiveProps) -> Html {
 		perspective: props.game.to_owned(),
 		highlighted_choice: (*highlighted_choice).to_owned(),
 		choose: props.choose.to_owned(),
-		view_card: view_card.to_owned(),
-		set_highlighted_choice: set_highlighted_choice.to_owned(),
+		view_card,
+		set_highlighted_choice,
 	});
 
 	let rotated = props.game.rotated_players(&props.statics);

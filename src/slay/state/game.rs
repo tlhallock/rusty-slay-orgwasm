@@ -299,6 +299,12 @@ impl Game {
 	}
 }
 
+impl Default for Game {
+	fn default() -> Self {
+		Self::new()
+	}
+}
+
 // Summarize the roll...
 impl Summarizable for Game {
 	fn summarize<W: Write>(
@@ -361,12 +367,7 @@ impl Game {
 			players: self
 				.players
 				.iter()
-				.map(|p| {
-					p.to_perspective(
-						&self,
-						get_perspective(p.player_index, viewing_player),
-					)
-				})
+				.map(|p| p.to_perspective(self, get_perspective(p.player_index, viewing_player)))
 				.collect(),
 			decks: self
 				.decks()

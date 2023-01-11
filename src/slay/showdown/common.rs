@@ -28,7 +28,7 @@ impl Roll {
 		}
 	}
 
-	pub fn calculate_total(&self, modifications: &Vec<RollModification>) -> i32 {
+	pub fn calculate_total(&self, modifications: &[RollModification]) -> i32 {
 		(self.die1 as i32)
 			+ (self.die2 as i32)
 			+ modifications

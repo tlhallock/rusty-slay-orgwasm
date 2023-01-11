@@ -9,14 +9,10 @@ use crate::slay::tasks::PlayerTask;
 use crate::slay::tasks::TaskParamName;
 use crate::slay::tasks::TaskProgressResult;
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Default)]
 pub struct StealTask {}
 
 impl StealTask {
-	pub fn new() -> Self {
-		Self {}
-	}
-
 	pub fn create() -> Box<dyn PlayerTask> {
 		Box::new(Self {})
 	}
@@ -47,7 +43,7 @@ impl PlayerTask for StealTask {
 	}
 
 	fn label(&self) -> String {
-		format!("Preparing to steal a card")
+		"Preparing to steal a card".to_string()
 	}
 }
 

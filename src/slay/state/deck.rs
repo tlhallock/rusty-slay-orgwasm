@@ -340,7 +340,7 @@ impl Deck {
 			}
 			for modifier in stack.modifiers.iter() {
 				if modifier.id == modifier_card_id {
-					return Some(&modifier);
+					return Some(modifier);
 				}
 			}
 		}

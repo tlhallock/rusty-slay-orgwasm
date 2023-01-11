@@ -48,7 +48,7 @@ impl PlayerTask for DestroyTask {
 	}
 
 	fn label(&self) -> String {
-		format!("Player is preparing to destroy a card.",)
+		"Player is preparing to destroy a card.".to_string()
 	}
 }
 
@@ -105,7 +105,7 @@ impl PlayerTask for DestroyCardTask {
 			.take_card(card_to_steal)?;
 		game
 			.deck_mut(self.get_destination(stealer_index))
-			.extend(stack.modifiers.drain(..).map(|card| Stack::new(card)));
+			.extend(stack.modifiers.drain(..).map(Stack::new));
 		game.deck_mut(DeckPath::Discard).add(stack);
 		Ok(TaskProgressResult::TaskComplete)
 	}

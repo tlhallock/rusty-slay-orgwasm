@@ -45,7 +45,7 @@ pub fn create_search_discard_choices(
 				context.id_generator.generate(),
 				ChoiceDisplay {
 					display_type: card.as_choice(),
-					label: card.get_spec().label.to_owned(),
+					label: card.get_spec().label,
 				},
 				vec![Box::new(MoveCardTask {
 					source: DeckPath::Discard,
@@ -154,7 +154,7 @@ impl PlayerTask for MagicTask {
 					}
 					game.players[player_index]
 						.hand
-						.extend(cards_to_move.drain(..).map(|c| Stack::new(c)));
+						.extend(cards_to_move.drain(..).map(Stack::new));
 				}
 				Ok(TaskProgressResult::TaskComplete)
 			}

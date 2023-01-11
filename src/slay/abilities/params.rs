@@ -97,14 +97,12 @@ impl ChoosePlayerParameterTask {
 	) -> Vec<ids::PlayerIndex> {
 		if let Some(player_indices) = self.players.as_ref() {
 			player_indices.to_owned()
+		} else if self.exclude_self {
+			(0..game.number_of_players())
+				.filter(|idx| *idx != player_index)
+				.collect()
 		} else {
-			if self.exclude_self {
-				(0..game.number_of_players())
-					.filter(|idx| *idx != player_index)
-					.collect()
-			} else {
-				(0..game.number_of_players()).collect()
-			}
+			(0..game.number_of_players()).collect()
 		}
 	}
 }

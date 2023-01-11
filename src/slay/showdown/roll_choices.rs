@@ -86,7 +86,7 @@ pub fn create_modify_roll_choice(
 			Box::new(MoveCardTask {
 				source: DeckPath::Hand(player_index),
 				destination: DeckPath::Discard,
-				card_id: card_id,
+				card_id,
 			}) as Box<dyn PlayerTask>,
 			Box::new(ModifyRollTask::new(
 				RollModification {

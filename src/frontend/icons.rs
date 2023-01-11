@@ -56,12 +56,7 @@ pub fn timer(props: &TimerProps) -> Html {
 	let completion_option = props.timeline.completion();
 	if let Some(completion) = completion_option {
 		let mut width = (800f64 * completion.percent_complete) as i32;
-		if width < 0 {
-			width = 0;
-		}
-		if width > 800 {
-			width = 800;
-		}
+		width = width.clamp(0, 800);
 		let width = format!("{}", width);
 		html! {
 			<div>

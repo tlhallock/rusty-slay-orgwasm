@@ -509,17 +509,12 @@ pub fn assign_action_choices(context: &mut GameBookKeeping, game: &mut Game) {
 /// Tasks
 //////////////////////////////////////////////////////////////////////
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Default)]
 pub struct UseAbility {
 	// player_index: ids::PlayerIndex,
 	// amount: u32,
 }
 
-impl UseAbility {
-	pub fn new() -> Self {
-		Self {}
-	}
-}
 impl PlayerTask for UseAbility {
 	fn make_progress(
 		&mut self,

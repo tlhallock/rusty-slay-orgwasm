@@ -66,15 +66,15 @@ impl Card {
 	}
 
 	pub fn label(&self) -> String {
-		self.get_spec().label.to_string()
+		self.get_spec().label
 	}
 
 	pub fn monster_spec(&self) -> Option<MonsterSpec> {
-		if let Some(monster) = &self.get_spec().monster {
-			Some(monster.create_spec())
-		} else {
-			None
-		}
+		self
+			.get_spec()
+			.monster
+			.as_ref()
+			.map(|monster| monster.create_spec())
 	}
 
 	pub fn hero_ability(&self) -> Option<HeroAbility> {
@@ -160,15 +160,12 @@ impl Stack {
 	) -> StackPerspective {
 		StackPerspective {
 			top: self.top.to_perspective(
-				game.was_card_played(player_index, self.top.id)
-				// DisplayPath::CardAt(CardPath::TopCardIn(deck_path, self.top.id)),
+				game.was_card_played(player_index, self.top.id), // DisplayPath::CardAt(CardPath::TopCardIn(deck_path, self.top.id)),
 			),
 			modifiers: self
 				.modifiers
 				.iter()
-				.map(|s| {
-					s.to_perspective(false)
-				})
+				.map(|s| s.to_perspective(false))
 				.collect(),
 		}
 	}

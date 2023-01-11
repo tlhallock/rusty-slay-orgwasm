@@ -4,10 +4,10 @@ use enum_iterator::all;
 use rand::prelude::SliceRandom;
 use rand::Rng;
 
+use crate::slay::game_context::GameBookKeeping;
 use crate::slay::specs::cards::SlayCardSpec;
 use crate::slay::state::game::Game;
 use crate::slay::{actions, ids};
-use crate::slay::{game_context::GameBookKeeping};
 
 use super::deck::DeckPath;
 use super::player::Player;

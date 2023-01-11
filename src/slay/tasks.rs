@@ -115,6 +115,7 @@ pub trait PlayerTask: Debug + dyn_clone::DynClone {
 		player_index: ids::PlayerIndex,
 	) -> SlayResult<TaskProgressResult>;
 
+	// TODO: Make this just extend Summarizable...
 	fn label(&self) -> String;
 }
 
