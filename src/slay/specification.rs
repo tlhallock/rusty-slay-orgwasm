@@ -159,6 +159,15 @@ pub enum MonsterRequirements {
 	HeroType(HeroType),
 }
 
+impl MonsterRequirements {
+	pub fn satisfied_by_party_leader(&self, leader_type: HeroType) -> bool {
+		match self {
+			MonsterRequirements::Hero => false,
+			MonsterRequirements::HeroType(hero_type) => *hero_type == leader_type,
+		}
+	}
+}
+
 // #[derive(Debug, Clone)]
 // pub enum RollConsequenceType {
 //     MonsterSlain(ids::CardId),

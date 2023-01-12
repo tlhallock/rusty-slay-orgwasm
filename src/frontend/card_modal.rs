@@ -3,9 +3,9 @@ use std::rc::Rc;
 use yew::classes;
 use yew::prelude::*;
 
+use crate::frontend::app::CommonProps;
 use crate::slay::choices::ChoicePerspective;
 use crate::slay::specs::cards::SlayCardSpec;
-use crate::frontend::app::CommonProps;
 
 #[derive(Clone, PartialEq)]
 pub struct CardModalInfo {

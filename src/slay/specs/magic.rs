@@ -1,7 +1,5 @@
 use enum_iterator::Sequence;
 
-use crate::slay::abilities::magic::create_search_discard_choices;
-use crate::slay::abilities::magic::SearchDiscardFilters;
 use crate::slay::errors::SlayResult;
 use crate::slay::game_context::GameBookKeeping;
 use crate::slay::ids;
@@ -22,6 +20,8 @@ use crate::slay::tasks::tasks::params::ChoosePlayerParameterTask;
 use crate::slay::tasks::tasks::params::ClearParamsTask;
 use crate::slay::tasks::tasks::params::SetParameterToMyself;
 use crate::slay::tasks::tasks::return_modifiers::ReturnModifierTask;
+use crate::slay::tasks::tasks::search_discard::create_search_discard_choices;
+use crate::slay::tasks::tasks::search_discard::SearchDiscardFilters;
 
 #[derive(Debug, Clone, Copy, Sequence, PartialEq)]
 pub enum MagicSpell {
@@ -59,7 +59,7 @@ impl MagicSpell {
 			}
 			MagicSpell::WindsOfChange => {
 				// description: "Return an Item card equipped to any player's Hero card to that player's hand,
-				let tasks = &mut vec![ReturnModifierTask::create(), DrawTask::create(1)];
+				let tasks = &mut vec![ReturnModifierTask::return_everyones(), DrawTask::create(1)];
 				game.players[player_index].tasks.prepend_from(tasks);
 				Ok(TaskProgressResult::TaskComplete)
 			}

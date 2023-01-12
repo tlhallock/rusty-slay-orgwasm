@@ -30,7 +30,7 @@ impl ModifierDuration {
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum ModifierOrigin {
 	FromMagicCard(MagicSpell),
-	FromHeroAbility(ids::CardId),
+	FromHeroAbility,
 	FromSlainMonster,
 	FromPartyLeader(ids::CardId),
 	FromItem,
@@ -112,12 +112,16 @@ pub enum PlayerModifier {
 	PlayMagicOnDraw,
 	PlayItemOnDraw,
 
+	ItemsCannotBeChallenged,
+	NoCardsCanBeChallenged,
+	NoCardsCanBeStolen,
+	NoCardsCanBeDestroyed,
+
 	UndestroyableHeros,
 	ExtraActionPoint,
 	DrawOnSuccessfulAbility,
 	DiscardOnChallenge,
 	DrawOnDestroy,
-	ItemsCannotBeChallenged,
 	StealInsteadOfSacrifice,
 	RevealModifiersAndDrawAgain,
 	DrawOnPlayMagic,

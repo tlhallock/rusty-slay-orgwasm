@@ -1,3 +1,5 @@
+use std::iter::repeat_with;
+
 use enum_iterator::Sequence;
 
 use crate::slay::modifiers::PlayerModifier;
@@ -13,17 +15,42 @@ use crate::slay::tasks::core::draw::DrawTask;
 use crate::slay::tasks::core::sacrifice::Sacrifice;
 
 pub fn player_satisfies_requirements(
-	_hero_type_counts: &HeroTypeCounter,
-	_requirements: &Vec<MonsterRequirements>,
+	hero_type_counts: &mut HeroTypeCounter,
+	requirements: &mut Vec<MonsterRequirements>,
 ) -> bool {
-	let _remaining_heros = 3;
+	// First try to use the party leader if possible:
 
-	// This information is not enough: The party leader is not a hero...
+	hero_type_counts.leader_type.unwrap();
 
-	// let assignment = vec![];
-	// First assign any specific variants
+	for i in 0..requirements.len() {
+		if requirements[i].satisfied_by_party_leader(hero_type_counts.leader_type.unwrap()) {
+			requirements.remove(i);
+			hero_type_counts.leader_type = None;
+			break;
+		}
+	}
 
-	false
+	// assign hero type requirements
+	'outer: loop {
+		for i in 0..requirements.len() {
+			if let MonsterRequirements::HeroType(hero_type) = requirements[i] {
+				if hero_type_counts.try_to_take_one_away(hero_type) {
+					requirements.remove(i);
+					continue 'outer;
+				}
+				return false;
+			}
+		}
+		break;
+	}
+	// Just checkin...
+	for i in 0..requirements.len() {
+		if let MonsterRequirements::HeroType(hero_type) = requirements[i] {
+			unreachable!()
+		}
+	}
+
+	requirements.len() < hero_type_counts.sum()
 }
 
 #[derive(Debug, Clone, Sequence, PartialEq, Copy)]

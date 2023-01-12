@@ -34,12 +34,14 @@ use std::io::Write;
 use std::iter::Iterator;
 
 pub struct HeroTypeCounter {
-	counts: HashMap<HeroType, u32>,
+	pub leader_type: Option<HeroType>,
+	pub counts: HashMap<HeroType, u32>,
 }
 
 impl HeroTypeCounter {
 	pub fn new() -> Self {
 		Self {
+			leader_type: None,
 			counts: Default::default(),
 		}
 	}
@@ -58,6 +60,36 @@ impl HeroTypeCounter {
 		if let Some(hero_type) = hero_type_option.as_ref() {
 			self.add_hero_type(hero_type);
 		}
+	}
+
+	pub fn try_to_satisfy_with_leader(&mut self, hero_type: HeroType) -> bool {
+		if let Some(leader_type) = self.leader_type {
+			if leader_type == hero_type {
+				self.leader_type = None;
+				return true;
+			}
+		}
+		false
+	}
+	pub(crate) fn try_to_take_one_away(&mut self, hero_type: HeroType) -> bool {
+		if self.try_to_satisfy_with_leader(hero_type) {
+			return true;
+		}
+		if let Some(count) = self.counts.get(&hero_type) {
+			if *count > 0 {
+				self.counts.insert(hero_type, count - 1);
+				return true;
+			}
+		}
+		false
+	}
+
+	pub(crate) fn sum(&self) -> usize {
+		let mut ret = 0u32;
+		for count in self.counts.values() {
+			ret += count;
+		}
+		return ret as usize;
 	}
 }
 
@@ -147,7 +179,7 @@ impl Player {
 	pub fn count_hero_types(&self, hero_types: &mut HeroTypeCounter) {
 		// Could this be a one liner?
 		self.party.count_hero_types(hero_types);
-		hero_types.maybe_add_hero_type(self.leader.get_unmodified_hero_type());
+		hero_types.leader_type = self.leader.get_unmodified_hero_type();
 	}
 	pub fn collect_hero_types(&self, hero_types: &mut HashSet<HeroType>) {
 		// Could this be a one liner?

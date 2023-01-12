@@ -12,4 +12,6 @@ pub mod receive_modifier;
 pub mod remove_action_points;
 pub mod replace_hand;
 pub mod return_modifiers;
+pub mod search_discard;
 pub mod set_complete;
+pub mod trade_hands;

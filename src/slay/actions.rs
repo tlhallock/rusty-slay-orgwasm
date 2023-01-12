@@ -21,8 +21,10 @@ use crate::slay::specification::MonsterSpec;
 use crate::slay::specs::cards::SlayCardSpec;
 use crate::slay::specs::hero::HeroAbility;
 use crate::slay::specs::magic::MagicSpell;
+use crate::slay::specs::monster;
 use crate::slay::state::deck::DeckPath;
 use crate::slay::state::game::Game;
+use crate::slay::state::player::HeroTypeCounter;
 use crate::slay::state::stack::Card;
 use crate::slay::tasks::core::draw::DrawTask;
 use crate::slay::tasks::core::pull::PullFromTask;
@@ -216,7 +218,7 @@ fn create_draw_choice(id: ids::ChoiceId) -> TasksChoice {
 		},
 		vec![
 			Box::new(RemoveActionPointsTask::new(1)),
-			Box::new(DrawTask { number_to_draw: 1 }),
+			DrawTask::create(1),
 		],
 	)
 }
@@ -395,6 +397,28 @@ pub fn assign_action_choices(context: &mut GameBookKeeping, game: &mut Game) {
 	if remaining_action_points >= 2 {
 		for monster_card in game.monsters.tops() {
 			if let Some(monster) = monster_card.monster_spec() {
+				// /////////////////////////////////////////////////////////////////////
+				//  Just write some unit tests for this....
+				// /////////////////////////////////////////////////////////////////////
+				let hero_type_counts = &mut HeroTypeCounter::new();
+				game.players[player_index].count_hero_types(hero_type_counts);
+				let requirements = &mut monster.requirements.to_vec();
+				println!(
+					"Does\n\t\tleader={:?}\n\t\tparty={:?}\nsatisfy requirements\n\t\t{:?}?",
+					game.players[player_index].leader.card_type,
+					game.players[player_index]
+						.party
+						.stacks()
+						.map(|stack| stack.get_hero_type())
+						.collect::<Vec<_>>(),
+					requirements,
+				);
+				if !monster::player_satisfies_requirements(hero_type_counts, requirements) {
+					println!("NO");
+					continue;
+				}
+				println!("YES");
+				// /////////////////////////////////////////////////////////////////////
 				options.push(create_attack_monster_choice(
 					context,
 					game,

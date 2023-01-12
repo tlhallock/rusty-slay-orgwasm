@@ -3,9 +3,9 @@ use std::rc::Rc;
 use yew::classes;
 use yew::prelude::*;
 
+use crate::frontend::app::CommonProps;
 use crate::frontend::stack::StackView;
 use crate::slay::state::deck::DeckPerspective;
-use crate::frontend::app::CommonProps;
 
 #[derive(Properties, PartialEq)]
 pub struct DeckProps {

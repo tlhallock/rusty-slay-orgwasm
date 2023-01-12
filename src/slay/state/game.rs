@@ -248,8 +248,8 @@ impl Game {
 		self.turn.set_active_player(player_index);
 	}
 
-	pub(crate) fn get_turn(&self) -> Turn {
-		self.turn.to_owned()
+	pub(crate) fn get_turn(&self) -> &Turn {
+		&self.turn
 	}
 
 	pub(crate) fn replentish_for(&mut self, number_to_draw: usize) {
@@ -374,7 +374,7 @@ impl Game {
 				.filter(|d| d.visible_to_spectator())
 				.map(|d| d.to_spectator_perspective(self, None))
 				.collect(),
-			turn: self.get_turn(),
+			turn: self.get_turn().to_owned(),
 			choices: choices.map(|c| c.to_perspective()),
 			roll: self.showdown.get_roll().map(|r| r.to_perspective()),
 			offer: self.showdown.get_offer().map(|o| o.to_perspective()),

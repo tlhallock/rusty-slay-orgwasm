@@ -28,6 +28,10 @@ pub enum TaskParamName {
 	ForcedExchangeSelf,
 	ForcedExchangeVictimDonationCard,
 	ShadowClawVictim,
+	HeavyBearVictim,
+	MellowDeeVictim,
+	DodgyDealerVictim,
+	HopperVictim,
 }
 
 #[derive(Debug, Default, Clone)]

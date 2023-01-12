@@ -1,4 +1,3 @@
-
 use crate::slay::choices::ChoiceDisplay;
 use crate::slay::choices::ChoiceDisplayType;
 use crate::slay::choices::Choices;
@@ -14,11 +13,36 @@ use crate::slay::tasks::player_tasks::TaskProgressResult;
 use crate::slay::tasks::tasks::move_card::MoveCardTask;
 
 #[derive(Clone, Debug)]
-pub struct ReturnModifierTask {}
+enum ReturnModifiersTarget {
+	Myself,
+	Everyone,
+}
+
+#[derive(Clone, Debug)]
+pub struct ReturnModifierTask {
+	target: ReturnModifiersTarget,
+}
 
 impl ReturnModifierTask {
-	pub fn create() -> Box<dyn PlayerTask> {
-		Box::new(Self {})
+	pub fn return_everyones() -> Box<dyn PlayerTask> {
+		Box::new(Self {
+			target: ReturnModifiersTarget::Everyone,
+		})
+	}
+	pub fn return_mine() -> Box<dyn PlayerTask> {
+		Box::new(Self {
+			target: ReturnModifiersTarget::Myself,
+		})
+	}
+	fn player_indices(
+		&self,
+		player_index: ids::PlayerIndex,
+		number_of_player: usize,
+	) -> Vec<ids::PlayerIndex> {
+		match self.target {
+			ReturnModifiersTarget::Myself => vec![player_index],
+			ReturnModifiersTarget::Everyone => (0..number_of_player).collect(),
+		}
 	}
 }
 
@@ -29,8 +53,9 @@ impl PlayerTask for ReturnModifierTask {
 		game: &mut Game,
 		chooser_index: ids::PlayerIndex,
 	) -> SlayResult<TaskProgressResult> {
+		let player_indices = self.player_indices(chooser_index, game.number_of_players());
 		let mut options = Vec::new();
-		for player_index in 0..game.number_of_players() {
+		for player_index in player_indices {
 			for stack in game.players[player_index].party.stacks() {
 				for modifier in stack.modifiers.iter() {
 					options.push(TasksChoice::new(

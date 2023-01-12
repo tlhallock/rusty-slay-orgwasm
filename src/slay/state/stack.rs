@@ -58,10 +58,6 @@ impl Card {
 		}
 	}
 
-	pub(crate) fn is_magic(&self) -> bool {
-		self.get_spec().is_magic()
-	}
-
 	pub fn modification_amounts(&self) -> Vec<i32> {
 		self.get_spec().modifiers.to_vec() // ::<Vec<(ids::CardId, i32)>>()
 	}
@@ -87,7 +83,19 @@ impl Card {
 	}
 
 	pub(crate) fn is_hero(&self) -> bool {
-		self.get_spec().is_hero()
+		matches!(self.card_type, SlayCardSpec::HeroCard(_))
+	}
+
+	pub(crate) fn is_modifier(&self) -> bool {
+		matches!(self.card_type, SlayCardSpec::ModifierCard(_))
+	}
+
+	pub(crate) fn is_item(&self) -> bool {
+		matches!(self.card_type, SlayCardSpec::Item(_))
+	}
+	
+	pub(crate) fn is_magic(&self) -> bool {
+		matches!(self.card_type, SlayCardSpec::MagicCard(_))
 	}
 
 	pub(crate) fn is_challenge(&self) -> bool {

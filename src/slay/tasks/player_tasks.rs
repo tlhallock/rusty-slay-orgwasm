@@ -210,6 +210,12 @@ pub(crate) fn continue_tasks(
 	game: &mut Game,
 	player_index: ids::PlayerIndex,
 ) -> SlayResult<TaskProgressResult> {
+	/*
+	
+	NOTE:
+		Actions can assign choices to other players aside from the current player.
+		This check of choices.is_some() is correct (I think) but tricker to think through.
+	*/
 	let mut result = TaskProgressResult::NothingDone;
 	loop {
 		if game.players[player_index].choices.is_some() {

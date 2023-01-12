@@ -9,11 +9,20 @@ use crate::slay::state::deck::DeckPath;
 use crate::slay::state::game::Game;
 use crate::slay::tasks::player_tasks::PlayerTask;
 use crate::slay::tasks::player_tasks::TaskProgressResult;
+use crate::slay::tasks::task_params::TaskParamName;
 use crate::slay::tasks::tasks::move_card::MoveCardTask;
+
+
+#[derive(Debug, Clone)]
+pub enum SacrificeVictim {
+	Myself,
+	FromParam(TaskParamName),
+}
 
 #[derive(Debug, Clone)]
 pub struct Sacrifice {
 	num: u32,
+	victim: SacrificeVictim,
 }
 
 impl Sacrifice {
@@ -21,7 +30,16 @@ impl Sacrifice {
 		Box::new(Self::new(num))
 	}
 	pub fn new(num: u32) -> Self {
-		Self { num }
+		Self { num, victim: SacrificeVictim::Myself}
+	}
+	pub fn from_param(param: TaskParamName) -> Box<dyn PlayerTask> {
+		Box::new(Self { num: 1, victim: SacrificeVictim::FromParam(param), })
+	}
+	fn get_victim(&self, game: &Game, player_index: ids::PlayerIndex) -> SlayResult<ids::PlayerIndex> {
+		match self.victim {
+    	SacrificeVictim::Myself => Ok(player_index),
+	    SacrificeVictim::FromParam(param) => game.player_param(player_index, &param),
+		}
 	}
 }
 
@@ -39,8 +57,8 @@ impl PlayerTask for Sacrifice {
 		if self.num == 0 {
 			return Ok(TaskProgressResult::TaskComplete);
 		}
-
-		let party = &game.players[player_index].party;
+		let victim_index = self.get_victim(game, player_index)?;
+		let party = &game.players[victim_index].party;
 		let mut options: Vec<TasksChoice> = party
 			.tops()
 			// .filter(card_is_sacrificable)
@@ -62,7 +80,7 @@ impl PlayerTask for Sacrifice {
 
 		if options.len() == self.num as usize {
 			for option in options.iter_mut() {
-				option.select(game, player_index)?;
+				option.select(game, victim_index)?;
 			}
 			return Ok(TaskProgressResult::TaskComplete);
 		}
@@ -71,7 +89,7 @@ impl PlayerTask for Sacrifice {
 			return Ok(TaskProgressResult::TaskComplete);
 		}
 
-		game.players[player_index].choices = Some(Choices {
+		game.players[victim_index].choices = Some(Choices {
 			instructions: "Choose a card to sacrifice.".to_string(),
 			options,
 			default_choice: None,

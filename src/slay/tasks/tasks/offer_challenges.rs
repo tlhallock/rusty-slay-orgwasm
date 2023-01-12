@@ -3,15 +3,11 @@ use crate::slay::errors::SlayError;
 use crate::slay::errors::SlayResult;
 use crate::slay::game_context::GameBookKeeping;
 use crate::slay::ids;
-
 use crate::slay::showdown::completion::Completion;
 use crate::slay::showdown::completion::CompletionTracker;
-
 use crate::slay::showdown::current_showdown::ShowDown;
 use crate::slay::showdown::offer::OfferChallengesState;
-
 use crate::slay::state::game::Game;
-
 use crate::slay::tasks::player_tasks::PlayerTask;
 use crate::slay::tasks::player_tasks::TaskProgressResult;
 

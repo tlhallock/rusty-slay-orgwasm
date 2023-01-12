@@ -7,23 +7,42 @@ use crate::slay::game_context::GameBookKeeping;
 use crate::slay::ids;
 use crate::slay::message::Notification;
 use crate::slay::state::game::Game;
+use crate::slay::state::initialize;
 use crate::slay::state::player::Player;
 use crate::slay::state::summarizable::Summarizable;
 use crate::slay::strategy;
+use crate::slay::tasks::player_tasks;
+use crate::slay::tasks::player_tasks::TaskProgressResult;
 
 use std::collections::HashSet;
 use std::io::BufWriter;
 
 use simple_logging;
 
-use crate::slay::state::initialize;
-use crate::slay::tasks::player_tasks::TaskProgressResult;
-use crate::slay::tasks::player_tasks::{self};
-
 pub fn player_has_won(player: &Player) -> bool {
 	let hero_types = &mut HashSet::new();
 	player.collect_hero_types(hero_types);
-	player.slain_monsters.num_top_cards() >= 3 || hero_types.len() >= 6
+
+	let num_monsters = player.slain_monsters.num_top_cards();
+	if num_monsters >= 3 {
+		log::info!(
+			"Player {} has {} slain monsters.",
+			player.player_index,
+			num_monsters
+		);
+		return false;
+		// return true;
+	}
+	if hero_types.len() >= 6 {
+		log::info!(
+			"Player {} has {} different hero types.",
+			player.player_index,
+			hero_types.len()
+		);
+		return false;
+		// return true;
+	}
+	false
 }
 
 pub fn game_is_over(game: &Game) -> bool {
@@ -133,6 +152,16 @@ pub fn make_selection(
 	Ok(())
 }
 
+fn game_to_string(game: &Game) -> String {
+	let mut writer = BufWriter::new(Vec::new());
+	game
+		.summarize(&mut writer, 0)
+		.expect("Error writing to file");
+	let bytes = writer.into_inner().expect("whoops");
+	let string = String::from_utf8(bytes).expect("error logging state");
+	string
+}
+
 pub fn game_loop() -> SlayResult<()> {
 	simple_logging::log_to_file("output/log.txt", LevelFilter::Info).expect("Unable to log.");
 
@@ -146,6 +175,7 @@ pub fn game_loop() -> SlayResult<()> {
 		iteration += 1;
 
 		if game.get_turn().over_the_limit() {
+			log::info!("Reached iteration cap.");
 			return Ok(());
 			// return Err(SlayError::new("Hit maximum iterations"));
 		}
@@ -156,12 +186,8 @@ pub fn game_loop() -> SlayResult<()> {
 			// 	format!("./output/iteration_{:04}.txt", iteration))
 			// 	.unwrap();
 			// let mut writer = BufWriter::new(&write_file);
-			let mut writer = BufWriter::new(Vec::new());
-			game
-				.summarize(&mut writer, 0)
-				.expect("Error writing to file");
-			let bytes = writer.into_inner().expect("whoops");
-			let string = String::from_utf8(bytes).expect("error logging state");
+
+			let string = game_to_string(game);
 			log::info!("iteration {:04} information:\n{}", iteration, string);
 		}
 
@@ -186,7 +212,11 @@ pub fn game_loop() -> SlayResult<()> {
 			log::info!("Notification: '{}'", notification.message_text);
 		})?;
 		match advance_game(context, game)? {
-			AdvanceGameResult::GameOver => return Ok(()),
+			AdvanceGameResult::GameOver => {
+				let string = game_to_string(game);
+				println!("Ending state: {}", string);
+				return Ok(());
+			}
 			AdvanceGameResult::WaitingForPlayers => continue 'turns,
 		}
 	}
