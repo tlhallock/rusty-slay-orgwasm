@@ -224,9 +224,7 @@ impl HeroAbilityType {
 				Discard::from_param(2, TaskParamName::HeavyBearVictim),
 			],
 			HeroAbilityType::BadAxe => vec![DestroyTask::create()],
-			HeroAbilityType::ToughTeddy => vec![
-				Discard::each_player_with(HeroType::Fighter)
-			],
+			HeroAbilityType::ToughTeddy => vec![Discard::each_player_with(HeroType::Fighter)],
 			HeroAbilityType::BearClaw => vec![], /////////////////////////////////////
 			HeroAbilityType::FuryKnuckle => vec![], //////////////////////////////////
 			HeroAbilityType::BearyWise => vec![], ////////////////////////////////////
@@ -234,31 +232,19 @@ impl HeroAbilityType {
 				// There is similar logic in... immediately.rs
 				DrawTask::create(1),
 			],
-			HeroAbilityType::Wildshot => vec![
-				DrawTask::create(3),
-				Discard::create(1),
-			],
-			HeroAbilityType::SeriousGrey => vec![
-				DestroyTask::create(),
-				DrawTask::create(1),
-			],
-			HeroAbilityType::WilyRed => vec![
-				DrawTask::until(7),
-			],
+			HeroAbilityType::Wildshot => vec![DrawTask::create(3), Discard::create(1)],
+			HeroAbilityType::SeriousGrey => vec![DestroyTask::create(), DrawTask::create(1)],
+			HeroAbilityType::WilyRed => vec![DrawTask::until(7)],
 			HeroAbilityType::QuickDraw => vec![], ////////////////////////////////////
-			HeroAbilityType::LookieRookie => vec![
-				SearchDiscard::for_item(),
-			],
-			HeroAbilityType::Bullseye => vec![],//////////////////////////////////////
-			HeroAbilityType::SharpFox => vec![],//////////////////////////////////////
+			HeroAbilityType::LookieRookie => vec![SearchDiscard::for_item()],
+			HeroAbilityType::Bullseye => vec![], //////////////////////////////////////
+			HeroAbilityType::SharpFox => vec![], //////////////////////////////////////
 			HeroAbilityType::FuzzyCheeks => vec![], //////////////////////////////////
 			HeroAbilityType::Peanut => vec![DrawTask::create(2)],
 			HeroAbilityType::NappingNibbles => vec![/* This one actually is empty. */],
-			HeroAbilityType::TipsyTootie => vec![],///////////////////////////////////
-			HeroAbilityType::MellowDee => vec![
-				DrawTask::into_param(TaskParamName::MellowDeeVictim),
-			],
-			HeroAbilityType::LuckBucky => vec![],/////////////////////////////////////
+			HeroAbilityType::TipsyTootie => vec![], ///////////////////////////////////
+			HeroAbilityType::MellowDee => vec![DrawTask::into_param(TaskParamName::MellowDeeVictim)],
+			HeroAbilityType::LuckBucky => vec![], /////////////////////////////////////
 			HeroAbilityType::DodgyDealer => vec![
 				ChoosePlayerParameterTask::exclude_self(
 					TaskParamName::DodgyDealerVictim,
@@ -267,18 +253,13 @@ impl HeroAbilityType {
 				TradeHands::create(TaskParamName::DodgyDealerVictim),
 				ClearParamsTask::create(),
 			],
-			HeroAbilityType::GreedyCheeks => vec![],//////////////////////////////////
-			HeroAbilityType::Fluffy => vec![
-				DestroyTask::create(),
-				DestroyTask::create(),
-			],
-			HeroAbilityType::Wiggles => vec![],///////////////////////////////////////
-			HeroAbilityType::Spooky => vec![],////////////////////////////////////////
-			HeroAbilityType::Snowball => vec![],//////////////////////////////////////
-			HeroAbilityType::Buttons => vec![],///////////////////////////////////////
-			HeroAbilityType::BunBun => vec![
-				SearchDiscard::for_magic(),
-			],
+			HeroAbilityType::GreedyCheeks => vec![], //////////////////////////////////
+			HeroAbilityType::Fluffy => vec![DestroyTask::create(), DestroyTask::create()],
+			HeroAbilityType::Wiggles => vec![], ///////////////////////////////////////
+			HeroAbilityType::Spooky => vec![],  ////////////////////////////////////////
+			HeroAbilityType::Snowball => vec![], //////////////////////////////////////
+			HeroAbilityType::Buttons => vec![], ///////////////////////////////////////
+			HeroAbilityType::BunBun => vec![SearchDiscard::for_magic()],
 			HeroAbilityType::Hopper => vec![
 				ChoosePlayerParameterTask::exclude_self(
 					TaskParamName::HopperVictim,
@@ -287,10 +268,7 @@ impl HeroAbilityType {
 				Sacrifice::from_param(TaskParamName::HopperVictim),
 				ClearParamsTask::create(),
 			],
-			HeroAbilityType::Whiskers => vec![
-				StealTask::create(),
-				DestroyTask::create(),
-			],
+			HeroAbilityType::Whiskers => vec![StealTask::create(), DestroyTask::create()],
 		}
 	}
 }

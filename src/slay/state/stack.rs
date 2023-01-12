@@ -93,7 +93,7 @@ impl Card {
 	pub(crate) fn is_item(&self) -> bool {
 		matches!(self.card_type, SlayCardSpec::Item(_))
 	}
-	
+
 	pub(crate) fn is_magic(&self) -> bool {
 		matches!(self.card_type, SlayCardSpec::MagicCard(_))
 	}

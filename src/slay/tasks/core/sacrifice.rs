@@ -12,7 +12,6 @@ use crate::slay::tasks::player_tasks::TaskProgressResult;
 use crate::slay::tasks::task_params::TaskParamName;
 use crate::slay::tasks::tasks::move_card::MoveCardTask;
 
-
 #[derive(Debug, Clone)]
 pub enum SacrificeVictim {
 	Myself,
@@ -30,15 +29,25 @@ impl Sacrifice {
 		Box::new(Self::new(num))
 	}
 	pub fn new(num: u32) -> Self {
-		Self { num, victim: SacrificeVictim::Myself}
+		Self {
+			num,
+			victim: SacrificeVictim::Myself,
+		}
 	}
 	pub fn from_param(param: TaskParamName) -> Box<dyn PlayerTask> {
-		Box::new(Self { num: 1, victim: SacrificeVictim::FromParam(param), })
+		Box::new(Self {
+			num: 1,
+			victim: SacrificeVictim::FromParam(param),
+		})
 	}
-	fn get_victim(&self, game: &Game, player_index: ids::PlayerIndex) -> SlayResult<ids::PlayerIndex> {
+	fn get_victim(
+		&self,
+		game: &Game,
+		player_index: ids::PlayerIndex,
+	) -> SlayResult<ids::PlayerIndex> {
 		match self.victim {
-    	SacrificeVictim::Myself => Ok(player_index),
-	    SacrificeVictim::FromParam(param) => game.player_param(player_index, &param),
+			SacrificeVictim::Myself => Ok(player_index),
+			SacrificeVictim::FromParam(param) => game.player_param(player_index, &param),
 		}
 	}
 }

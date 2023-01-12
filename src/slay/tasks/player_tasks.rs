@@ -211,7 +211,7 @@ pub(crate) fn continue_tasks(
 	player_index: ids::PlayerIndex,
 ) -> SlayResult<TaskProgressResult> {
 	/*
-	
+
 	NOTE:
 		Actions can assign choices to other players aside from the current player.
 		This check of choices.is_some() is correct (I think) but tricker to think through.
