@@ -7,7 +7,7 @@ use crate::slay::deadlines;
 use crate::slay::errors::SlayResult;
 use crate::slay::game_context::GameBookKeeping;
 use crate::slay::ids;
-use crate::slay::showdown::completion::{Completion, CompletionTracker};
+use crate::slay::showdown::completion::{CompletionTracker};
 use crate::slay::showdown::current_showdown::ShowDown;
 use crate::slay::showdown::roll_modification::ModificationPath;
 use crate::slay::showdown::roll_modification::RollModification;

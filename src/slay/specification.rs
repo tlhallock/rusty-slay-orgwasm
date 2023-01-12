@@ -3,8 +3,8 @@ use std::vec;
 
 use enum_iterator::Sequence;
 
-use super::errors::SlayResult;
-use super::game_context::GameBookKeeping;
+
+
 use super::ids;
 use super::modifiers::ItemModifier;
 use super::modifiers::PlayerModifier;
@@ -12,7 +12,7 @@ use super::specs::hero::HeroAbility;
 use super::specs::hero::HeroAbilityType;
 use super::specs::magic::MagicSpell;
 use super::specs::monster::Monster;
-use super::state::game::Game;
+
 use super::tasks::tasks::monster_slain::MonsterSlainTask;
 use crate::slay::showdown::consequences::Condition;
 use crate::slay::showdown::consequences::RollConsequence;

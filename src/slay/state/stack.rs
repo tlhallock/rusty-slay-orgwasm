@@ -108,7 +108,7 @@ impl Stack {
 	}
 
 	pub(crate) fn card_has_modifier(&self, modifier: ItemModifier) -> bool {
-		let mut visitor = CardHasModifier::new(modifier);
+		let visitor = CardHasModifier::new(modifier);
 		// self.tour_buffs(&mut visitor);
 		visitor.has
 	}
