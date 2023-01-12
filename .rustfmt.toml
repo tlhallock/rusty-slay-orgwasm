@@ -9,5 +9,6 @@ enum_trailing_comma = "Always"
 reorder_imports = true
 reorder_imported_names = true
 hard_tabs = true
+imports_granularity = "Item"
 # wrap_match_arms =
 
