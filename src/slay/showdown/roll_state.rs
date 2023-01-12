@@ -2,7 +2,6 @@ use std::rc::Rc;
 use std::vec;
 
 use crate::slay::choices::{ChoicePerspective, Choices, ChoicesPerspective, TasksChoice};
-use crate::slay::deadlines;
 use crate::slay::game_context::GameBookKeeping;
 use crate::slay::ids;
 use crate::slay::showdown::common::ModificationPath;
@@ -14,6 +13,7 @@ use crate::slay::showdown::current_showdown::ShowDown;
 use crate::slay::showdown::roll_choices::{self, create_modify_roll_choice};
 use crate::slay::specs::cards::SlayCardSpec;
 use crate::slay::state::game::{Game, GameStaticInformation};
+use crate::slay::{deadlines, modifier_visitors};
 
 use super::consequences::Condition;
 
@@ -23,6 +23,8 @@ use super::consequences::Condition;
 pub enum RollReason {
 	UseHeroAbility(SlayCardSpec),
 	AttackMonster(SlayCardSpec),
+	Challenged,
+	Challenging,
 }
 
 #[derive(Debug, Clone)]
@@ -47,16 +49,6 @@ pub struct RollPerspective {
 }
 
 impl RollState {
-	pub fn create_roll_history(
-		game: &Game,
-		player_index: ids::PlayerIndex,
-		reason: RollReason,
-	) -> Vec<RollModification> {
-		let mut ret = Vec::new();
-		game.players[player_index].collect_roll_buffs(reason, &mut ret);
-		ret
-	}
-
 	pub fn create(
 		context: &mut GameBookKeeping,
 		game: &Game,
@@ -67,7 +59,7 @@ impl RollState {
 		Self {
 			roller_index,
 			initial: Roll::create_from(&mut context.rng),
-			history: RollState::create_roll_history(game, roller_index, reason),
+			history: modifier_visitors::create_roll_history(game, roller_index, reason),
 			consequences,
 			completion_tracker: None,
 			reason,
@@ -98,11 +90,7 @@ impl RollState {
 	pub fn calculate_roll_total(&self) -> i32 {
 		self.initial.die1 as i32
 			+ self.initial.die2 as i32
-			+ self
-				.history
-				.iter()
-				.map(|h| h.modification_amount)
-				.sum::<i32>()
+			+ self.history.iter().map(|h| h.amount).sum::<i32>()
 	}
 }
 

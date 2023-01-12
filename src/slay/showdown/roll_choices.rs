@@ -90,8 +90,8 @@ pub fn create_modify_roll_choice(
 			}) as Box<dyn PlayerTask>,
 			Box::new(ModifyRollTask::new(
 				RollModification {
-					modification_origin: ModificationOrigin::FromPlayer(player_index, *modifier_kind),
-					modification_amount,
+					origin: ModificationOrigin::FromPlayer(player_index, *modifier_kind),
+					amount: modification_amount,
 				},
 				*modification_path,
 			)) as Box<dyn PlayerTask>,
@@ -264,7 +264,7 @@ impl PlayerTask for ChallengeTask {
 		challenging_player_index: ids::PlayerIndex,
 	) -> SlayResult<TaskProgressResult> {
 		let offer = game.showdown.take_current_offer()?;
-		let mut challenge = offer.to_challenge(&mut context.rng, challenging_player_index)?;
+		let mut challenge = offer.to_challenge(&mut context.rng, game, challenging_player_index)?;
 		challenge.completion_tracker = Some(CompletionTracker::new(
 			game.number_of_players(),
 			deadlines::get_challenge_deadline(),

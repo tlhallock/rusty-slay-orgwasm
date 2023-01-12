@@ -4,10 +4,10 @@ use crate::slay::choices::ChoicesPerspective;
 use crate::slay::choices::DisplayPath;
 use crate::slay::errors;
 use crate::slay::ids;
+use crate::slay::modifier_visitors::CountActionPoints;
+use crate::slay::modifier_visitors::ModifierVisitor;
+use crate::slay::modifiers::ModifierOrigin;
 use crate::slay::modifiers::PlayerBuffs;
-use crate::slay::modifiers::PlayerModifier;
-use crate::slay::showdown::common::RollModification;
-use crate::slay::showdown::roll_state::RollReason;
 use crate::slay::specification::HeroType;
 use crate::slay::state::deck::Deck;
 use crate::slay::state::deck::DeckPath;
@@ -167,31 +167,36 @@ impl Player {
 		self.remaining_action_points
 	}
 	pub(crate) fn calculate_total_action_points(&self) -> u32 {
-		3 + self
-			.slain_monsters
-			.tops()
-			.map(|card| {
-				if let Some(monster) = card.card_type.get_card_spec_creation().monster {
-					monster
-						.create_spec()
-						.modifiers
-						.iter()
-						.map(|modifier| match modifier {
-							PlayerModifier::ExtraActionPoint => 1,
-							_ => 0,
-						})
-						.sum::<u32>()
-				} else {
-					unreachable!()
-				}
-			})
-			.sum::<u32>()
+		let mut counter = CountActionPoints::new();
+		self.tour_buffs(&mut counter);
+		counter.count
 	}
 
-	pub(crate) fn collect_roll_buffs(&self, _reason: RollReason, ret: &mut Vec<RollModification>) {
-		self.temporary_buffs.collect_roll_buffs(ret);
-
-		todo!()
+	pub(crate) fn tour_buffs(&self, visitor: &mut dyn ModifierVisitor) {
+		self.temporary_buffs.tour_buffs(visitor);
+		if let Some(buff) = self.leader.card_type.create_party_leader_buffs() {
+			visitor.visit_player_modifier(buff, ModifierOrigin::FromPartyLeader(self.leader.id));
+		}
+		for top in self.slain_monsters.tops() {
+			if let Some(monster) = top.card_type.get_card_spec_creation().monster {
+				for modifier in monster.create_spec().modifiers {
+					visitor.visit_player_modifier(modifier, ModifierOrigin::FromSlainMonster);
+				}
+			} else {
+				unreachable!()
+			}
+		}
+		for stack in self.party.stacks() {
+			for modifier_card in stack.modifiers.iter() {
+				if let Some(modifier) = modifier_card
+					.card_type
+					.get_card_spec_creation()
+					.card_modifier
+				{
+					visitor.visit_card_modifier(modifier, stack.top.card_type)
+				}
+			}
+		}
 	}
 
 	pub fn to_perspective(&self, game: &Game, perspective: &Perspective) -> PlayerPerspective {

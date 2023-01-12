@@ -117,20 +117,20 @@ pub struct RollModificationProps {
 }
 #[function_component(RollModificationView)]
 pub fn view_roll_modification(props: &RollModificationProps) -> Html {
-	match props.modification.modification_origin {
+	match props.modification.origin {
 		ModificationOrigin::FromPlayer(player_index, kinds) => html! {
 			<PlayerModificationView
 				common={props.common.to_owned()}
 				player_index={player_index}
 				kinds={kinds.to_owned()}
-				amount={props.modification.modification_amount}
+				amount={props.modification.amount}
 			/>
 		},
 		ModificationOrigin::FromBuff(origin) => html! {
 			<BuffModificationView
 				common={props.common.to_owned()}
 				origin={origin.to_owned()}
-				amount={props.modification.modification_amount}
+				amount={props.modification.amount}
 			/>
 		},
 	}

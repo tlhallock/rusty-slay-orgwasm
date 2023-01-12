@@ -89,10 +89,12 @@ impl OfferChallengesState {
 	pub fn to_challenge(
 		&self,
 		rng: &mut rand::rngs::ThreadRng,
+		game: &Game,
 		challenger_index: ids::PlayerIndex,
 	) -> SlayResult<ChallengeState> {
 		Ok(ChallengeState::new(
 			rng,
+			game,
 			self.player_index,
 			challenger_index,
 			self.consequences.to_owned(), // Copied, although it is about to be dropped.

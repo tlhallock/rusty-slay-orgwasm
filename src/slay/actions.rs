@@ -32,6 +32,10 @@ use crate::slay::tasks::PlayerTask;
 use crate::slay::tasks::TaskParamName;
 use crate::slay::tasks::TaskProgressResult;
 
+use super::abilities::params::ClearParamsTask;
+use super::abilities::pull::PullFromTask;
+use super::specification::HeroType;
+use super::specs::cards::SlayCardSpec;
 use super::specs::hero::HeroAbility;
 use super::specs::magic::MagicSpell;
 
@@ -440,6 +444,28 @@ fn create_party_action_choice(
 			player_index,
 			card_path,
 			ability,
+		));
+	}
+	if matches!(
+		game.card(card_path).card_type,
+		SlayCardSpec::PartyLeader(HeroType::Thief)
+	) {
+		return Some(TasksChoice::new(
+			context.id_generator.generate(),
+			ChoiceDisplay {
+				display_type: ChoiceDisplayType::HighlightPath(DisplayPath::CardAt(card_path)),
+				label: String::from("Use the Shadow Claw to pull a card."),
+			},
+			vec![
+				Box::new(RemoveActionPointsTask::new(1)),
+				Box::new(CardUsedTask::new(player_index, card_path.get_card_id())),
+				ChoosePlayerParameterTask::exclude_self(
+					TaskParamName::ShadowClawVictim,
+					"Choose a player to steal from.",
+				),
+				PullFromTask::create(TaskParamName::ShadowClawVictim),
+				ClearParamsTask::create(),
+			],
 		));
 	}
 	None

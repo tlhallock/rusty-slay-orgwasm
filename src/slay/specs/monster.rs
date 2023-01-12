@@ -74,7 +74,7 @@ impl Monster {
 					MonsterRequirements::HeroType(HeroType::Fighter),
 					MonsterRequirements::Hero,
 				],
-				modifiers: vec![PlayerModifier::AddToRollForChallenge],
+				modifiers: vec![PlayerModifier::AddToRollForChallenge(1)],
 			},
 			Monster::DarkDragonKing => MonsterSpec {
 				consequences: RollConsequences {
@@ -91,7 +91,7 @@ impl Monster {
 					MonsterRequirements::HeroType(HeroType::Bard),
 					MonsterRequirements::Hero,
 				],
-				modifiers: vec![PlayerModifier::AddToRollForAbility],
+				modifiers: vec![PlayerModifier::AddToRollForAnyAbility(1)],
 			},
 			Monster::AbyssQueen => MonsterSpec {
 				consequences: RollConsequences {

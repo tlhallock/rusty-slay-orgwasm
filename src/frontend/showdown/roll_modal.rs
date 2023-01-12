@@ -125,6 +125,7 @@ pub fn view_roll_context(props: &RollModalProps) -> Html {
 				<br/>
 			</>
 		},
+		_ => unreachable!(),
 	};
 	html! {
 		<label>

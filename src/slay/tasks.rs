@@ -38,6 +38,7 @@ pub enum TaskParamName {
 	ForcedExchangeVictimCard,
 	ForcedExchangeSelf,
 	ForcedExchangeVictimDonationCard,
+	ShadowClawVictim,
 }
 
 #[derive(Debug, Default, Clone)]
@@ -308,34 +309,6 @@ impl PlayerTask for ReceiveModifier {
 		format!("Player is receiving modifier {:?}", self.modifier)
 	}
 }
-
-// #[derive(Debug, Clone)]
-// struct Draw {
-// 	player_index: usize,
-// 	num: u32,
-// }
-
-// impl Draw {
-// 	pub fn new(player_index: usize, num: u32) -> Self {
-// 		Self { player_index, num }
-// 	}
-// }
-
-// impl PlayerTask for Draw {
-// 	fn make_progress(
-// 		&mut self, _context: &mut GameBookKeeping, _game: &mut Game,
-// 	) -> SlayResult<TaskProgressResult> {
-// 		let stack = _game.draw.deal();
-// 		_game.players[self.player_index].hand.add(stack);
-// 		Ok(TaskProgressResult::TaskComplete)
-// 	}
-// 	fn label(&self) -> String {
-// 		format!(
-// 			"Player {} is drawing {} cards.",
-// 			self.player_index, self.num
-// 		)
-// 	}
-// }
 
 pub(crate) fn continue_tasks(
 	context: &mut GameBookKeeping,

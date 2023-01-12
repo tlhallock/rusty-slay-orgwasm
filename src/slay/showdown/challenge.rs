@@ -8,9 +8,11 @@ use super::common::RollModification;
 use super::completion::CompletionTracker;
 use super::consequences::RollConsequences;
 use super::roll_state::list_modification_choices;
+use super::roll_state::RollReason;
 use crate::slay::choices::ChoicesPerspective;
 use crate::slay::choices::{ChoicePerspective, Choices};
 use crate::slay::game_context::GameBookKeeping;
+use crate::slay::modifier_visitors;
 use crate::slay::showdown::common::Roll;
 use crate::slay::showdown::current_showdown::ShowDown;
 use crate::slay::state::game::Game;
@@ -47,10 +49,23 @@ pub struct ChallengePerspective {
 }
 
 impl ChallengeRoll {
-	pub fn new(rng: &mut ThreadRng, player_index: ids::PlayerIndex, path: ModificationPath) -> Self {
+	pub fn new(
+		rng: &mut ThreadRng,
+		game: &Game,
+		player_index: ids::PlayerIndex,
+		path: ModificationPath,
+	) -> Self {
 		Self {
 			initial: Roll::create_from(rng),
-			history: Default::default(),
+			history: modifier_visitors::create_roll_history(
+				game,
+				player_index,
+				match path {
+					ModificationPath::Roll => unreachable!(),
+					ModificationPath::Challenger => RollReason::Challenging,
+					ModificationPath::Initiator => RollReason::Challenged,
+				},
+			),
 			path,
 			player_index,
 		}
@@ -59,11 +74,7 @@ impl ChallengeRoll {
 	pub fn calculate_roll_total(&self) -> i32 {
 		self.initial.die1 as i32
 			+ self.initial.die2 as i32
-			+ self
-				.history
-				.iter()
-				.map(|h| h.modification_amount)
-				.sum::<i32>()
+			+ self.history.iter().map(|h| h.amount).sum::<i32>()
 	}
 
 	pub fn roller_name(&self, statics: &Rc<GameStaticInformation>) -> String {
@@ -105,14 +116,15 @@ impl ChallengeState {
 
 	pub fn new(
 		rng: &mut rand::rngs::ThreadRng,
+		game: &Game,
 		player_index: ids::PlayerIndex,
 		challenger_index: ids::PlayerIndex,
 		consequences: RollConsequences,
 		reason: ChallengeReason,
 	) -> Self {
 		Self {
-			initiator: ChallengeRoll::new(rng, player_index, ModificationPath::Initiator),
-			challenger: ChallengeRoll::new(rng, challenger_index, ModificationPath::Challenger),
+			initiator: ChallengeRoll::new(rng, game, player_index, ModificationPath::Initiator),
+			challenger: ChallengeRoll::new(rng, game, challenger_index, ModificationPath::Challenger),
 			completion_tracker: None,
 			consequences,
 			reason,

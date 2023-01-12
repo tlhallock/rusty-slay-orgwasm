@@ -29,12 +29,7 @@ impl Roll {
 	}
 
 	pub fn calculate_total(&self, modifications: &[RollModification]) -> i32 {
-		(self.die1 as i32)
-			+ (self.die2 as i32)
-			+ modifications
-				.iter()
-				.map(|m| m.modification_amount)
-				.sum::<i32>()
+		(self.die1 as i32) + (self.die2 as i32) + modifications.iter().map(|m| m.amount).sum::<i32>()
 	}
 }
 
@@ -54,9 +49,8 @@ pub enum ModificationOrigin {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct RollModification {
-	// Rename these: it is already within a modification...
-	pub modification_origin: ModificationOrigin,
-	pub modification_amount: i32,
+	pub origin: ModificationOrigin,
+	pub amount: i32,
 }
 
 #[derive(Debug, PartialEq, Clone)]

@@ -1,10 +1,7 @@
 use crate::slay::state::turn::Turn;
 
 use super::{
-	ids,
-	showdown::common::{ModificationOrigin, RollModification},
-	specification::HeroType,
-	specs::magic::MagicSpell,
+	ids, modifier_visitors::ModifierVisitor, specification::HeroType, specs::magic::MagicSpell,
 };
 
 #[derive(Debug, Clone, Copy)]
@@ -35,6 +32,7 @@ pub enum ModifierOrigin {
 	FromHeroAbility(ids::CardId),
 	FromSlainMonster,
 	FromPartyLeader(ids::CardId),
+	FromItem,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -59,6 +57,12 @@ pub struct PlayerBuffs {
 	temporary_buffs: Vec<PlayerBuff>,
 }
 impl PlayerBuffs {
+	pub(crate) fn tour_buffs(&self, visitor: &mut dyn ModifierVisitor) {
+		for buff in self.temporary_buffs.iter() {
+			visitor.visit_player_modifier(buff.modifier, buff.origin)
+		}
+	}
+
 	pub(crate) fn clear_expired_modifiers(&mut self, turn: &Turn) {
 		self
 			.temporary_buffs
@@ -90,35 +94,41 @@ impl PlayerBuffs {
 	// 	});
 	// }
 
-	pub(crate) fn collect_roll_buffs(&self, ret: &mut Vec<RollModification>) {
-		for modifier in self.temporary_buffs.iter() {
-			if let PlayerModifier::AddToAllRolls(amount) = &modifier.modifier {
-				ret.push(RollModification {
-					modification_origin: ModificationOrigin::FromBuff(modifier.origin),
-					modification_amount: *amount,
-				})
-			}
-		}
-	}
+	// pub(crate) fn collect_roll_buffs(&self, ret: &mut Vec<RollModification>) {
+	// 	for modifier in self.temporary_buffs.iter() {
+	// 		if let PlayerModifier::AddToAllRolls(amount) = &modifier.modifier {
+	// 			ret.push(RollModification {
+	// 				modification_origin: ModificationOrigin::FromBuff(modifier.origin),
+	// 				modification_amount: *amount,
+	// 			})
+	// 		}
+	// 	}
+	// }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum PlayerModifier {
-	UndestroyableHeros,
 	PlayMagicOnDraw,
 	PlayItemOnDraw,
+
+	UndestroyableHeros,
 	ExtraActionPoint,
-	AddToAllRolls(i32),
-	AddToRollForAbility,
 	DrawOnSuccessfulAbility,
 	DiscardOnChallenge,
 	DrawOnDestroy,
 	ItemsCannotBeChallenged,
-	DrawOnModify,
 	StealInsteadOfSacrifice,
 	RevealModifiersAndDrawAgain,
+	DrawOnPlayMagic,
+	ModifierBonus,
+
+	DrawOnModify,
 	AddOnModify,
-	AddToRollForChallenge,
+
+	AddToRollForAttack(i32),
+	AddToAllRolls(i32),
+	AddToRollForAnyAbility(i32),
+	AddToRollForChallenge(i32),
 }
 
 // Rename this to card modifier, or hero modifier
