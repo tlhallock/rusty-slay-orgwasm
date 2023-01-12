@@ -1,9 +1,9 @@
-use std::{
-	collections::HashMap,
-	io::{BufWriter, Write},
-};
+use std::collections::HashMap;
+use std::io::BufWriter;
+use std::io::Write;
 
-use crate::slay::{ids, state::summarizable::Summarizable};
+use crate::slay::ids;
+use crate::slay::state::summarizable::Summarizable;
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
 pub enum TaskParamName {

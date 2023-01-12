@@ -5,8 +5,7 @@ use yew::prelude::*;
 
 use crate::frontend::deck::DeckView;
 use crate::slay::state::player::PlayerPerspective;
-
-use super::app::CommonProps;
+use crate::frontend::app::CommonProps;
 
 #[derive(Properties, PartialEq)]
 struct ActionPointsProps {

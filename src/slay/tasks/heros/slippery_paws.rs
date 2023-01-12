@@ -1,16 +1,13 @@
 use std::collections::HashSet;
 
-use crate::slay::{
-	errors::SlayResult,
-	game_context::GameBookKeeping,
-	ids,
-	state::game::Game,
-	tasks::{
-		core::discard::Discard,
-		player_tasks::{PlayerTask, TaskProgressResult},
-		task_params::TaskParamName,
-	},
-};
+use crate::slay::errors::SlayResult;
+use crate::slay::game_context::GameBookKeeping;
+use crate::slay::ids;
+use crate::slay::state::game::Game;
+use crate::slay::tasks::core::discard::Discard;
+use crate::slay::tasks::player_tasks::PlayerTask;
+use crate::slay::tasks::player_tasks::TaskProgressResult;
+use crate::slay::tasks::task_params::TaskParamName;
 
 #[derive(Clone, Debug)]
 pub struct SlipperyPaws {}

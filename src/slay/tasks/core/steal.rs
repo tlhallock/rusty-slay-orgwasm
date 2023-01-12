@@ -2,11 +2,12 @@ use crate::slay::errors::SlayResult;
 use crate::slay::game_context::GameBookKeeping;
 use crate::slay::ids;
 use crate::slay::state::game::Game;
-use crate::slay::tasks::player_tasks::{PlayerTask, TaskProgressResult};
+use crate::slay::tasks::player_tasks::PlayerTask;
+use crate::slay::tasks::player_tasks::TaskProgressResult;
 use crate::slay::tasks::task_params::TaskParamName;
-use crate::slay::tasks::tasks::params::{
-	ChooseCardFromPlayerParameterTask, ChoosePlayerParameterTask, ClearParamsTask,
-};
+use crate::slay::tasks::tasks::params::ChooseCardFromPlayerParameterTask;
+use crate::slay::tasks::tasks::params::ChoosePlayerParameterTask;
+use crate::slay::tasks::tasks::params::ClearParamsTask;
 
 #[derive(Clone, Debug, Default)]
 pub struct StealTask {}

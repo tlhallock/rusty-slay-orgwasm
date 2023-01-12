@@ -1,8 +1,12 @@
 use crate::slay::modifiers::ItemModifier;
 use crate::slay::showdown::consequences::Condition;
-use crate::slay::specification::{CardSpec, CardType, HeroType, ItemType};
+use crate::slay::specification::CardSpec;
+use crate::slay::specification::CardType;
+use crate::slay::specification::HeroType;
+use crate::slay::specification::ItemType;
 use crate::slay::specs::cards::SlayCardSpec;
-use crate::slay::specs::hero::{HeroAbility, HeroAbilityType};
+use crate::slay::specs::hero::HeroAbility;
+use crate::slay::specs::hero::HeroAbilityType;
 use crate::slay::specs::items::Item;
 use crate::slay::specs::magic::MagicSpell;
 use crate::slay::specs::modifier::ModifierKinds;

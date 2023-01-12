@@ -1,22 +1,24 @@
 use log::LevelFilter;
 
 use crate::slay::actions;
-use crate::slay::errors::{SlayError, SlayResult};
+use crate::slay::errors::SlayError;
+use crate::slay::errors::SlayResult;
 use crate::slay::game_context::GameBookKeeping;
 use crate::slay::ids;
 use crate::slay::message::Notification;
 use crate::slay::state::game::Game;
 use crate::slay::state::player::Player;
 use crate::slay::state::summarizable::Summarizable;
-use crate::slay::{strategy};
+use crate::slay::strategy;
 
 use std::collections::HashSet;
 use std::io::BufWriter;
 
 use simple_logging;
 
-use super::state::initialize;
-use super::tasks::player_tasks::{self, TaskProgressResult};
+use crate::slay::state::initialize;
+use crate::slay::tasks::player_tasks::TaskProgressResult;
+use crate::slay::tasks::player_tasks::{self};
 
 pub fn player_has_won(player: &Player) -> bool {
 	let hero_types = &mut HashSet::new();

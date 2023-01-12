@@ -5,47 +5,39 @@ use crate::slay::choices::Choices;
 use crate::slay::choices::DisplayPath;
 use crate::slay::choices::TasksChoice;
 use crate::slay::deadlines;
-
-
 use crate::slay::game_context::GameBookKeeping;
 use crate::slay::ids;
 use crate::slay::modifiers::ItemModifier;
-
-
+use crate::slay::modifiers::PlayerModifier;
 use crate::slay::showdown::consequences::Condition;
 use crate::slay::showdown::consequences::RollConsequence;
 use crate::slay::showdown::consequences::RollConsequences;
-
 use crate::slay::showdown::offer::OfferChallengesState;
 use crate::slay::showdown::roll::ChallengeReason;
 use crate::slay::showdown::roll_state::RollReason;
 use crate::slay::showdown::roll_state::RollState;
+use crate::slay::specification::HeroType;
 use crate::slay::specification::MonsterSpec;
+use crate::slay::specs::cards::SlayCardSpec;
+use crate::slay::specs::hero::HeroAbility;
+use crate::slay::specs::magic::MagicSpell;
 use crate::slay::state::deck::DeckPath;
 use crate::slay::state::game::Game;
 use crate::slay::state::stack::Card;
-
 use crate::slay::tasks::core::draw::DrawTask;
 use crate::slay::tasks::core::pull::PullFromTask;
-
-
-use super::modifiers::PlayerModifier;
-use super::specification::HeroType;
-use super::specs::cards::SlayCardSpec;
-use super::specs::hero::HeroAbility;
-use super::specs::magic::MagicSpell;
-use super::tasks::player_tasks::PlayerTask;
-use super::tasks::task_params::TaskParamName;
-use super::tasks::tasks::add_tasks::AddTasks;
-use super::tasks::tasks::card_used::CardUsedTask;
-use super::tasks::tasks::do_roll::DoRollTask;
-use super::tasks::tasks::magic::MagicTask;
-use super::tasks::tasks::move_card::MoveCardTask;
-use super::tasks::tasks::offer_challenges::OfferChallengesTask;
-use super::tasks::tasks::params::ChoosePlayerParameterTask;
-use super::tasks::tasks::params::ClearParamsTask;
-use super::tasks::tasks::remove_action_points::RemoveActionPointsTask;
-use super::tasks::tasks::replace_hand::ReplaceHandTask;
+use crate::slay::tasks::player_tasks::PlayerTask;
+use crate::slay::tasks::task_params::TaskParamName;
+use crate::slay::tasks::tasks::add_tasks::AddTasks;
+use crate::slay::tasks::tasks::card_used::CardUsedTask;
+use crate::slay::tasks::tasks::do_roll::DoRollTask;
+use crate::slay::tasks::tasks::magic::MagicTask;
+use crate::slay::tasks::tasks::move_card::MoveCardTask;
+use crate::slay::tasks::tasks::offer_challenges::OfferChallengesTask;
+use crate::slay::tasks::tasks::params::ChoosePlayerParameterTask;
+use crate::slay::tasks::tasks::params::ClearParamsTask;
+use crate::slay::tasks::tasks::remove_action_points::RemoveActionPointsTask;
+use crate::slay::tasks::tasks::replace_hand::ReplaceHandTask;
 
 // Emit logs like "Waiting for challenges..."
 

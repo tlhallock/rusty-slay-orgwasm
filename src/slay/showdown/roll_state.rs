@@ -1,22 +1,26 @@
 use std::rc::Rc;
 use std::vec;
 
-use crate::slay::choices::{ChoicePerspective, Choices, ChoicesPerspective, TasksChoice};
+use crate::slay::choices::ChoicePerspective;
+use crate::slay::choices::Choices;
+use crate::slay::choices::ChoicesPerspective;
+use crate::slay::choices::TasksChoice;
+use crate::slay::deadlines;
 use crate::slay::game_context::GameBookKeeping;
 use crate::slay::ids;
+use crate::slay::modifier_visitors;
 use crate::slay::showdown::completion::CompletionTracker;
+use crate::slay::showdown::consequences::Condition;
 use crate::slay::showdown::consequences::RollConsequences;
 use crate::slay::showdown::current_showdown::ShowDown;
 use crate::slay::showdown::roll::Roll;
+use crate::slay::showdown::roll_choices;
 use crate::slay::showdown::roll_modification::ModificationPath;
 use crate::slay::showdown::roll_modification::RollModification;
 use crate::slay::specs::cards::SlayCardSpec;
-use crate::slay::state::game::{Game, GameStaticInformation};
+use crate::slay::state::game::Game;
+use crate::slay::state::game::GameStaticInformation;
 use crate::slay::tasks::tasks::set_complete;
-use crate::slay::{deadlines, modifier_visitors};
-
-use super::consequences::Condition;
-use crate::slay::showdown::roll_choices;
 
 // Only the party needs stacks...
 

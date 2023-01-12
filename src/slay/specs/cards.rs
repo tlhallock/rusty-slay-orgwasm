@@ -6,7 +6,7 @@ use crate::slay::specs::magic::MagicSpell;
 use crate::slay::specs::modifier::ModifierKinds;
 use crate::slay::specs::monster::Monster;
 
-use super::hero::HeroAbilityType;
+use crate::slay::specs::hero::HeroAbilityType;
 
 #[derive(Debug, Clone, Sequence, PartialEq, Copy)]
 pub enum SlayCardSpec {

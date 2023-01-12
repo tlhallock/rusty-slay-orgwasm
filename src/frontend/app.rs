@@ -2,15 +2,18 @@ use std::collections::VecDeque;
 use std::rc::Rc;
 use yew::Callback;
 
-use super::card_modal::CardModalInfo;
 use crate::slay::choices::ChoicesPerspective;
+use crate::slay::driver;
 use crate::slay::driver::AdvanceGameResult;
 use crate::slay::game_context::GameBookKeeping;
 use crate::slay::ids;
 use crate::slay::message::Notification;
-use crate::slay::state::game::{Game, GamePerspective, GameStaticInformation};
+use crate::slay::state::game::Game;
+use crate::slay::state::game::GamePerspective;
+use crate::slay::state::game::GameStaticInformation;
 use crate::slay::state::initialize;
-use crate::slay::{driver, strategy};
+use crate::slay::strategy;
+use crate::frontend::card_modal::CardModalInfo;
 
 #[derive(Clone)]
 pub struct AppState {

@@ -1,24 +1,14 @@
-
-
-
-
-
-
 use crate::slay::errors::SlayResult;
 use crate::slay::game_context::GameBookKeeping;
 use crate::slay::ids;
 
-
 use crate::slay::showdown::roll_modification::ModificationPath;
 use crate::slay::showdown::roll_modification::RollModification;
-
-
 
 use crate::slay::state::game::Game;
 
 use crate::slay::tasks::player_tasks::PlayerTask;
 use crate::slay::tasks::player_tasks::TaskProgressResult;
-
 
 #[derive(Debug, Clone)]
 pub struct ModifyRollTask {

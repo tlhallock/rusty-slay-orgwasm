@@ -1,13 +1,16 @@
 use enum_iterator::Sequence;
 
+use crate::slay::modifiers::PlayerModifier;
+use crate::slay::showdown::consequences::Condition;
+use crate::slay::showdown::consequences::RollConsequence;
+use crate::slay::showdown::consequences::RollConsequences;
+use crate::slay::specification::HeroType;
+use crate::slay::specification::MonsterRequirements;
+use crate::slay::specification::MonsterSpec;
+use crate::slay::state::player::HeroTypeCounter;
+use crate::slay::tasks::core::discard::Discard;
+use crate::slay::tasks::core::draw::DrawTask;
 use crate::slay::tasks::core::sacrifice::Sacrifice;
-use crate::slay::{
-	modifiers::PlayerModifier,
-	showdown::consequences::{Condition, RollConsequence, RollConsequences},
-	specification::{HeroType, MonsterRequirements, MonsterSpec},
-	state::player::HeroTypeCounter,
-	tasks::core::{discard::Discard, draw::DrawTask},
-};
 
 pub fn player_satisfies_requirements(
 	_hero_type_counts: &HeroTypeCounter,

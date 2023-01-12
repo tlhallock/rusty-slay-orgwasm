@@ -2,9 +2,9 @@ use std::rc::Rc;
 
 use yew::prelude::*;
 
-use crate::slay::choices::{ChoicePerspective, ChoicesPerspective};
-
-use super::app::CommonProps;
+use crate::slay::choices::ChoicePerspective;
+use crate::slay::choices::ChoicesPerspective;
+use crate::frontend::app::CommonProps;
 
 #[derive(Properties, PartialEq)]
 pub struct ChoiceProps {

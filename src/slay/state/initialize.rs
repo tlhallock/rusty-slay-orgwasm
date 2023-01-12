@@ -4,14 +4,16 @@ use enum_iterator::all;
 use rand::prelude::SliceRandom;
 use rand::Rng;
 
+use crate::slay::actions;
 use crate::slay::game_context::GameBookKeeping;
+use crate::slay::ids;
 use crate::slay::specs::cards::SlayCardSpec;
 use crate::slay::state::game::Game;
-use crate::slay::{actions, ids};
 
-use super::deck::DeckPath;
-use super::player::Player;
-use super::stack::{Card, Stack};
+use crate::slay::state::deck::DeckPath;
+use crate::slay::state::player::Player;
+use crate::slay::state::stack::Card;
+use crate::slay::state::stack::Stack;
 
 fn initialize_global_decks(context: &mut GameBookKeeping, game: &mut Game) {
 	let (draw_capacity, leaders_capacity, monsters_capacity) = (101, 10, 20);

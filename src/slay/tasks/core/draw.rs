@@ -1,10 +1,9 @@
-use crate::slay::{
-	errors::SlayResult,
-	game_context::GameBookKeeping,
-	ids,
-	state::game::Game,
-	tasks::player_tasks::{PlayerTask, TaskProgressResult},
-};
+use crate::slay::errors::SlayResult;
+use crate::slay::game_context::GameBookKeeping;
+use crate::slay::ids;
+use crate::slay::state::game::Game;
+use crate::slay::tasks::player_tasks::PlayerTask;
+use crate::slay::tasks::player_tasks::TaskProgressResult;
 
 #[derive(Debug, Clone)]
 pub struct DrawTask {

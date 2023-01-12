@@ -3,9 +3,11 @@ use crate::slay::modifiers::ModifierOrigin;
 use crate::slay::specs::cards::SlayCardSpec;
 use crate::slay::state::game::Game;
 
-use super::modifiers::{ItemModifier, PlayerModifier};
-use super::showdown::roll_modification::{ModificationOrigin, RollModification};
-use super::showdown::roll_state::RollReason;
+use crate::slay::modifiers::ItemModifier;
+use crate::slay::modifiers::PlayerModifier;
+use crate::slay::showdown::roll_modification::ModificationOrigin;
+use crate::slay::showdown::roll_modification::RollModification;
+use crate::slay::showdown::roll_state::RollReason;
 
 pub fn create_roll_history(
 	game: &Game,

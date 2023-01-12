@@ -1,11 +1,8 @@
-
-
 use crate::slay::specs::cards::SlayCardSpec;
-
 
 use rand::Rng;
 
-use super::roll_modification::RollModification;
+use crate::slay::showdown::roll_modification::RollModification;
 
 // Only the party needs stacks...
 

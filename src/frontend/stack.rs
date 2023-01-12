@@ -3,13 +3,12 @@ use std::rc::Rc;
 use yew::classes;
 use yew::prelude::*;
 
+use crate::frontend::app::CommonProps;
 use crate::frontend::card_modal::CardModalInfo;
 use crate::slay::choices::ChoicePerspective;
 use crate::slay::choices::ChoicesPerspective;
 use crate::slay::specs::cards::SlayCardSpec;
 use crate::slay::state::stack::StackPerspective;
-
-use super::app::CommonProps;
 
 #[derive(Properties, PartialEq, Default)]
 pub struct ExtraSpecProps {

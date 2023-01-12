@@ -3,21 +3,18 @@ use std::vec;
 
 use enum_iterator::Sequence;
 
-
-
-use super::ids;
-use super::modifiers::ItemModifier;
-use super::modifiers::PlayerModifier;
-use super::specs::hero::HeroAbility;
-use super::specs::hero::HeroAbilityType;
-use super::specs::magic::MagicSpell;
-use super::specs::monster::Monster;
-
-use super::tasks::tasks::monster_slain::MonsterSlainTask;
+use crate::slay::ids;
+use crate::slay::modifiers::ItemModifier;
+use crate::slay::modifiers::PlayerModifier;
 use crate::slay::showdown::consequences::Condition;
 use crate::slay::showdown::consequences::RollConsequence;
 use crate::slay::showdown::consequences::RollConsequences;
+use crate::slay::specs::hero::HeroAbility;
+use crate::slay::specs::hero::HeroAbilityType;
+use crate::slay::specs::magic::MagicSpell;
+use crate::slay::specs::monster::Monster;
 use crate::slay::state::deck::DeckPath;
+use crate::slay::tasks::tasks::monster_slain::MonsterSlainTask;
 
 /*
 

@@ -5,14 +5,13 @@ use crate::slay::game_context::GameBookKeeping;
 use crate::slay::ids;
 use crate::slay::state::game::Game;
 use crate::slay::state::summarizable::Summarizable;
+use crate::slay::tasks::task_params::TaskParamName;
+use crate::slay::tasks::task_params::TaskParams;
 
 use core::fmt::Debug;
 use std::collections::VecDeque;
 use std::io::BufWriter;
 use std::io::Write;
-
-use super::task_params::TaskParamName;
-use super::task_params::TaskParams;
 
 pub enum TaskProgressResult {
 	NothingDone,

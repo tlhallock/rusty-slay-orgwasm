@@ -7,6 +7,7 @@ use crate::slay::state::game::Game;
 use crate::slay::tasks::player_tasks::PlayerTask;
 use crate::slay::tasks::player_tasks::TaskProgressResult;
 
+
 #[derive(Debug, Clone)]
 pub struct ReceiveModifier {
 	modifier: PlayerModifier,

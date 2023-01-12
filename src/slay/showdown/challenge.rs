@@ -2,22 +2,24 @@ use std::rc::Rc;
 
 use rand::rngs::ThreadRng;
 
-use super::completion::CompletionTracker;
-use super::consequences::RollConsequences;
-use super::roll::ChallengeReason;
-use super::roll_modification::ModificationPath;
-use super::roll_modification::RollModification;
-use super::roll_state::list_modification_choices;
-use super::roll_state::RollReason;
+use crate::slay::choices::ChoicePerspective;
+use crate::slay::choices::Choices;
 use crate::slay::choices::ChoicesPerspective;
-use crate::slay::choices::{ChoicePerspective, Choices};
+use crate::slay::deadlines;
 use crate::slay::game_context::GameBookKeeping;
+use crate::slay::ids;
 use crate::slay::modifier_visitors;
+use crate::slay::showdown::completion::CompletionTracker;
+use crate::slay::showdown::consequences::RollConsequences;
 use crate::slay::showdown::current_showdown::ShowDown;
+use crate::slay::showdown::roll::ChallengeReason;
 use crate::slay::showdown::roll::Roll;
+use crate::slay::showdown::roll_modification::ModificationPath;
+use crate::slay::showdown::roll_modification::RollModification;
+use crate::slay::showdown::roll_state::list_modification_choices;
+use crate::slay::showdown::roll_state::RollReason;
 use crate::slay::state::game::Game;
 use crate::slay::state::game::GameStaticInformation;
-use crate::slay::{deadlines, ids};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ChallengeRoll {

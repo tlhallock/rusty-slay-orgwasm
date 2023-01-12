@@ -1,12 +1,13 @@
-use crate::slay::{
-	choices::{ChoiceDisplay, ChoiceDisplayType, TasksChoice},
-	errors::SlayResult,
-	game_context::GameBookKeeping,
-	ids,
-	showdown::completion::Completion,
-	state::game::Game,
-	tasks::player_tasks::{PlayerTask, TaskProgressResult},
-};
+use crate::slay::choices::ChoiceDisplay;
+use crate::slay::choices::ChoiceDisplayType;
+use crate::slay::choices::TasksChoice;
+use crate::slay::errors::SlayResult;
+use crate::slay::game_context::GameBookKeeping;
+use crate::slay::ids;
+use crate::slay::showdown::completion::Completion;
+use crate::slay::state::game::Game;
+use crate::slay::tasks::player_tasks::PlayerTask;
+use crate::slay::tasks::player_tasks::TaskProgressResult;
 
 #[derive(Debug, Clone)]
 pub struct SetCompleteTask {

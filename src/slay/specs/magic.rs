@@ -1,30 +1,27 @@
 use enum_iterator::Sequence;
 
-use crate::slay::{
-	abilities::magic::{create_search_discard_choices, SearchDiscardFilters},
-	errors::SlayResult,
-	game_context::GameBookKeeping,
-	ids,
-	modifiers::{ModifierOrigin, PlayerModifier},
-	state::{game::Game, stack::Stack},
-	tasks::{
-		core::{
-			destroy::DestroyTask,
-			discard::Discard,
-			draw::DrawTask,
-			steal::{StealCardFromTask, StealTask, UnStealCardFromTask},
-		},
-		player_tasks::TaskProgressResult,
-		task_params::TaskParamName,
-		tasks::{
-			params::{
-				ChooseCardFromPlayerParameterTask, ChoosePlayerParameterTask, ClearParamsTask,
-				SetParameterToMyself,
-			},
-			return_modifiers::ReturnModifierTask,
-		},
-	},
-};
+use crate::slay::abilities::magic::create_search_discard_choices;
+use crate::slay::abilities::magic::SearchDiscardFilters;
+use crate::slay::errors::SlayResult;
+use crate::slay::game_context::GameBookKeeping;
+use crate::slay::ids;
+use crate::slay::modifiers::ModifierOrigin;
+use crate::slay::modifiers::PlayerModifier;
+use crate::slay::state::game::Game;
+use crate::slay::state::stack::Stack;
+use crate::slay::tasks::core::destroy::DestroyTask;
+use crate::slay::tasks::core::discard::Discard;
+use crate::slay::tasks::core::draw::DrawTask;
+use crate::slay::tasks::core::steal::StealCardFromTask;
+use crate::slay::tasks::core::steal::StealTask;
+use crate::slay::tasks::core::steal::UnStealCardFromTask;
+use crate::slay::tasks::player_tasks::TaskProgressResult;
+use crate::slay::tasks::task_params::TaskParamName;
+use crate::slay::tasks::tasks::params::ChooseCardFromPlayerParameterTask;
+use crate::slay::tasks::tasks::params::ChoosePlayerParameterTask;
+use crate::slay::tasks::tasks::params::ClearParamsTask;
+use crate::slay::tasks::tasks::params::SetParameterToMyself;
+use crate::slay::tasks::tasks::return_modifiers::ReturnModifierTask;
 
 #[derive(Debug, Clone, Copy, Sequence, PartialEq)]
 pub enum MagicSpell {

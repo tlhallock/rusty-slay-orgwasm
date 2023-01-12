@@ -7,8 +7,9 @@ use crate::slay::deadlines;
 use crate::slay::errors::SlayResult;
 use crate::slay::game_context::GameBookKeeping;
 use crate::slay::ids;
-use crate::slay::showdown::completion::{CompletionTracker};
+use crate::slay::showdown::completion::CompletionTracker;
 use crate::slay::showdown::current_showdown::ShowDown;
+use crate::slay::showdown::roll_modification::ModificationOrigin;
 use crate::slay::showdown::roll_modification::ModificationPath;
 use crate::slay::showdown::roll_modification::RollModification;
 use crate::slay::showdown::roll_modification::RollModificationChoiceType;
@@ -20,8 +21,6 @@ use crate::slay::tasks::player_tasks::PlayerTask;
 use crate::slay::tasks::player_tasks::TaskProgressResult;
 use crate::slay::tasks::tasks::modify_roll::ModifyRollTask;
 use crate::slay::tasks::tasks::move_card::MoveCardTask;
-
-use super::roll_modification::ModificationOrigin;
 
 pub fn create_modify_roll_choice(
 	context: &mut GameBookKeeping,

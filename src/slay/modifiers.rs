@@ -1,8 +1,9 @@
 use crate::slay::state::turn::Turn;
 
-use super::{
-	ids, modifier_visitors::ModifierVisitor, specification::HeroType, specs::magic::MagicSpell,
-};
+use crate::slay::ids;
+use crate::slay::modifier_visitors::ModifierVisitor;
+use crate::slay::specification::HeroType;
+use crate::slay::specs::magic::MagicSpell;
 
 #[derive(Debug, Clone, Copy)]
 pub enum ModifierDuration {

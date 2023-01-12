@@ -7,13 +7,12 @@ use crate::slay::ids;
 use crate::slay::showdown::completion::Completion;
 use crate::slay::showdown::roll_modification::ModificationPath;
 use crate::slay::showdown::roll_modification::RollModificationChoiceType;
+use crate::slay::specs::cards::SlayCardSpec;
 use crate::slay::state::deck::DeckPath;
 use crate::slay::state::game::Game;
 use crate::slay::state::summarizable::Summarizable;
-
-use super::specs::cards::SlayCardSpec;
-use super::tasks::player_tasks::PlayerTask;
-use super::tasks::tasks::move_card::MoveCardTask;
+use crate::slay::tasks::player_tasks::PlayerTask;
+use crate::slay::tasks::tasks::move_card::MoveCardTask;
 
 #[derive(Clone, Debug)]
 pub struct Choices {

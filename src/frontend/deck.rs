@@ -5,8 +5,7 @@ use yew::prelude::*;
 
 use crate::frontend::stack::StackView;
 use crate::slay::state::deck::DeckPerspective;
-
-use super::app::CommonProps;
+use crate::frontend::app::CommonProps;
 
 #[derive(Properties, PartialEq)]
 pub struct DeckProps {

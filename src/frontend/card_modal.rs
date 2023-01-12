@@ -5,8 +5,7 @@ use yew::prelude::*;
 
 use crate::slay::choices::ChoicePerspective;
 use crate::slay::specs::cards::SlayCardSpec;
-
-use super::app::CommonProps;
+use crate::frontend::app::CommonProps;
 
 #[derive(Clone, PartialEq)]
 pub struct CardModalInfo {

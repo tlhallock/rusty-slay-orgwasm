@@ -1,4 +1,6 @@
-use crate::slay::{ids, modifiers::ModifierOrigin, specs::modifier::ModifierKinds};
+use crate::slay::ids;
+use crate::slay::modifiers::ModifierOrigin;
+use crate::slay::specs::modifier::ModifierKinds;
 
 // TODO: rename to Roll....
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]

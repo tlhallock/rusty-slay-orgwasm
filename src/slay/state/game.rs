@@ -12,10 +12,12 @@ use crate::slay::specs::visibility::VisibilitySpec;
 use crate::slay::state::deck::Deck;
 use crate::slay::state::deck::DeckPath;
 use crate::slay::state::deck::DeckPerspective;
+use crate::slay::state::deck::DeckSpec;
 use crate::slay::state::player::Player;
 use crate::slay::state::player::PlayerPerspective;
 use crate::slay::state::stack::Card;
 use crate::slay::state::summarizable::Summarizable;
+use crate::slay::state::turn::Turn;
 use crate::slay::tasks::player_tasks::PlayerTask;
 use crate::slay::tasks::task_params::TaskParamName;
 
@@ -23,9 +25,6 @@ use std::fmt::Debug;
 use std::io::BufWriter;
 use std::io::Write;
 use std::iter::Iterator;
-
-use super::deck::DeckSpec;
-use super::turn::Turn;
 
 #[derive(Clone, Debug)]
 pub struct Game {

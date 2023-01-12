@@ -1,4 +1,7 @@
-use crate::slay::choices::{ChoicePerspective, Choices, ChoicesPerspective, TasksChoice};
+use crate::slay::choices::ChoicePerspective;
+use crate::slay::choices::Choices;
+use crate::slay::choices::ChoicesPerspective;
+use crate::slay::choices::TasksChoice;
 use crate::slay::errors::SlayResult;
 use crate::slay::game_context::GameBookKeeping;
 use crate::slay::ids;

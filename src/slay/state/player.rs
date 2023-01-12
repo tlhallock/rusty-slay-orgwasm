@@ -16,11 +16,13 @@ use crate::slay::specs::visibility::VisibilitySpec;
 use crate::slay::state::deck::Deck;
 use crate::slay::state::deck::DeckPath;
 use crate::slay::state::deck::DeckPerspective;
+use crate::slay::state::deck::DeckSpec;
 use crate::slay::state::game::Game;
+use crate::slay::state::game::GamePerspective;
+use crate::slay::state::game::GameStaticInformation;
 use crate::slay::state::stack::Card;
 use crate::slay::state::summarizable::Summarizable;
 use crate::slay::state::turn::Turn;
-
 use crate::slay::tasks::player_tasks::PlayerTask;
 use crate::slay::tasks::player_tasks::PlayerTasks;
 
@@ -30,10 +32,6 @@ use std::fmt::Debug;
 use std::io::BufWriter;
 use std::io::Write;
 use std::iter::Iterator;
-
-use super::deck::DeckSpec;
-use super::game::GamePerspective;
-use super::game::GameStaticInformation;
 
 pub struct HeroTypeCounter {
 	counts: HashMap<HeroType, u32>,

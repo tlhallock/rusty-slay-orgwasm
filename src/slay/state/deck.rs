@@ -24,8 +24,8 @@ use std::io::Write;
 use std::iter::Iterator;
 use std::ops::RangeBounds;
 
-use super::player::HeroTypeCounter;
-use super::stack::StackPerspective;
+use crate::slay::state::player::HeroTypeCounter;
+use crate::slay::state::stack::StackPerspective;
 
 // Move this to the decks file?
 #[derive(Debug, Clone)]
