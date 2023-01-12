@@ -6,9 +6,13 @@ use crate::slay::errors;
 use crate::slay::ids;
 use crate::slay::modifier_visitors::CountActionPoints;
 use crate::slay::modifier_visitors::ModifierVisitor;
+use crate::slay::modifier_visitors::PlayerHasModifier;
 use crate::slay::modifiers::ModifierOrigin;
 use crate::slay::modifiers::PlayerBuffs;
+use crate::slay::modifiers::PlayerModifier;
 use crate::slay::specification::HeroType;
+use crate::slay::specs::visibility::Perspective;
+use crate::slay::specs::visibility::VisibilitySpec;
 use crate::slay::state::deck::Deck;
 use crate::slay::state::deck::DeckPath;
 use crate::slay::state::deck::DeckPerspective;
@@ -17,9 +21,8 @@ use crate::slay::state::stack::Card;
 use crate::slay::state::summarizable::Summarizable;
 use crate::slay::state::turn::Turn;
 use crate::slay::tasks;
-use crate::slay::tasks::PlayerTasks;
-use crate::slay::visibility::Perspective;
-use crate::slay::visibility::VisibilitySpec;
+use crate::slay::tasks::player_tasks::PlayerTask;
+use crate::slay::tasks::player_tasks::PlayerTasks;
 
 use std::collections::HashMap;
 use std::collections::HashSet;
@@ -82,10 +85,7 @@ pub struct Player {
 }
 
 impl Player {
-	pub fn put_current_task_back(
-		&mut self,
-		task: Box<dyn tasks::PlayerTask>,
-	) -> errors::SlayResult<()> {
+	pub fn put_current_task_back(&mut self, task: Box<dyn PlayerTask>) -> errors::SlayResult<()> {
 		self.tasks.put_current_task_back(task)?;
 		Ok(())
 	}
@@ -118,6 +118,12 @@ impl Player {
 			}),
 			played_this_turn: Default::default(),
 		}
+	}
+
+	pub fn has_modifier(&self, modifier: PlayerModifier) -> bool {
+		let mut visitor = PlayerHasModifier::new(modifier);
+		self.tour_buffs(&mut visitor);
+		visitor.has
 	}
 
 	pub fn turn_begin(&mut self) {
@@ -155,7 +161,7 @@ impl Player {
 			|| self.party.contains_hero_type(hero_type)
 	}
 
-	pub fn take_current_task(&mut self) -> Option<Box<dyn tasks::PlayerTask>> {
+	pub fn take_current_task(&mut self) -> Option<Box<dyn PlayerTask>> {
 		self.tasks.take_current_task()
 	}
 

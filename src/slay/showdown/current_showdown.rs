@@ -7,11 +7,11 @@ use crate::slay::errors::SlayResult;
 use crate::slay::game_context::GameBookKeeping;
 use crate::slay::ids;
 use crate::slay::showdown::challenge::ChallengeState;
-use crate::slay::showdown::common::ModificationPath;
-use crate::slay::showdown::common::RollModification;
 use crate::slay::showdown::completion::Completion;
 use crate::slay::showdown::completion::CompletionTracker;
 use crate::slay::showdown::offer::OfferChallengesState;
+use crate::slay::showdown::roll_modification::ModificationPath;
+use crate::slay::showdown::roll_modification::RollModification;
 use crate::slay::showdown::roll_state::RollState;
 use crate::slay::state::game::Game;
 

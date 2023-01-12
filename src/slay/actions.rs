@@ -1,5 +1,3 @@
-use crate::slay::abilities::magic::MagicTask;
-use crate::slay::abilities::params::ChoosePlayerParameterTask;
 use crate::slay::choices::CardPath;
 use crate::slay::choices::ChoiceDisplay;
 use crate::slay::choices::ChoiceDisplayType;
@@ -12,7 +10,6 @@ use crate::slay::errors::SlayResult;
 use crate::slay::game_context::GameBookKeeping;
 use crate::slay::ids;
 use crate::slay::modifiers::ItemModifier;
-use crate::slay::showdown::common::ChallengeReason;
 use crate::slay::showdown::completion::Completion;
 use crate::slay::showdown::completion::CompletionTracker;
 use crate::slay::showdown::consequences::Condition;
@@ -20,6 +17,7 @@ use crate::slay::showdown::consequences::RollConsequence;
 use crate::slay::showdown::consequences::RollConsequences;
 use crate::slay::showdown::current_showdown::ShowDown;
 use crate::slay::showdown::offer::OfferChallengesState;
+use crate::slay::showdown::roll::ChallengeReason;
 use crate::slay::showdown::roll_state::RollReason;
 use crate::slay::showdown::roll_state::RollState;
 use crate::slay::specification::MonsterSpec;
@@ -27,42 +25,29 @@ use crate::slay::state::deck::DeckPath;
 use crate::slay::state::game::Game;
 use crate::slay::state::stack::Card;
 use crate::slay::tasks;
-use crate::slay::tasks::MoveCardTask;
-use crate::slay::tasks::PlayerTask;
-use crate::slay::tasks::TaskParamName;
-use crate::slay::tasks::TaskProgressResult;
+use crate::slay::tasks::core::draw::DrawTask;
+use crate::slay::tasks::core::pull::PullFromTask;
 
-use super::abilities::params::ClearParamsTask;
-use super::abilities::pull::PullFromTask;
+use super::modifier_listeners;
+use super::modifiers::PlayerModifier;
 use super::specification::HeroType;
 use super::specs::cards::SlayCardSpec;
 use super::specs::hero::HeroAbility;
 use super::specs::magic::MagicSpell;
+use super::tasks::player_tasks::PlayerTask;
+use super::tasks::task_params::TaskParamName;
+use super::tasks::tasks::add_tasks::AddTasks;
+use super::tasks::tasks::card_used::CardUsedTask;
+use super::tasks::tasks::do_roll::DoRollTask;
+use super::tasks::tasks::magic::MagicTask;
+use super::tasks::tasks::move_card::MoveCardTask;
+use super::tasks::tasks::offer_challenges::OfferChallengesTask;
+use super::tasks::tasks::params::ChoosePlayerParameterTask;
+use super::tasks::tasks::params::ClearParamsTask;
+use super::tasks::tasks::remove_action_points::RemoveActionPointsTask;
+use super::tasks::tasks::replace_hand::ReplaceHandTask;
 
 // Emit logs like "Waiting for challenges..."
-
-#[derive(Debug, Clone)]
-pub struct AddTasks {
-	tasks: Vec<Box<dyn PlayerTask>>,
-}
-
-impl PlayerTask for AddTasks {
-	fn make_progress(
-		&mut self,
-		_context: &mut GameBookKeeping,
-		game: &mut Game,
-		player_index: ids::PlayerIndex,
-	) -> SlayResult<TaskProgressResult> {
-		game.players[player_index]
-			.tasks
-			.prepend_from(&mut self.tasks);
-		Ok(TaskProgressResult::TaskComplete)
-	}
-
-	fn label(&self) -> String {
-		"Adding some tasks".to_owned()
-	}
-}
 
 fn create_roll_for_ability_task(
 	context: &mut GameBookKeeping,
@@ -130,25 +115,33 @@ fn create_place_hero_choice(
 	)
 }
 
+pub fn create_place_item_task(players_with_stacks: Vec<ids::PlayerIndex>) -> Box<dyn PlayerTask> {
+	Box::new(AddTasks {
+		tasks: vec![ChoosePlayerParameterTask::one_of(
+			TaskParamName::PlayerToGiveItem,
+			"Choose a player to give this item to.",
+			players_with_stacks,
+		)],
+	})
+}
+
 pub fn create_place_item_challenge_offer(
+	game: &Game,
 	player_index: ids::PlayerIndex,
 	card: &Card,
 	_item_modifier: &ItemModifier,
 	players_with_stacks: Vec<ids::PlayerIndex>,
 ) -> Box<dyn PlayerTask> {
+	let place_item = create_place_item_task(players_with_stacks);
+	if game.players[player_index].has_modifier(PlayerModifier::ItemsCannotBeChallenged) {
+		return place_item;
+	}
 	Box::new(OfferChallengesTask::new(OfferChallengesState::new(
 		player_index,
 		RollConsequences {
 			success: RollConsequence {
 				condition: Condition::challenge_denied(),
-				tasks: vec![
-					// TODO: place the item...
-					ChoosePlayerParameterTask::one_of(
-						TaskParamName::PlayerToGiveItem,
-						"Choose a player to give this item to.",
-						players_with_stacks,
-					),
-				],
+				tasks: vec![place_item],
 			},
 			loss: Some(RollConsequence {
 				condition: Condition::challenge_sustained(),
@@ -156,7 +149,7 @@ pub fn create_place_item_challenge_offer(
 					source: DeckPath::Hand(player_index),
 					destination: DeckPath::Discard,
 					card_id: card.id,
-				}) as Box<dyn tasks::PlayerTask>],
+				}) as Box<dyn PlayerTask>],
 			}),
 		},
 		ChallengeReason::PlaceHeroCard(card.card_type),
@@ -164,6 +157,7 @@ pub fn create_place_item_challenge_offer(
 }
 
 pub fn create_place_item_choice(
+	game: &Game,
 	placer_index: ids::PlayerIndex,
 	id: ids::ChoiceId,
 	card: &Card,
@@ -179,7 +173,13 @@ pub fn create_place_item_choice(
 		},
 		vec![
 			Box::new(RemoveActionPointsTask::new(1)),
-			create_place_item_challenge_offer(placer_index, card, item_modifier, players_with_stacks),
+			create_place_item_challenge_offer(
+				game,
+				placer_index,
+				card,
+				item_modifier,
+				players_with_stacks,
+			),
 		],
 	)
 }
@@ -205,7 +205,7 @@ fn create_cast_magic_choice(
 				RollConsequences {
 					success: RollConsequence {
 						condition: Condition::challenge_denied(),
-						tasks: vec![Box::new(MagicTask::new(spell)) as Box<dyn tasks::PlayerTask>],
+						tasks: vec![Box::new(MagicTask::new(spell)) as Box<dyn PlayerTask>],
 					},
 					loss: None,
 				},
@@ -214,31 +214,6 @@ fn create_cast_magic_choice(
 		],
 	)
 }
-
-// #[derive(Clone, Debug)]
-// struct UseAbility {
-//     choice_information: choices::ChoiceInformation,
-//     card_id: ids::CardId,
-// }
-
-// impl UseAbility {
-//     pub fn new(locator: choices::ChoiceLocator, card: &state::Card) -> Self {
-//         Self {
-//             card_id: card.id,
-//             choice_information: choices::ChoiceInformation::new(
-//                 locator.to_owned(),
-//                 choices::ChoiceDisplay {
-//                     highlight: Some(choices::DisplayPath::CardIn(
-//                         state::DeckPath::Party(locator.player_index),
-//                         card.id,
-//                     )),
-//                     label: format!("Use hero {}'s ability.", card.label()),
-//                     ..Default::default()
-//                 },
-//             ),
-//         }
-//     }
-// }
 
 fn create_draw_choice(id: ids::ChoiceId) -> TasksChoice {
 	TasksChoice::new(
@@ -254,39 +229,6 @@ fn create_draw_choice(id: ids::ChoiceId) -> TasksChoice {
 	)
 }
 
-#[derive(Debug, Clone)]
-pub struct DrawTask {
-	number_to_draw: usize,
-}
-
-impl DrawTask {
-	pub fn create(num: usize) -> Box<dyn PlayerTask> {
-		Box::new(Self::new(num))
-	}
-	pub fn new(number_to_draw: usize) -> Self {
-		Self { number_to_draw }
-	}
-}
-
-impl PlayerTask for DrawTask {
-	fn make_progress(
-		&mut self,
-		_context: &mut GameBookKeeping,
-		game: &mut Game,
-		player_index: ids::PlayerIndex,
-	) -> SlayResult<TaskProgressResult> {
-		game.replentish_for(self.number_to_draw);
-		game.players[player_index]
-			.hand
-			.extend(game.draw.drain(0..self.number_to_draw));
-		Ok(TaskProgressResult::TaskComplete)
-	}
-
-	fn label(&self) -> String {
-		format!("Draw {} cards.", self.number_to_draw)
-	}
-}
-
 fn create_replace_hand_choice(id: ids::ChoiceId) -> TasksChoice {
 	TasksChoice::new(
 		id,
@@ -299,31 +241,6 @@ fn create_replace_hand_choice(id: ids::ChoiceId) -> TasksChoice {
 			Box::new(ReplaceHandTask {}),
 		],
 	)
-}
-
-#[derive(Debug, Clone)]
-struct ReplaceHandTask {}
-
-impl PlayerTask for ReplaceHandTask {
-	fn make_progress(
-		&mut self,
-		_context: &mut GameBookKeeping,
-		game: &mut Game,
-		player_index: ids::PlayerIndex,
-	) -> SlayResult<TaskProgressResult> {
-		game
-			.discard
-			.extend(game.players[player_index].hand.drain(..));
-		game.replentish_for(5);
-		game.players[player_index]
-			.hand
-			.extend(game.draw.drain(0..5));
-		Ok(TaskProgressResult::TaskComplete)
-	}
-
-	fn label(&self) -> String {
-		"Replace your hand with 5 new cards.".to_string()
-	}
 }
 
 fn create_forfeit_choice(
@@ -416,6 +333,7 @@ fn create_hand_action_choice(
 		let players_with_stacks = game.players_with_stacks();
 		if !players_with_stacks.is_empty() {
 			return Some(create_place_item_choice(
+				game,
 				player_index,
 				context.id_generator.generate(),
 				game.card(card_path),
@@ -529,153 +447,4 @@ pub fn assign_action_choices(context: &mut GameBookKeeping, game: &mut Game) {
 		default_choice: Some(default_choice),
 		timeline: deadlines::get_action_point_choice_deadline(),
 	});
-}
-
-//////////////////////////////////////////////////////////////////////
-/// Tasks
-//////////////////////////////////////////////////////////////////////
-
-#[derive(Clone, Debug, Default)]
-pub struct UseAbility {
-	// player_index: ids::PlayerIndex,
-	// amount: u32,
-}
-
-impl PlayerTask for UseAbility {
-	fn make_progress(
-		&mut self,
-		_context: &mut GameBookKeeping,
-		_game: &mut Game,
-		_player_index: ids::PlayerIndex,
-	) -> SlayResult<TaskProgressResult> {
-		log::info!("TODO: Implement using a hero ability.");
-		Ok(TaskProgressResult::TaskComplete)
-	}
-
-	fn label(&self) -> String {
-		"Use hero ability".to_string()
-	}
-}
-
-#[derive(Clone, Debug)]
-pub struct RemoveActionPointsTask {
-	amount: u32,
-}
-
-impl RemoveActionPointsTask {
-	pub fn new(amount: u32) -> Self {
-		Self { amount }
-	}
-}
-impl PlayerTask for RemoveActionPointsTask {
-	fn make_progress(
-		&mut self,
-		_context: &mut GameBookKeeping,
-		game: &mut Game,
-		player_index: ids::PlayerIndex,
-	) -> SlayResult<TaskProgressResult> {
-		game.players[player_index].action_points_used(self.amount);
-		Ok(TaskProgressResult::TaskComplete)
-	}
-	fn label(&self) -> String {
-		format!("Deducting {} action points.", self.amount)
-	}
-}
-
-#[derive(Clone, Debug)]
-pub struct OfferChallengesTask {
-	offer: Option<OfferChallengesState>,
-}
-
-impl OfferChallengesTask {
-	pub fn new(offer: OfferChallengesState) -> Self {
-		Self { offer: Some(offer) }
-	}
-}
-impl PlayerTask for OfferChallengesTask {
-	fn make_progress(
-		&mut self,
-		context: &mut GameBookKeeping,
-		game: &mut Game,
-		_player_index: ids::PlayerIndex,
-	) -> SlayResult<tasks::TaskProgressResult> {
-		log::info!("making progress");
-		if let Some(mut offer) = self.offer.take() {
-			let mut completion_tracker = CompletionTracker::new(
-				game.number_of_players(),
-				deadlines::get_offer_challenges_deadline(),
-			);
-			// The current player is not allowed to challenge himself...
-			completion_tracker.set_player_completion(offer.player_index, Completion::AllDone);
-			offer.completion_tracker = Some(completion_tracker);
-			offer.assign_all_choices(context, game);
-			game.showdown.offer(offer);
-			log::info!("set the offer...");
-			Ok(tasks::TaskProgressResult::TaskComplete)
-		} else {
-			Err(SlayError::new("Can only perform a choice once..."))
-		}
-	}
-	fn label(&self) -> String {
-		format!("Offering challenges for {:?}", self.offer)
-	}
-}
-
-#[derive(Clone, Debug)]
-pub struct DoRollTask {
-	roll: Option<RollState>,
-}
-
-impl DoRollTask {
-	pub fn new(roll: RollState) -> Self {
-		Self { roll: Some(roll) }
-	}
-}
-impl PlayerTask for DoRollTask {
-	fn make_progress(
-		&mut self,
-		context: &mut GameBookKeeping,
-		game: &mut Game,
-		_player_index: ids::PlayerIndex,
-	) -> SlayResult<tasks::TaskProgressResult> {
-		if let Some(mut roll) = self.roll.take() {
-			roll.completion_tracker = Some(CompletionTracker::new(
-				game.number_of_players(),
-				deadlines::get_roll_deadline(),
-			));
-			roll.assign_all_choices(context, game);
-			game.showdown.roll(roll);
-			Ok(tasks::TaskProgressResult::TaskComplete)
-		} else {
-			Err(SlayError::new("Can only perform a choice once..."))
-		}
-	}
-	fn label(&self) -> String {
-		format!("Doing a roll task for {:?}", self.roll)
-	}
-}
-
-#[derive(Clone, Debug)]
-pub struct CardUsedTask {
-	card_id: ids::CardId,
-}
-
-impl CardUsedTask {
-	pub fn new(_player_index: ids::PlayerIndex, card_id: ids::CardId) -> Self {
-		Self { card_id }
-	}
-}
-impl PlayerTask for CardUsedTask {
-	fn make_progress(
-		&mut self,
-		_context: &mut GameBookKeeping,
-		game: &mut Game,
-		player_index: ids::PlayerIndex,
-	) -> SlayResult<tasks::TaskProgressResult> {
-		game.players[player_index].set_card_played(self.card_id);
-		Ok(tasks::TaskProgressResult::TaskComplete)
-	}
-	fn label(&self) -> String {
-		format!("Marking {} as used", self.card_id)
-	}
 }

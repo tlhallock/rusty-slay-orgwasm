@@ -1,5 +1,6 @@
 use crate::slay::choices::ChoiceDisplayType;
 use crate::slay::ids;
+use crate::slay::modifier_visitors::CardHasModifier;
 use crate::slay::modifiers::ItemModifier;
 use crate::slay::specification::CardSpec;
 use crate::slay::specification::HeroType;
@@ -104,6 +105,12 @@ impl Stack {
 			top,
 			modifiers: Vec::new(),
 		}
+	}
+
+	pub(crate) fn card_has_modifier(&self, modifier: ItemModifier) -> bool {
+		let mut visitor = CardHasModifier::new(modifier);
+		// self.tour_buffs(&mut visitor);
+		visitor.has
 	}
 
 	pub fn contains(&self, card_id: ids::CardId) -> bool {

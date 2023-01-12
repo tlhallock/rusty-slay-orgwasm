@@ -7,56 +7,21 @@ use crate::slay::deadlines;
 use crate::slay::errors::SlayResult;
 use crate::slay::game_context::GameBookKeeping;
 use crate::slay::ids;
-use crate::slay::showdown::common::ModificationPath;
-use crate::slay::showdown::common::RollModification;
-use crate::slay::showdown::common::RollModificationChoiceType;
 use crate::slay::showdown::completion::{Completion, CompletionTracker};
 use crate::slay::showdown::current_showdown::ShowDown;
+use crate::slay::showdown::roll_modification::ModificationPath;
+use crate::slay::showdown::roll_modification::RollModification;
+use crate::slay::showdown::roll_modification::RollModificationChoiceType;
 use crate::slay::specs::modifier::ModifierKinds;
 use crate::slay::state::deck::DeckPath;
 use crate::slay::state::game::Game;
 use crate::slay::state::stack::Card;
-use crate::slay::tasks::{MoveCardTask, PlayerTask, TaskProgressResult};
+use crate::slay::tasks::player_tasks::PlayerTask;
+use crate::slay::tasks::player_tasks::TaskProgressResult;
+use crate::slay::tasks::tasks::modify_roll::ModifyRollTask;
+use crate::slay::tasks::tasks::move_card::MoveCardTask;
 
-use super::common::ModificationOrigin;
-
-#[derive(Debug, Clone)]
-pub struct ModifyRollTask {
-	modification: RollModification,
-	modification_path: ModificationPath,
-}
-impl ModifyRollTask {
-	pub fn new(modification: RollModification, path: ModificationPath) -> Self {
-		Self {
-			modification,
-			modification_path: path,
-		}
-	}
-}
-
-impl PlayerTask for ModifyRollTask {
-	fn make_progress(
-		&mut self,
-		context: &mut GameBookKeeping,
-		game: &mut Game,
-		_player_index: ids::PlayerIndex,
-	) -> SlayResult<TaskProgressResult> {
-		let modification = self.modification.to_owned();
-
-		game
-			.showdown
-			.add_modification(self.modification_path, modification)?;
-		let modification_task = game.showdown.get_modification_task(context, game);
-		modification_task.apply(context, game);
-		Ok(TaskProgressResult::TaskComplete)
-	}
-	fn label(&self) -> String {
-		format!(
-			"Player modifying {:?} with {:?}",
-			self.modification_path, self.modification
-		)
-	}
-}
+use super::roll_modification::ModificationOrigin;
 
 pub fn create_modify_roll_choice(
 	context: &mut GameBookKeeping,
@@ -170,62 +135,6 @@ let move_card =  ;
 //         &self.choice_information
 //     }
 // }
-
-#[derive(Debug, Clone)]
-pub struct SetCompleteTask {
-	persist: Completion,
-}
-
-impl SetCompleteTask {
-	pub fn new(persist: Completion) -> Self {
-		Self { persist }
-	}
-}
-
-impl PlayerTask for SetCompleteTask {
-	fn make_progress(
-		&mut self,
-		_context: &mut GameBookKeeping,
-		game: &mut Game,
-		player_index: ids::PlayerIndex,
-	) -> SlayResult<TaskProgressResult> {
-		game
-			.showdown
-			.set_player_completion(player_index, self.persist)?;
-		game.players[player_index].choices = None;
-		Ok(TaskProgressResult::TaskComplete)
-	}
-	fn label(&self) -> String {
-		format!("Setting completion to {:?}", self.persist)
-	}
-}
-
-fn create_set_complete_choice(
-	id: ids::ChoiceId,
-	persist: Completion,
-	label: String,
-) -> TasksChoice {
-	TasksChoice::new(
-		id,
-		ChoiceDisplay {
-			label,
-			display_type: ChoiceDisplayType::SetCompletion(persist),
-		},
-		vec![Box::new(SetCompleteTask::new(persist)) as Box<dyn PlayerTask>],
-	)
-}
-
-pub fn create_set_completion_done(id: ids::ChoiceId) -> TasksChoice {
-	create_set_complete_choice(id, Completion::AllDone, "Do nothing.".to_string())
-}
-
-pub fn create_set_completion_until_modification(id: ids::ChoiceId) -> TasksChoice {
-	create_set_complete_choice(
-		id,
-		Completion::DoneUntilModification,
-		"Don't modify this roll unless someone else does.".to_string(),
-	)
-}
 
 pub fn create_challenge_choice(
 	player_index: ids::PlayerIndex,

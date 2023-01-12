@@ -13,10 +13,10 @@ use crate::slay::choices::ChoiceDisplayType;
 use crate::slay::choices::ChoicePerspective;
 use crate::slay::ids;
 use crate::slay::modifiers::ModifierOrigin;
-use crate::slay::showdown::common::ModificationOrigin;
-use crate::slay::showdown::common::RollModification;
-use crate::slay::showdown::common::RollModificationChoiceType;
 use crate::slay::showdown::completion::Completion;
+use crate::slay::showdown::roll_modification::ModificationOrigin;
+use crate::slay::showdown::roll_modification::RollModification;
+use crate::slay::showdown::roll_modification::RollModificationChoiceType;
 use crate::slay::specs::cards::SlayCardSpec;
 use crate::slay::specs::modifier::ModifierKinds;
 

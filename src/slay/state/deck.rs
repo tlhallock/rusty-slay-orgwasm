@@ -8,13 +8,13 @@ use crate::slay::errors;
 use crate::slay::errors::SlayResult;
 use crate::slay::ids;
 use crate::slay::specification::HeroType;
+use crate::slay::specs::visibility::Perspective;
+use crate::slay::specs::visibility::Visibility;
+use crate::slay::specs::visibility::VisibilitySpec;
 use crate::slay::state::game::Game;
 use crate::slay::state::stack::Card;
 use crate::slay::state::stack::Stack;
 use crate::slay::state::summarizable::Summarizable;
-use crate::slay::visibility::Perspective;
-use crate::slay::visibility::Visibility;
-use crate::slay::visibility::VisibilitySpec;
 
 use std::collections::HashSet;
 use std::collections::VecDeque;

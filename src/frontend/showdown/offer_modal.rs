@@ -10,8 +10,8 @@ use crate::frontend::showdown::common::CompletionsView;
 use crate::frontend::stack::CardSpecView;
 use crate::frontend::stack::ExtraSpecProps;
 use crate::slay::choices::ChoiceDisplayType;
-use crate::slay::showdown::common::ChallengeReason;
 use crate::slay::showdown::offer::OfferChallengesPerspective;
+use crate::slay::showdown::roll::ChallengeReason;
 
 #[derive(Properties, PartialEq)]
 pub struct OfferModalProps {

@@ -1,7 +1,7 @@
 use yew::classes;
 use yew::prelude::*;
 
-use crate::slay::showdown::common::Roll;
+use crate::slay::showdown::roll::Roll;
 
 #[function_component(Die1)]
 fn view_die_1() -> Html {

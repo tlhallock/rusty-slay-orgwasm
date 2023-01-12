@@ -13,7 +13,7 @@ use crate::frontend::showdown::common::RollTotal;
 use crate::frontend::stack::CardSpecView;
 use crate::frontend::stack::ExtraSpecProps;
 use crate::slay::showdown::challenge::ChallengePerspective;
-use crate::slay::showdown::common::ChallengeReason;
+use crate::slay::showdown::roll::ChallengeReason;
 
 #[function_component(ChallengeDescription)]
 pub fn view_challenge_description(props: &ChallengeModalProps) -> Html {

@@ -8,7 +8,6 @@ use crate::slay::message::Notification;
 use crate::slay::state::game::Game;
 use crate::slay::state::player::Player;
 use crate::slay::state::summarizable::Summarizable;
-use crate::slay::tasks::TaskProgressResult;
 use crate::slay::{strategy, tasks};
 
 use std::collections::HashSet;
@@ -17,6 +16,7 @@ use std::io::BufWriter;
 use simple_logging;
 
 use super::state::initialize;
+use super::tasks::player_tasks::{self, TaskProgressResult};
 
 pub fn player_has_won(player: &Player) -> bool {
 	let hero_types = &mut HashSet::new();
@@ -55,7 +55,7 @@ fn run_tasks(context: &mut GameBookKeeping, game: &mut Game) -> SlayResult<TaskP
 	let mut result = TaskProgressResult::NothingDone;
 	let number_of_players = game.number_of_players();
 	for player_index in 0..number_of_players {
-		match tasks::continue_tasks(context, game, player_index)? {
+		match player_tasks::continue_tasks(context, game, player_index)? {
 			TaskProgressResult::NothingDone => {}
 			TaskProgressResult::TaskComplete | TaskProgressResult::ProgressMade => {
 				result = TaskProgressResult::ProgressMade;

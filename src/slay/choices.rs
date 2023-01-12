@@ -4,16 +4,16 @@ use std::io::Write;
 
 use crate::slay::deadlines::Timeline;
 use crate::slay::ids;
-use crate::slay::showdown::common::ModificationPath;
-use crate::slay::showdown::common::RollModificationChoiceType;
 use crate::slay::showdown::completion::Completion;
+use crate::slay::showdown::roll_modification::ModificationPath;
+use crate::slay::showdown::roll_modification::RollModificationChoiceType;
 use crate::slay::state::deck::DeckPath;
 use crate::slay::state::game::Game;
 use crate::slay::state::summarizable::Summarizable;
-use crate::slay::tasks::MoveCardTask;
-use crate::slay::tasks::PlayerTask;
 
 use super::specs::cards::SlayCardSpec;
+use super::tasks::player_tasks::PlayerTask;
+use super::tasks::tasks::move_card::MoveCardTask;
 
 #[derive(Clone, Debug)]
 pub struct Choices {

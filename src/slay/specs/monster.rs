@@ -1,12 +1,12 @@
 use enum_iterator::Sequence;
 
+use crate::slay::tasks::core::sacrifice::Sacrifice;
 use crate::slay::{
-	abilities::{discard::Discard, sacrifice::Sacrifice},
-	actions::DrawTask,
 	modifiers::PlayerModifier,
 	showdown::consequences::{Condition, RollConsequence, RollConsequences},
 	specification::{HeroType, MonsterRequirements, MonsterSpec},
 	state::player::HeroTypeCounter,
+	tasks::core::{discard::Discard, draw::DrawTask},
 };
 
 pub fn player_satisfies_requirements(

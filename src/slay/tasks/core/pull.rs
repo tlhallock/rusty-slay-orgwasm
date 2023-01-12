@@ -6,9 +6,9 @@ use crate::slay::game_context::GameBookKeeping;
 use crate::slay::ids;
 use crate::slay::state::deck::DeckPath;
 use crate::slay::state::game::Game;
-use crate::slay::tasks::PlayerTask;
-use crate::slay::tasks::TaskParamName;
-use crate::slay::tasks::TaskProgressResult;
+use crate::slay::tasks::player_tasks::PlayerTask;
+use crate::slay::tasks::player_tasks::TaskProgressResult;
+use crate::slay::tasks::task_params::TaskParamName;
 
 #[derive(Clone, Debug)]
 pub struct PullFromTask {

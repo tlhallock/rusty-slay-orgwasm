@@ -9,6 +9,7 @@ pub mod game_context;
 pub mod hero_abilities;
 pub mod ids;
 pub mod message;
+pub mod modifier_listeners;
 pub mod modifier_visitors;
 pub mod modifiers;
 pub mod old;
@@ -19,6 +20,4 @@ pub mod state;
 pub mod state_modifiers;
 pub mod strategy;
 pub mod tasks;
-pub mod visibility;
-
-// pub mod test_scripts;
+pub mod test_scripts;

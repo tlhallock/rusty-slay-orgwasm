@@ -10,9 +10,9 @@ use crate::slay::game_context::GameBookKeeping;
 use crate::slay::ids;
 use crate::slay::state::game::Game;
 use crate::slay::state::stack::Card;
-use crate::slay::tasks::PlayerTask;
-use crate::slay::tasks::TaskParamName;
-use crate::slay::tasks::TaskProgressResult;
+use crate::slay::tasks::player_tasks::PlayerTask;
+use crate::slay::tasks::player_tasks::TaskProgressResult;
+use crate::slay::tasks::task_params::TaskParamName;
 
 #[derive(Clone, Debug)]
 pub enum PlayImmediatelyFilter {
@@ -72,6 +72,7 @@ impl PlayerTask for OfferPlayImmediately {
 				return Ok(TaskProgressResult::TaskComplete);
 			}
 			play_immediately_tasks.push(actions::create_place_item_challenge_offer(
+				game,
 				player_index,
 				card,
 				item_modifier,

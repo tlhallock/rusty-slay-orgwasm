@@ -12,9 +12,9 @@ use crate::slay::state::deck::Deck;
 use crate::slay::state::deck::PartialDeckPath;
 use crate::slay::state::game::Game;
 use crate::slay::state::stack::Card;
-use crate::slay::tasks::PlayerTask;
-use crate::slay::tasks::TaskParamName;
-use crate::slay::tasks::TaskProgressResult;
+use crate::slay::tasks::player_tasks::PlayerTask;
+use crate::slay::tasks::player_tasks::TaskProgressResult;
+use crate::slay::tasks::task_params::TaskParamName;
 
 // // TODO: remove this class...
 // #[derive(Clone, Debug)]

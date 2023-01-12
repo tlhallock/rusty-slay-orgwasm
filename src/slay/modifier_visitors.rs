@@ -4,7 +4,7 @@ use crate::slay::specs::cards::SlayCardSpec;
 use crate::slay::state::game::Game;
 
 use super::modifiers::{ItemModifier, PlayerModifier};
-use super::showdown::common::{ModificationOrigin, RollModification};
+use super::showdown::roll_modification::{ModificationOrigin, RollModification};
 use super::showdown::roll_state::RollReason;
 
 pub fn create_roll_history(
@@ -125,3 +125,43 @@ elf
 			.sum::<u32>()
 
 			*/
+
+pub struct PlayerHasModifier {
+	modifier: PlayerModifier,
+	pub has: bool,
+}
+
+impl PlayerHasModifier {
+	pub fn new(modifier: PlayerModifier) -> Self {
+		Self {
+			modifier,
+			has: false,
+		}
+	}
+}
+
+impl ModifierVisitor for PlayerHasModifier {
+	fn visit_player_modifier(&mut self, modifier: PlayerModifier, _origin: ModifierOrigin) {
+		self.has |= modifier == self.modifier;
+	}
+}
+
+pub struct CardHasModifier {
+	modifier: ItemModifier,
+	pub has: bool,
+}
+
+impl CardHasModifier {
+	pub fn new(modifier: ItemModifier) -> Self {
+		Self {
+			modifier,
+			has: false,
+		}
+	}
+}
+
+impl ModifierVisitor for CardHasModifier {
+	fn visit_card_modifier(&mut self, modifier: ItemModifier, _modified_spec: SlayCardSpec) {
+		self.has |= modifier == self.modifier;
+	}
+}

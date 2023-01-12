@@ -3,12 +3,13 @@ use crate::slay::errors::SlayResult;
 use crate::slay::game_context::GameBookKeeping;
 use crate::slay::ids;
 use crate::slay::showdown::challenge::ChallengeState;
-use crate::slay::showdown::common::ChallengeReason;
 use crate::slay::showdown::completion::CompletionTracker;
 use crate::slay::showdown::consequences::RollConsequences;
 use crate::slay::showdown::current_showdown::ShowDown;
-use crate::slay::showdown::roll_choices::{self, create_challenge_choice};
+use crate::slay::showdown::roll::ChallengeReason;
+use crate::slay::showdown::roll_choices;
 use crate::slay::state::game::Game;
+use crate::slay::tasks::tasks::set_complete;
 
 #[derive(Debug, Clone)]
 pub struct OfferChallengesState {
@@ -70,14 +71,14 @@ impl OfferChallengesState {
 		// challenging_player: &Player,
 		default_choice: u32,
 	) -> Vec<TasksChoice> {
-		let mut ret = vec![roll_choices::create_set_completion_done(default_choice)];
+		let mut ret = vec![set_complete::create_set_completion_done(default_choice)];
 
 		if let Some(card) = game.players[challenging_player_index]
 			.hand
 			.tops()
 			.find(|card| card.is_challenge())
 		{
-			ret.push(create_challenge_choice(
+			ret.push(roll_choices::create_challenge_choice(
 				challenging_player_index,
 				context.id_generator.generate(),
 				card,

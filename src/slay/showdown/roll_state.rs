@@ -4,18 +4,19 @@ use std::vec;
 use crate::slay::choices::{ChoicePerspective, Choices, ChoicesPerspective, TasksChoice};
 use crate::slay::game_context::GameBookKeeping;
 use crate::slay::ids;
-use crate::slay::showdown::common::ModificationPath;
-use crate::slay::showdown::common::Roll;
-use crate::slay::showdown::common::RollModification;
 use crate::slay::showdown::completion::CompletionTracker;
 use crate::slay::showdown::consequences::RollConsequences;
 use crate::slay::showdown::current_showdown::ShowDown;
-use crate::slay::showdown::roll_choices::{self, create_modify_roll_choice};
+use crate::slay::showdown::roll::Roll;
+use crate::slay::showdown::roll_modification::ModificationPath;
+use crate::slay::showdown::roll_modification::RollModification;
 use crate::slay::specs::cards::SlayCardSpec;
 use crate::slay::state::game::{Game, GameStaticInformation};
+use crate::slay::tasks::tasks::set_complete;
 use crate::slay::{deadlines, modifier_visitors};
 
 use super::consequences::Condition;
+use crate::slay::showdown::roll_choices;
 
 // Only the party needs stacks...
 
@@ -141,15 +142,15 @@ pub fn list_modification_choices(
 	rolls: Vec<ModificationPath>,
 ) -> Vec<TasksChoice> {
 	let mut choices: Vec<TasksChoice> = vec![
-		roll_choices::create_set_completion_done(default_choice),
-		roll_choices::create_set_completion_until_modification(context.id_generator.generate()),
+		set_complete::create_set_completion_done(default_choice),
+		set_complete::create_set_completion_until_modification(context.id_generator.generate()),
 	];
 
 	for card in game.players[player_index].hand.tops() {
 		if let SlayCardSpec::ModifierCard(kind) = card.card_type {
 			for modification_path in rolls.iter() {
 				for modification_amount in kind.list_amounts() {
-					choices.push(create_modify_roll_choice(
+					choices.push(roll_choices::create_modify_roll_choice(
 						context,
 						player_index,
 						card.id,

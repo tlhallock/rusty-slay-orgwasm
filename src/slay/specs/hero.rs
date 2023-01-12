@@ -1,15 +1,17 @@
 use crate::slay::showdown::consequences::{Condition, RollConsequence, RollConsequences};
 
-use crate::slay::abilities::destroy::{DestroyCardTask, DestroyModifiersDestination};
 use crate::slay::abilities::heros::VictimDraws;
-use crate::slay::abilities::heros::{self};
-use crate::slay::abilities::immediate::{OfferPlayImmediately, PlayImmediatelyFilter};
-use crate::slay::abilities::params::{
+use crate::slay::tasks::core::destroy::{DestroyCardTask, DestroyModifiersDestination};
+use crate::slay::tasks::core::pull::PullFromTask;
+use crate::slay::tasks::core::steal::{StealCardFromTask, StealTask};
+use crate::slay::tasks::heros::mimimeow::Mimimeow;
+use crate::slay::tasks::heros::slippery_paws::SlipperyPaws;
+use crate::slay::tasks::player_tasks::PlayerTask;
+use crate::slay::tasks::task_params::TaskParamName;
+use crate::slay::tasks::tasks::immediate::{OfferPlayImmediately, PlayImmediatelyFilter};
+use crate::slay::tasks::tasks::params::{
 	ChooseCardFromPlayerParameterTask, ChoosePlayerParameterTask, ClearParamsTask,
 };
-use crate::slay::abilities::pull::PullFromTask;
-use crate::slay::abilities::steal::{self, StealTask};
-use crate::slay::tasks::{PlayerTask, TaskParamName};
 use enum_iterator::Sequence;
 
 #[derive(Debug, Clone)]
@@ -109,10 +111,10 @@ impl HeroAbilityType {
 					TaskParamName::SlipperyPawsVictim,
 					Some(TaskParamName::SlipperyPawsVictimPulledCard2),
 				),
-				heros::SlipperyPaws::create(),
+				SlipperyPaws::create(),
 				ClearParamsTask::create(),
 			],
-			HeroAbilityType::SmoothMimimeow => vec![heros::Mimimeow::create(), ClearParamsTask::create()],
+			HeroAbilityType::SmoothMimimeow => vec![Mimimeow::create(), ClearParamsTask::create()],
 			HeroAbilityType::Meowzio => vec![
 				ChoosePlayerParameterTask::exclude_self(
 					TaskParamName::MeowzioVictim,
@@ -124,7 +126,7 @@ impl HeroAbilityType {
 					TaskParamName::MeowzioCard,
 					"Which hero card would you like to steal?",
 				),
-				steal::StealCardFromTask::create(TaskParamName::MeowzioVictim, TaskParamName::MeowzioCard),
+				StealCardFromTask::create(TaskParamName::MeowzioVictim, TaskParamName::MeowzioCard),
 				ClearParamsTask::create(),
 			],
 			HeroAbilityType::Shurikitty => vec![

@@ -1,4 +1,5 @@
 pub mod cards;
+pub mod challenge;
 pub mod hero;
 pub mod initialization;
 pub mod items;
@@ -6,3 +7,4 @@ pub mod magic;
 pub mod modifier;
 pub mod monster;
 pub mod party_leader;
+pub mod visibility;

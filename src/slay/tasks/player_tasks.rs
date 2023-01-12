@@ -3,90 +3,16 @@ use crate::slay::errors::SlayError;
 use crate::slay::errors::SlayResult;
 use crate::slay::game_context::GameBookKeeping;
 use crate::slay::ids;
-use crate::slay::modifiers::PlayerModifier;
-use crate::slay::state::deck::DeckPath;
 use crate::slay::state::game::Game;
 use crate::slay::state::summarizable::Summarizable;
 
 use core::fmt::Debug;
-use std::collections::HashMap;
 use std::collections::VecDeque;
 use std::io::BufWriter;
 use std::io::Write;
 
-use super::modifiers::ModifierOrigin;
-
-#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
-pub enum TaskParamName {
-	PlayerToStealFrom,
-	CardToSteal,
-	PlayerToPullFrom,
-	PlayerToGiveItem,
-	StackToPlaceItemOn,
-	MeowzioVictim,
-	MeowzioCard,
-	PlayerToDestroy,
-	CardToDestroy,
-	SilentShadowVictim,
-	SilentShadowCard,
-	SlipperyPawsVictim,
-	SlipperyPawsVictimPulledCard1,
-	SlipperyPawsVictimPulledCard2,
-	SlyPickinsVictim,
-	SlyPickinsCard,
-	ForcedExchangeVictim,
-	ForcedExchangeVictimCard,
-	ForcedExchangeSelf,
-	ForcedExchangeVictimDonationCard,
-	ShadowClawVictim,
-}
-
-#[derive(Debug, Default, Clone)]
-struct TaskParams {
-	// These should probably be card paths, right?
-	players: HashMap<TaskParamName, ids::PlayerIndex>,
-	// None of the player did not choose a card.
-	cards: HashMap<TaskParamName, Option<ids::CardId>>,
-	index: HashMap<TaskParamName, usize>,
-}
-
-impl TaskParams {
-	pub fn clear(&mut self) {
-		self.players.clear();
-		self.cards.clear();
-		self.index.clear();
-	}
-}
-
-impl Summarizable for TaskParams {
-	fn summarize<W: Write>(
-		&self,
-		f: &mut BufWriter<W>,
-		indentation_level: u32,
-	) -> Result<(), std::io::Error> {
-		if !self.cards.is_empty() {
-			for _ in 0..indentation_level {
-				write!(f, "  ")?;
-			}
-			write!(f, "card params: ")?;
-			for (name, value) in self.cards.iter() {
-				write!(f, "{:?}->{:?}, ", name, value)?;
-			}
-			writeln!(f)?;
-		}
-		if !self.players.is_empty() {
-			for _ in 0..indentation_level {
-				write!(f, "  ")?;
-			}
-			write!(f, "player params: ")?;
-			for (name, value) in self.players.iter() {
-				write!(f, "{:?}->{:?}, ", name, value)?;
-			}
-			writeln!(f)?;
-		}
-		Ok(())
-	}
-}
+use super::task_params::TaskParamName;
+use super::task_params::TaskParams;
 
 pub enum TaskProgressResult {
 	NothingDone,
@@ -280,36 +206,6 @@ impl PlayerTasks {
 	}
 }
 
-#[derive(Debug, Clone)]
-pub struct ReceiveModifier {
-	modifier: PlayerModifier,
-	origin: ModifierOrigin,
-}
-
-impl ReceiveModifier {
-	pub fn create(modifier: PlayerModifier, origin: ModifierOrigin) -> Box<dyn PlayerTask> {
-		Box::new(Self { modifier, origin })
-	}
-}
-
-impl PlayerTask for ReceiveModifier {
-	fn make_progress(
-		&mut self,
-		_context: &mut GameBookKeeping,
-		_game: &mut Game,
-		_player_index: ids::PlayerIndex,
-	) -> SlayResult<TaskProgressResult> {
-		// game.players[player_index]
-		// 	.temporary_buffs
-		// 	.add_forever(self.modifier.to_owned(), self.origin);
-		Ok(TaskProgressResult::TaskComplete)
-	}
-
-	fn label(&self) -> String {
-		format!("Player is receiving modifier {:?}", self.modifier)
-	}
-}
-
 pub(crate) fn continue_tasks(
 	context: &mut GameBookKeeping,
 	game: &mut Game,
@@ -345,88 +241,3 @@ pub(crate) fn continue_tasks(
 		}
 	}
 }
-
-#[derive(Debug, Clone)]
-pub struct MoveCardTask {
-	// Now that I have a card path, I could just use that...
-	pub source: DeckPath,
-	pub destination: DeckPath,
-	pub card_id: ids::CardId,
-	// Could have a replentish here?
-}
-
-impl PlayerTask for MoveCardTask {
-	fn make_progress(
-		&mut self,
-		_context: &mut GameBookKeeping,
-		game: &mut Game,
-		_player_index: ids::PlayerIndex,
-	) -> SlayResult<TaskProgressResult> {
-		game.move_card(self.source, self.destination, self.card_id)?;
-		Ok(TaskProgressResult::TaskComplete)
-	}
-	fn label(&self) -> String {
-		format!(
-			"Moving {} from {:?} to {:?}",
-			self.card_id, self.source, self.destination
-		)
-	}
-}
-
-// #[derive(Debug, Clone)]
-// pub struct UseAbilityTask {
-// 	ability: Ability,
-// }
-
-// impl PlayerTask for UseAbilityTask {
-// 	fn make_progress(
-// 		&mut self, context: &mut GameBookKeeping, game: &mut Game, player_index: ids::PlayerIndex,
-// 	) -> SlayResult<TaskProgressResult> {
-// 		let hero_tasks = &mut do_hero_ability(context, game, player_index, self.ability);
-// 		game.players[player_index].tasks.prepend_from(hero_tasks);
-// 		Ok(TaskProgressResult::TaskComplete)
-// 	}
-// 	fn label(&self) -> String {
-// 		"I wish I were this far...".to_string()
-// 	}
-// }
-
-// #[derive(Clone, Debug)]
-// pub struct AnonTask {
-// 	pub fun: Box<dyn FnMut(GameBookKeeping, Game, ids::PlayerIndex)>,
-// }
-
-// impl PlayerTask for AnonTask {
-//     fn make_progress(
-// 		&mut self, context: &mut GameBookKeeping, game: &mut Game, player_index: ids::PlayerIndex,
-// 	) -> SlayResult<TaskProgressResult> {
-//         todo!()
-
-//     }
-
-//     fn label(&self) -> String {
-//         "anonymous task".to_owned()
-//     }
-// }
-
-// fn foo() {
-
-// 	let a = (||{
-// 		#[derive(Clone, Debug)]
-// 		struct Anonymous {}
-// 		impl PlayerTask for Anonymous {
-//     	fn make_progress(
-//  				&mut self, context: &mut GameBookKeeping, game: &mut Game, player_index: ids::PlayerIndex,
-// 			) -> SlayResult<TaskProgressResult> {
-// 				/////////////////
-
-// 				/////////////////
-// 				Ok(TaskProgressResult::TaskComplete)
-// 			}
-// 			fn label(&self) -> String {
-// 				"anonymous task".to_owned()
-// 			}
-// 		}
-// 		Box::new(Anonymous {}) as Box<PlayerTask>
-// 	})();
-// }
