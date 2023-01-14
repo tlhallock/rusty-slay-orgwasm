@@ -37,7 +37,7 @@ pub fn view_choices(props: &ChoiceProps) -> Html {
 			onmouseenter={select_this_choice}
 			onmouseleave={remove_any_selected_choice}
 		>
-			{props.choice.display.label.to_owned()}
+			{props.choice.choice.label()}
 		</button>
 	}
 }
@@ -52,7 +52,7 @@ pub struct ChoicesInstructionsProps {
 pub fn view_choices(props: &ChoicesInstructionsProps) -> Html {
 	html! {
 			<>
-					<span>{props.choices.instructions.to_owned()}</span>
+					<span>{props.choices.choices_type.get_instructions()}</span>
 					{
 							for props.choices.options.iter().map(
 									|c| html! {

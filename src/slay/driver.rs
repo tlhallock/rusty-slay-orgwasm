@@ -5,7 +5,7 @@ use crate::slay::errors::SlayError;
 use crate::slay::errors::SlayResult;
 use crate::slay::game_context::GameBookKeeping;
 use crate::slay::ids;
-use crate::slay::message::Notification;
+use crate::slay::notification::Notification;
 use crate::slay::state::game::Game;
 use crate::slay::state::initialize;
 use crate::slay::state::player::Player;
@@ -17,7 +17,7 @@ use crate::slay::tasks::player_tasks::TaskProgressResult;
 use std::collections::HashSet;
 use std::io::BufWriter;
 
-use simple_logging;
+// use simple_logging;
 
 pub fn player_has_won(player: &Player) -> bool {
 	let hero_types = &mut HashSet::new();
@@ -145,9 +145,7 @@ pub fn make_selection(
 		.ok_or_else(|| SlayError::new("Choice not found."))?;
 
 	/*context.emit*/
-	notify(Notification {
-		message_text: format!("Player {} chose {}", player_index, choice.display.label),
-	});
+	notify(Notification::PlayerChose(player_index, choice.choice));
 	choice.select(game, player_index)?;
 	Ok(())
 }
@@ -163,7 +161,7 @@ fn game_to_string(game: &Game) -> String {
 }
 
 pub fn game_loop() -> SlayResult<()> {
-	simple_logging::log_to_file("output/log.txt", LevelFilter::Info).expect("Unable to log.");
+	// simple_logging::log_to_file("output/log.txt", LevelFilter::Info).expect("Unable to log.");
 
 	let context = &mut GameBookKeeping::new();
 	let game = &mut Game::new();

@@ -1,5 +1,5 @@
 use crate::slay::ids;
-use crate::slay::message;
+use crate::slay::notification;
 
 use rand::rngs::ThreadRng;
 use rand::thread_rng;
@@ -25,7 +25,7 @@ impl GameBookKeeping {
 		}
 	}
 
-	pub fn emit(&mut self, notification: &message::Notification) {
+	pub fn emit(&mut self, notification: &notification::Notification) {
 		log::info!("Notification: {}", notification.message_text);
 		// self.notifier.iter().for_each(|f| f(notification.to_owned()));
 	}

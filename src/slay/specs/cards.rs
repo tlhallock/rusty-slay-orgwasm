@@ -8,6 +8,8 @@ use crate::slay::specs::monster::Monster;
 
 use crate::slay::specs::hero::HeroAbilityType;
 
+
+// Rename this: remove the Slay
 #[derive(Debug, Clone, Sequence, PartialEq, Copy)]
 pub enum SlayCardSpec {
 	HeroCard(HeroAbilityType),
@@ -21,7 +23,7 @@ pub enum SlayCardSpec {
 
 impl SlayCardSpec {
 	pub fn label(&self) -> String {
-		String::from("")
+		self.get_card_spec_creation().label
 	}
 	pub fn description(&self) -> String {
 		String::from("")

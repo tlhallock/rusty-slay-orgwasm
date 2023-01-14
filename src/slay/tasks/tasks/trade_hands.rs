@@ -28,10 +28,14 @@ impl PlayerTask for TradeHands {
 		player_index: ids::PlayerIndex,
 	) -> SlayResult<TaskProgressResult> {
 		let victim_index = game.player_param(player_index, &self.param)?;
-		let victim_drained = game.players[victim_index].hand.drain(..);
-		let my_drained = game.players[player_index].hand.drain(..);
-		game.players[player_index].hand.extend(victim_drained);
-		game.players[victim_index].hand.extend(my_drained);
+
+		let mut victim_cards = Vec::new();
+		let mut my_cards = Vec::new();
+
+		victim_cards.extend(game.players[victim_index].hand.drain(..));
+		my_cards.extend(game.players[player_index].hand.drain(..));
+		game.players[player_index].hand.extend(victim_cards.drain(..));
+		game.players[victim_index].hand.extend(my_cards.drain(..));
 		Ok(TaskProgressResult::TaskComplete)
 	}
 

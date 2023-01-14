@@ -30,6 +30,8 @@ use crate::slay::tasks::tasks::return_modifiers::ReturnModifierTask;
 use crate::slay::tasks::tasks::search_discard::SearchDiscard;
 use crate::slay::tasks::tasks::trade_hands::TradeHands;
 
+use super::cards::SlayCardSpec;
+
 #[derive(Debug, Clone)]
 pub struct HeroAbility {
 	pub condition: Condition,
@@ -49,6 +51,7 @@ impl HeroAbility {
 }
 
 // Some renaming is appropriate...
+// Call this HeroCard
 #[derive(Clone, Debug, Sequence, PartialEq, Copy)]
 pub enum HeroAbilityType {
 	PlunderingPuma,
@@ -102,6 +105,20 @@ pub enum HeroAbilityType {
 }
 
 impl HeroAbilityType {
+	pub fn label(&self) -> String {
+		// Kind of backwards: that method should call this one...
+		SlayCardSpec::HeroCard(*self).label()
+	}
+
+	pub fn to_consequences(&self) -> RollConsequences {
+		if let Some(ability) = SlayCardSpec::HeroCard(*self).get_card_spec_creation().hero_ability {
+			return ability.to_consequences();
+		} {
+			unreachable!();
+		}
+	}
+
+
 	pub fn create_tasks(&self) -> Vec<Box<dyn PlayerTask>> {
 		match self {
 			HeroAbilityType::PlunderingPuma => vec![

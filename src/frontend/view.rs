@@ -4,6 +4,13 @@ use yew::prelude::*;
 
 use crate::frontend::app::AppState;
 use crate::frontend::game::GamePerspectiveView;
+use crate::slay::specs::cards::SlayCardSpec;
+use crate::slay::specs::hero::HeroAbilityType;
+
+
+// View the notifications
+// View the hero leader...
+// Make players clickable?
 
 #[function_component(App)]
 fn app() -> Html {
@@ -13,6 +20,13 @@ fn app() -> Html {
 	let restart = {
 		let current_game = current_game.clone();
 		move |_| current_game.set(AppState::new())
+	};
+
+	let test = {
+		let current_game = current_game.clone();
+		move |_| current_game.set(AppState::test(
+			&SlayCardSpec::HeroCard(HeroAbilityType::PlunderingPuma)
+		))
 	};
 
 	let choose = {
@@ -25,6 +39,7 @@ fn app() -> Html {
 					<h1>{ "Here to Slay!" }</h1>
 					<div>
 							<button class={classes!("border-blink")} onclick={restart}>{ "Restart" } </button>
+							<button class={classes!("border-blink")} onclick={test}>{ "Test next" } </button>
 							<GamePerspectiveView
 								game={Rc::new(current_game.perspective())}
 								statics={Rc::new(current_game.get_statics())}

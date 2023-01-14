@@ -2,6 +2,7 @@ use std::iter::repeat_with;
 
 use enum_iterator::Sequence;
 
+use crate::slay::ids;
 use crate::slay::modifiers::PlayerModifier;
 use crate::slay::showdown::consequences::Condition;
 use crate::slay::showdown::consequences::RollConsequence;
@@ -13,6 +14,8 @@ use crate::slay::state::player::HeroTypeCounter;
 use crate::slay::tasks::core::discard::Discard;
 use crate::slay::tasks::core::draw::DrawTask;
 use crate::slay::tasks::core::sacrifice::Sacrifice;
+
+use super::cards::SlayCardSpec;
 
 pub fn player_satisfies_requirements(
 	hero_type_counts: &mut HeroTypeCounter,
@@ -73,6 +76,15 @@ pub enum Monster {
 }
 
 impl Monster {
+
+	pub fn label(&self) -> String {
+		SlayCardSpec::MonsterCard(*self).label()
+	}
+
+	pub fn get_consequences(&self, card_id: ids::CardId) -> RollConsequences {
+		self.create_spec().get_consequences(card_id)
+	}
+
 	pub fn create_spec(&self) -> MonsterSpec {
 		match self {
 			Monster::AnuranCauldron => MonsterSpec {

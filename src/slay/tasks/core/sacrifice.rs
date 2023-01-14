@@ -47,7 +47,8 @@ impl Sacrifice {
 	) -> SlayResult<ids::PlayerIndex> {
 		match self.victim {
 			SacrificeVictim::Myself => Ok(player_index),
-			SacrificeVictim::FromParam(param) => game.player_param(player_index, &param),
+			SacrificeVictim::FromParam(param) => 
+				game.player_param(player_index, &param),
 		}
 	}
 }

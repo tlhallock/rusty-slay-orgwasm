@@ -2,6 +2,7 @@ use crate::slay::choices::CardPath;
 use crate::slay::choices::ChoiceDisplay;
 use crate::slay::choices::ChoiceDisplayType;
 use crate::slay::choices::Choices;
+use crate::slay::choices::ChoicesType;
 use crate::slay::choices::DisplayPath;
 use crate::slay::choices::TasksChoice;
 use crate::slay::deadlines;
@@ -41,6 +42,12 @@ use crate::slay::tasks::tasks::params::ClearParamsTask;
 use crate::slay::tasks::tasks::remove_action_points::RemoveActionPointsTask;
 use crate::slay::tasks::tasks::replace_hand::ReplaceHandTask;
 
+use super::choices::Action;
+use super::choices::Choice;
+use super::specs::hero::HeroAbilityType;
+use super::specs::items::AnotherItemType;
+use super::specs::monster::Monster;
+
 // Emit logs like "Waiting for challenges..."
 
 fn create_roll_for_ability_task(
@@ -48,7 +55,7 @@ fn create_roll_for_ability_task(
 	game: &Game,
 	player_index: ids::PlayerIndex,
 	card: &Card,
-	ability: &HeroAbility,
+	hero_card: HeroAbilityType,
 ) -> Box<dyn PlayerTask> {
 	Box::new(AddTasks {
 		tasks: vec![
@@ -57,7 +64,7 @@ fn create_roll_for_ability_task(
 				context,
 				game,
 				player_index,
-				ability.to_consequences(),
+				hero_card.to_consequences(),
 				RollReason::UseHeroAbility(card.card_type),
 			))) as Box<dyn PlayerTask>,
 		],
@@ -69,17 +76,13 @@ fn create_place_hero_choice(
 	game: &Game,
 	player_index: ids::PlayerIndex,
 	card_path: CardPath,
-	ability: &HeroAbility,
+	hero_card: HeroAbilityType,
 ) -> TasksChoice {
 	TasksChoice::new(
 		context.id_generator.generate(),
-		ChoiceDisplay {
-			display_type: card_path.display().to_highlight(),
-			label: format!(
-				"Place {} in your party.",
-				game.card(card_path).get_spec().label
-			),
-		},
+		Choice::UseActionPoints(Action::PlaceHeroInParty(hero_card)),
+
+		card_path.display().to_highlight(),
 		vec![
 			Box::new(RemoveActionPointsTask::new(1)),
 			Box::new(OfferChallengesTask::new(OfferChallengesState::new(
@@ -94,7 +97,7 @@ fn create_place_hero_choice(
 								game,
 								player_index,
 								game.card(card_path),
-								ability,
+								hero_card,
 							),
 						],
 					},
@@ -123,7 +126,6 @@ pub fn create_place_item_challenge_offer(
 	game: &Game,
 	player_index: ids::PlayerIndex,
 	card: &Card,
-	_item_modifier: &ItemModifier,
 	players_with_stacks: Vec<ids::PlayerIndex>,
 ) -> Box<dyn PlayerTask> {
 	let place_item = create_place_item_task(players_with_stacks);
@@ -156,22 +158,19 @@ pub fn create_place_item_choice(
 	id: ids::ChoiceId,
 	card: &Card,
 	display_type: ChoiceDisplayType,
-	item_modifier: &ItemModifier,
+	item_card: AnotherItemType,
 	players_with_stacks: Vec<ids::PlayerIndex>,
 ) -> TasksChoice {
 	TasksChoice::new(
 		id,
-		ChoiceDisplay {
-			display_type,
-			label: format!("Place item {}.", card.label()),
-		},
+		Choice::UseActionPoints(Action::PlaceItem(item_card)),
+		display_type,
 		vec![
 			Box::new(RemoveActionPointsTask::new(1)),
 			create_place_item_challenge_offer(
 				game,
 				placer_index,
 				card,
-				item_modifier,
 				players_with_stacks,
 			),
 		],
@@ -187,10 +186,8 @@ fn create_cast_magic_choice(
 ) -> TasksChoice {
 	TasksChoice::new(
 		id,
-		ChoiceDisplay {
-			display_type: card_path.display().to_highlight(),
-			label: format!("Cast {}", game.card(card_path).get_spec().label),
-		},
+		Choice::UseActionPoints(Action::CastMagic(spell)),
+		card_path.display().to_highlight(),
 		vec![
 			Box::new(RemoveActionPointsTask::new(1)),
 			card_path.get_discard_task(),
@@ -212,10 +209,8 @@ fn create_cast_magic_choice(
 fn create_draw_choice(id: ids::ChoiceId) -> TasksChoice {
 	TasksChoice::new(
 		id,
-		ChoiceDisplay {
-			display_type: ChoiceDisplayType::HighlightPath(DisplayPath::DeckAt(DeckPath::Draw)),
-			label: "Draw a card.".to_string(),
-		},
+		Choice::UseActionPoints(Action::Draw),
+		ChoiceDisplayType::HighlightPath(DisplayPath::DeckAt(DeckPath::Draw)),
 		vec![
 			Box::new(RemoveActionPointsTask::new(1)),
 			DrawTask::create(1),
@@ -226,10 +221,8 @@ fn create_draw_choice(id: ids::ChoiceId) -> TasksChoice {
 fn create_replace_hand_choice(id: ids::ChoiceId) -> TasksChoice {
 	TasksChoice::new(
 		id,
-		ChoiceDisplay {
-			display_type: ChoiceDisplayType::HighlightPath(DisplayPath::DeckAt(DeckPath::Discard)),
-			label: "Replace your hand with 5 new cards.".to_string(),
-		},
+		Choice::UseActionPoints(Action::Draw),
+		ChoiceDisplayType::HighlightPath(DisplayPath::DeckAt(DeckPath::Discard)),
 		vec![
 			Box::new(RemoveActionPointsTask::new(3)),
 			Box::new(ReplaceHandTask {}),
@@ -245,10 +238,8 @@ fn create_forfeit_choice(
 	let current_amount_remaining = game.players[player_index].get_remaining_action_points();
 	TasksChoice::new(
 		id,
-		ChoiceDisplay {
-			display_type: ChoiceDisplayType::Forfeit,
-			label: "Do nothing this turn".to_string(),
-		},
+		Choice::UseActionPoints(Action::Draw),
+		ChoiceDisplayType::Forfeit,
 		vec![Box::new(RemoveActionPointsTask::new(current_amount_remaining)) as Box<dyn PlayerTask>],
 	)
 }
@@ -258,17 +249,15 @@ fn create_roll_for_ability_choice(
 	game: &Game,
 	player_index: ids::PlayerIndex,
 	card_path: CardPath,
-	ability: &HeroAbility,
+	hero_card: HeroAbilityType,
 ) -> TasksChoice {
 	TasksChoice::new(
 		context.id_generator.generate(),
-		ChoiceDisplay {
-			display_type: card_path.display().to_highlight(),
-			label: format!("Use {}'s ability", game.card(card_path).get_spec().label),
-		},
+		Choice::UseActionPoints(Action::RollForAbility(hero_card)),
+		card_path.display().to_highlight(),
 		vec![
 			Box::new(RemoveActionPointsTask::new(1)),
-			create_roll_for_ability_task(context, game, player_index, game.card(card_path), ability),
+			create_roll_for_ability_task(context, game, player_index, game.card(card_path), hero_card),
 		],
 	)
 }
@@ -278,14 +267,12 @@ fn create_attack_monster_choice(
 	game: &Game,
 	player_index: ids::PlayerIndex,
 	card_path: CardPath,
-	monster: &MonsterSpec,
+	monster: Monster,
 ) -> TasksChoice {
 	TasksChoice::new(
 		context.id_generator.generate(),
-		ChoiceDisplay {
-			display_type: card_path.display().to_highlight(),
-			label: format!("Attack {}", game.card(card_path).get_spec().label),
-		},
+		Choice::UseActionPoints(Action::AttackMonster(monster)),
+		card_path.display().to_highlight(),
 		vec![
 			Box::new(RemoveActionPointsTask::new(2)) as Box<dyn PlayerTask>,
 			Box::new(DoRollTask::new(RollState::create(
@@ -314,16 +301,17 @@ fn create_hand_action_choice(
 			*spell,
 		));
 	}
-	if let Some(ability) = game.card(card_path).get_spec().hero_ability.as_ref() {
+	if let SlayCardSpec::HeroCard(hero_card) = game.card(card_path).card_type {
 		return Some(create_place_hero_choice(
 			context,
 			game,
 			player_index,
 			card_path,
-			ability,
+			hero_card,
 		));
 	}
-	if let Some(modifier) = game.card(card_path).get_spec().card_modifier.as_ref() {
+	if let SlayCardSpec::Item(item_card) = game.card(card_path).card_type {
+	// .get_spec().card_modifier.as_ref() {
 		let players_with_stacks = game.players_with_stacks();
 		if !players_with_stacks.is_empty() {
 			return Some(create_place_item_choice(
@@ -332,7 +320,7 @@ fn create_hand_action_choice(
 				context.id_generator.generate(),
 				game.card(card_path),
 				card_path.display().to_highlight(),
-				modifier,
+				item_card,
 				players_with_stacks,
 			));
 		}
@@ -349,13 +337,13 @@ fn create_party_action_choice(
 	if game.players[player_index].was_card_played(&game.card(card_path).id) {
 		return None;
 	}
-	if let Some(ability) = game.card(card_path).get_spec().hero_ability.as_ref() {
+	if let SlayCardSpec::HeroCard(hero_card) = game.card(card_path).card_type {
 		return Some(create_roll_for_ability_choice(
 			context,
 			game,
 			player_index,
 			card_path,
-			ability,
+			hero_card,
 		));
 	}
 	if matches!(
@@ -364,10 +352,8 @@ fn create_party_action_choice(
 	) {
 		return Some(TasksChoice::new(
 			context.id_generator.generate(),
-			ChoiceDisplay {
-				display_type: ChoiceDisplayType::HighlightPath(DisplayPath::CardAt(card_path)),
-				label: String::from("Use the Shadow Claw to pull a card."),
-			},
+			Choice::UseActionPoints(Action::UseLeader(HeroType::Thief)),
+			ChoiceDisplayType::HighlightPath(DisplayPath::CardAt(card_path)),
 			vec![
 				Box::new(RemoveActionPointsTask::new(1)),
 				Box::new(CardUsedTask::new(player_index, card_path.get_card_id())),
@@ -396,13 +382,13 @@ pub fn assign_action_choices(context: &mut GameBookKeeping, game: &mut Game) {
 	}
 	if remaining_action_points >= 2 {
 		for monster_card in game.monsters.tops() {
-			if let Some(monster) = monster_card.monster_spec() {
+			if let SlayCardSpec::MonsterCard(monster) = monster_card.card_type {
 				// /////////////////////////////////////////////////////////////////////
 				//  Just write some unit tests for this....
 				// /////////////////////////////////////////////////////////////////////
 				let hero_type_counts = &mut HeroTypeCounter::new();
 				game.players[player_index].count_hero_types(hero_type_counts);
-				let requirements = &mut monster.requirements.to_vec();
+				let requirements = &mut monster.create_spec().requirements.to_vec();
 				println!(
 					"Does\n\t\tleader={:?}\n\t\tparty={:?}\nsatisfy requirements\n\t\t{:?}?",
 					game.players[player_index].leader.card_type,
@@ -424,7 +410,7 @@ pub fn assign_action_choices(context: &mut GameBookKeeping, game: &mut Game) {
 					game,
 					player_index,
 					CardPath::TopCardIn(DeckPath::ActiveMonsters, monster_card.id),
-					&monster,
+					monster,
 				));
 			}
 		}
@@ -458,7 +444,7 @@ pub fn assign_action_choices(context: &mut GameBookKeeping, game: &mut Game) {
 	);
 
 	game.current_player_mut().choices = Some(Choices {
-		instructions: "Please choose an action".to_string(),
+		choices_type: ChoicesType::SpendActionPoints,
 		options,
 		default_choice: Some(default_choice),
 		timeline: deadlines::get_action_point_choice_deadline(),

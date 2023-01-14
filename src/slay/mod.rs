@@ -8,7 +8,7 @@ pub mod errors;
 pub mod game_context;
 pub mod hero_abilities;
 pub mod ids;
-pub mod message;
+pub mod notification;
 pub mod modifier_listeners;
 pub mod modifier_visitors;
 pub mod modifiers;

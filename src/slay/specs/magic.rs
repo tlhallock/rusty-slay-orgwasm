@@ -23,6 +23,9 @@ use crate::slay::tasks::tasks::return_modifiers::ReturnModifierTask;
 use crate::slay::tasks::tasks::search_discard::create_search_discard_choices;
 use crate::slay::tasks::tasks::search_discard::SearchDiscardFilters;
 
+use super::cards::SlayCardSpec;
+
+// Rename this to magic card.
 #[derive(Debug, Clone, Copy, Sequence, PartialEq)]
 pub enum MagicSpell {
 	EnganglingTrap,
@@ -35,6 +38,11 @@ pub enum MagicSpell {
 	CallToTheFallen,
 }
 impl MagicSpell {
+
+	pub fn label(&self) -> String {
+		SlayCardSpec::MagicCard(*self).label()
+	}
+	
 	pub fn perform_spell(
 		&self,
 		context: &mut GameBookKeeping,

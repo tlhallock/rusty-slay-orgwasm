@@ -8,7 +8,8 @@ use crate::slay::driver;
 use crate::slay::driver::AdvanceGameResult;
 use crate::slay::game_context::GameBookKeeping;
 use crate::slay::ids;
-use crate::slay::message::Notification;
+use crate::slay::notification::Notification;
+use crate::slay::specs::cards::SlayCardSpec;
 use crate::slay::state::game::Game;
 use crate::slay::state::game::GamePerspective;
 use crate::slay::state::game::GameStaticInformation;
@@ -32,6 +33,21 @@ impl AppState {
 		let mut game = Game::new();
 		initialize::initialize_game(&mut context, &mut game);
 		let player_index = game.active_player_index();
+		Self {
+			context,
+			game,
+			my_player_index: player_index,
+			notifications: Default::default(),
+		}
+	}
+	pub fn test(card: &SlayCardSpec) -> Self {
+		// let object = JsValue::from("world");
+		// log::info!("Hello {}", object.as_string().unwrap());
+
+		let mut context = GameBookKeeping::new();
+		let mut game = Game::new();
+		initialize::create_state_to_test(&mut context, &mut game, card);
+		let player_index = 0;
 		Self {
 			context,
 			game,

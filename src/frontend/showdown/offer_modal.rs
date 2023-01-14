@@ -84,7 +84,7 @@ fn view_offer_choices(props: &OfferModalProps) -> Html {
 		// 		{choice.label.to_owned()}
 		// 	</div>
 		// }
-		match choice.display.display_type {
+		match choice.display {
 			ChoiceDisplayType::Challenge(_) => html! {
 				<div
 					onclick={choose_this}

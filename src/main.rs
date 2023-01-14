@@ -6,6 +6,6 @@ pub mod frontend;
 pub mod slay;
 
 pub fn main() {
-	driver::game_loop().expect("oops");
-	// frontend::view::render();
+	// driver::game_loop().expect("oops");
+	frontend::view::render();
 }

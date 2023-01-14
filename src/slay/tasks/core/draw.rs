@@ -82,7 +82,7 @@ impl PlayerTask for DrawTask {
 		if let Some(param) = self.param {
 			game.players[player_index]
 				.tasks
-				.set_card_value(param, Some(card_id));
+				.set_card_value(param, Some(card_id))?;
 		}
 
 		if is_last {

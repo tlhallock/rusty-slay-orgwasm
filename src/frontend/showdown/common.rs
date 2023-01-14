@@ -195,7 +195,7 @@ pub fn view_roll_choices(props: &RollChoicesProps) -> Html {
 			let choice_id = choice.choice_id;
 			move |_| choose.iter().for_each(|c| c.emit(choice_id))
 		};
-		match &choice.display.display_type {
+		match &choice.display {
 			ChoiceDisplayType::Modify(modi) => match modi {
 				RollModificationChoiceType::AddToRoll(kind, amount, _) => html! {
 					<div

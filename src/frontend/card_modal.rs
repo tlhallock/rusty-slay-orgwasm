@@ -39,7 +39,7 @@ pub fn view_card_details(props: &CardModalProps) -> Html {
 					class={classes!("choice-button")}
 					onclick={choose_this}
 				>
-					{choice.display.label.to_owned()}
+					{choice.choice.label()}
 				</button>
 			</div>
 		}
