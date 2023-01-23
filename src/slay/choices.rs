@@ -21,13 +21,13 @@ use super::specs::magic::MagicSpell;
 use super::specs::modifier::ModifierKinds;
 use super::specs::monster::Monster;
 use super::state::game::GameStaticInformation;
-
+use super::tasks::tasks::search_discard::SearchDiscardFilters;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum ChoicesType {
 	SpendActionPoints,
+	SearchDiscard(SearchDiscardFilters),
 }
-
 
 #[derive(Clone, Debug)]
 pub struct Choices {
@@ -44,11 +44,7 @@ pub struct ChoicesPerspective {
 	pub options: Vec<ChoicePerspective>,
 }
 
-
-
-
-
-#[derive(Clone,  PartialEq, Debug)]
+#[derive(Clone, PartialEq, Debug)]
 pub enum Action {
 	Forfeit,
 	PlaceHeroInParty(HeroAbilityType),
@@ -61,18 +57,13 @@ pub enum Action {
 	RollForAbility(HeroAbilityType),
 }
 
-#[derive(Clone,  PartialEq, Debug)]
-pub enum PlayerParameter {
+#[derive(Clone, PartialEq, Debug)]
+pub enum PlayerParameter {}
 
-}
+#[derive(Clone, PartialEq, Debug)]
+pub enum CardParameter {}
 
-#[derive(Clone,  PartialEq, Debug)]
-pub enum CardParameter {
-
-}
-
-
-#[derive(Clone,  PartialEq, Debug)]
+#[derive(Clone, PartialEq, Debug)]
 pub enum Choice {
 	UseActionPoints(Action),
 	SetCompletion(Completion),
@@ -81,11 +72,8 @@ pub enum Choice {
 
 	SetPlayerParam(PlayerParameter),
 	SetCardParameter(PlayerParameter),
-
 	// SetParameter
 }
-
-
 
 // TODO: Rename this to Choice
 #[derive(Debug, Clone)]
@@ -109,10 +97,8 @@ pub struct ChoicePerspective {
 pub struct ChoiceDisplay {
 	// pub arrows: Vec<DisplayArrow>,
 	pub display_type: ChoiceDisplayType,
-
 	// for i18n, this should still be an enum
 	// pub label: String,
-
 
 	// pub highlight: Option<DisplayPath>,
 	// pub references_id: Option<ids::ElementId>,
@@ -136,97 +122,86 @@ pub struct ChoiceDisplay {
 impl Choice {
 	pub fn label(&self) -> String {
 		match self {
-    	Choice::UseActionPoints(action) => match action {
-        Action::Forfeit => String::from("Do nothing this round."),
-        Action::PlaceHeroInParty(hero_card) => format!(
-					"Place {} in your party", hero_card.label()
-				),
-        Action::CastMagic(magic_card) => format!(
-					"Play {}", magic_card.label()
-				),
-        Action::PlaceItem(item_card) => format!(
-					"Place {} on some hero card.", item_card.label()
-				),
-        Action::Draw => String::from(
-					"Draw a card."
-				),
-        Action::ReplaceHand => String::from(
-					"Use 3 action points to replace your entire hand."
-				),
-        Action::AttackMonster(monster) => format!(
-					"Attack {}", monster.label()
-				),
-        Action::UseLeader(leader_type) => String::from(
-					"Use Shadow Claw to pull from another player's hand."
-				),
-        Action::RollForAbility(hero_card) => format!(
-					"Roll for {}", hero_card.label()
-				),
-	    },
-    	Choice::SetCompletion(completion) => match completion {
-        Completion::Thinking => todo!(),
-        Completion::DoneUntilModification => String::from(
-					"Do not modify this roll, unless someone else does."
-				),
-        Completion::AllDone => String::from(
-					"Do not modify this roll, even if someone else does."
-				),
-    	},
-	    Choice::Modify(path, kind, amount) => format!(
-				"Use {:?} to modify {:?} by {}",
-				kind, path, amount,
-			),
-	    Choice::Challenge => String::from("Challenge!"),
-	    Choice::SetPlayerParam(parameter) => format!(
-				"choosing {:?}", parameter
-			),
-	    Choice::SetCardParameter(parameter) => format!(
-				"choosing {:?}", parameter
-			),
+			Choice::UseActionPoints(action) => match action {
+				Action::Forfeit => String::from("Do nothing this round."),
+				Action::PlaceHeroInParty(hero_card) => format!("Place {} in your party", hero_card.label()),
+				Action::CastMagic(magic_card) => format!("Play {}", magic_card.label()),
+				Action::PlaceItem(item_card) => format!("Place {} on some hero card.", item_card.label()),
+				Action::Draw => String::from("Draw a card."),
+				Action::ReplaceHand => String::from("Use 3 action points to replace your entire hand."),
+				Action::AttackMonster(monster) => format!("Attack {}", monster.label()),
+				Action::UseLeader(leader_type) => {
+					String::from("Use Shadow Claw to pull from another player's hand.")
+				}
+				Action::RollForAbility(hero_card) => format!("Roll for {}", hero_card.label()),
+			},
+			Choice::SetCompletion(completion) => match completion {
+				Completion::Thinking => todo!(),
+				Completion::DoneUntilModification => {
+					String::from("Do not modify this roll, unless someone else does.")
+				}
+				Completion::AllDone => String::from("Do not modify this roll, even if someone else does."),
+			},
+			Choice::Modify(path, kind, amount) => {
+				format!("Use {:?} to modify {:?} by {}", kind, path, amount,)
+			}
+			Choice::Challenge => String::from("Challenge!"),
+			Choice::SetPlayerParam(parameter) => format!("choosing {:?}", parameter),
+			Choice::SetCardParameter(parameter) => format!("choosing {:?}", parameter),
 		}
 	}
-	pub fn get_notification(&self, game: &GameStaticInformation, player_index: ids::PlayerIndex) -> String {
+	pub fn get_notification(
+		&self,
+		game: &GameStaticInformation,
+		player_index: ids::PlayerIndex,
+	) -> String {
 		// Player {} chose to
 		match self {
-    Choice::UseActionPoints(action) => match action {
-        Action::Forfeit => format!("To do nothing, lol."),
-        Action::PlaceHeroInParty(hero_card) => format!(
+			Choice::UseActionPoints(action) => match action {
+				Action::Forfeit => format!("To do nothing, lol."),
+				Action::PlaceHeroInParty(hero_card) => format!(
 					"Player {} chose to place {} in their party.",
 					game.player_name(player_index),
 					hero_card.label(),
 				),
-        Action::CastMagic(_) => todo!(),
-        Action::PlaceItem(_) => todo!(),
-        Action::Draw => todo!(),
-        Action::ReplaceHand => todo!(),
-        Action::AttackMonster(_) => todo!(),
-        Action::UseLeader(_) => todo!(),
-        Action::RollForAbility(_) => todo!(),
-    },
-    Choice::SetCompletion(_) => todo!(),
-    Choice::Modify(_, _, _) => todo!(),
-    Choice::Challenge => todo!(),
-    Choice::SetPlayerParam(_) => todo!(),
-    Choice::SetCardParameter(_) => todo!(),
-}
-	}
-	
-}
-
-/*
-
-	     */
-
-impl ChoicesType {
-	pub fn get_instructions(&self) -> String {
-		match self {
-    	ChoicesType::SpendActionPoints => String::from(
-				"How would you like to use your action points?"
-			),
+				Action::CastMagic(_) => todo!(),
+				Action::PlaceItem(_) => todo!(),
+				Action::Draw => todo!(),
+				Action::ReplaceHand => todo!(),
+				Action::AttackMonster(_) => todo!(),
+				Action::UseLeader(_) => todo!(),
+				Action::RollForAbility(_) => todo!(),
+			},
+			Choice::SetCompletion(_) => todo!(),
+			Choice::Modify(_, _, _) => todo!(),
+			Choice::Challenge => todo!(),
+			Choice::SetPlayerParam(_) => todo!(),
+			Choice::SetCardParameter(_) => todo!(),
 		}
 	}
 }
 
+/*
+
+*/
+
+impl ChoicesType {
+	pub fn get_instructions(&self) -> String {
+		match self {
+			ChoicesType::SpendActionPoints => {
+				String::from("How would you like to use your action points?")
+			}
+			ChoicesType::SearchDiscard(filters) => match filters {
+				SearchDiscardFilters::IsHero => {
+					String::from("Search the discard pile for a hero to add to your hand.")
+				}
+				SearchDiscardFilters::IsItem => {
+					String::from("Search the discard pile for an item to add to your hand.")
+				}
+			},
+		}
+	}
+}
 
 impl Choices {
 	pub fn new(
@@ -414,7 +389,12 @@ impl DisplayPath {
 // }
 
 impl TasksChoice {
-	pub fn new(id: ids::ChoiceId, choice: Choice, display: ChoiceDisplayType, tasks: Vec<Box<dyn PlayerTask>>) -> Self {
+	pub fn new(
+		id: ids::ChoiceId,
+		choice: Choice,
+		display: ChoiceDisplayType,
+		tasks: Vec<Box<dyn PlayerTask>>,
+	) -> Self {
 		Self {
 			id,
 			choice,
@@ -425,7 +405,8 @@ impl TasksChoice {
 	}
 	pub fn prepend(
 		id: ids::ChoiceId,
-		choice: Choice, display: ChoiceDisplayType, 
+		choice: Choice,
+		display: ChoiceDisplayType,
 		tasks: Vec<Box<dyn PlayerTask>>,
 	) -> Self {
 		Self {

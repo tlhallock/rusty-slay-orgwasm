@@ -1,5 +1,6 @@
 use crate::slay::choices::ChoiceDisplay;
 use crate::slay::choices::Choices;
+use crate::slay::choices::ChoicesType;
 use crate::slay::choices::TasksChoice;
 use crate::slay::deadlines;
 use crate::slay::errors::SlayResult;
@@ -105,6 +106,7 @@ pub fn create_search_discard_choices(
 		return None;
 	}
 	Some(Choices {
+		choices_type: ChoicesType::SearchDiscard(filter),
 		instructions: "Choose a hero card to add to your hand.".to_owned(),
 		default_choice: None,
 		options,

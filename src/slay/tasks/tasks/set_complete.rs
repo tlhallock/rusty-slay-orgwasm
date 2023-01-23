@@ -45,10 +45,8 @@ fn create_set_complete_choice(
 ) -> TasksChoice {
 	TasksChoice::new(
 		id,
-		ChoiceDisplay {
-			label,
-			display_type: ChoiceDisplayType::SetCompletion(persist),
-		},
+		crate::slay::choices::Choice::SetCompletion(persist),
+		ChoiceDisplayType::SetCompletion(persist),
 		vec![Box::new(SetCompleteTask::new(persist)) as Box<dyn PlayerTask>],
 	)
 }
