@@ -90,7 +90,7 @@ pub enum Choice {
 	PlayImmediately(SlayCardSpec),
 	DoNotPlayImmediately,
 	Discard(SlayCardSpec),
-	Sacrifice(SlayCardSpec),
+	Sacrifice(HeroAbilityType),
 	// SetParameter
 }
 
@@ -163,14 +163,27 @@ impl Choice {
 				format!("Use {:?} to modify {:?} by {}", kind, path, amount,)
 			}
 			Choice::Challenge => String::from("Challenge!"),
-			Choice::SetPlayerParam(parameter, player_index) => format!("choosing {:?}", parameter),
-			Choice::SetCardParameter(parameter, card) => format!("choosing {:?}", parameter),
+			Choice::SetPlayerParam(parameter, player_index) =>
+				format!("Set {:?} to player {}", parameter, player_index + 1),
+			Choice::SetCardParameter(parameter, card) =>
+				format!("Set {:?} to {}.", parameter, card.label()),
 			Choice::ChooseDiscardedCard(spec) => spec.get_card_spec_creation().label,
-			Choice::ReturnItem(_, _) => todo!(),
-			Choice::PlayImmediately(_) => todo!(),
-			Choice::DoNotPlayImmediately => todo!(),
-			Choice::Discard(_) => todo!(),
-			Choice::Sacrifice(_) => todo!(),
+			Choice::ReturnItem(item, hero) => format!(
+				"Return {} from {}", item.label(), hero.label(),
+			),
+			Choice::PlayImmediately(card) => format!(
+				"Play {} immediately",
+				card.label(),
+			),
+			Choice::DoNotPlayImmediately => String::from("Do not play immediately"),
+			Choice::Discard(card) => format!(
+				"Sacrifice {}",
+				card.label(),
+			),
+			Choice::Sacrifice(hero_card) => format!(
+				"Sacrifice {}",
+				hero_card.label(),
+			),
 		}
 	}
 	pub fn get_notification(
@@ -187,25 +200,85 @@ impl Choice {
 					game.player_name(player_index),
 					hero_card.label(),
 				),
-				Action::CastMagic(_) => todo!(),
-				Action::PlaceItem(_) => todo!(),
-				Action::Draw => todo!(),
-				Action::ReplaceHand => todo!(),
-				Action::AttackMonster(_) => todo!(),
-				Action::UseLeader(_) => todo!(),
-				Action::RollForAbility(_) => todo!(),
+				Action::CastMagic(magic_card) => format!(
+					"{} chose to use the magic card {:?}",
+					game.player_name(player_index),
+					magic_card,
+				),
+				Action::PlaceItem(item) => format!(
+					"{} chose to place the item {:?}",
+					game.player_name(player_index),
+					item,
+				),
+				Action::Draw => format!(
+					"{} chose to draw a card",
+					game.player_name(player_index),
+				),
+				Action::ReplaceHand =>format!(
+					"{} chose to replace their hand with 5 new cards",
+					game.player_name(player_index),
+				),
+				Action::AttackMonster(monster) => format!(
+					"{} chose to attack {}",
+					game.player_name(player_index),
+					monster.label(),
+				),
+				Action::UseLeader(_) => format!(
+					"{} chose to user their thiefy party leader's ability (and pull a card from somebody's hand).",
+					game.player_name(player_index),
+				),
+				Action::RollForAbility(hero_card) => format!(
+					"{} chose to roll for {}'s ability.",
+					game.player_name(player_index),
+					hero_card.label(),
+				),
 			},
-			Choice::SetCompletion(_) => todo!(),
-			Choice::Modify(_, _, _) => todo!(),
-			Choice::Challenge => todo!(),
-			Choice::SetPlayerParam(_, _) => todo!(),
-			Choice::SetCardParameter(_, _) => todo!(),
-			Choice::ChooseDiscardedCard(_) => todo!(),
-			Choice::ReturnItem(_, _) => todo!(),
-			Choice::PlayImmediately(_) => todo!(),
-			Choice::DoNotPlayImmediately => todo!(),
-			Choice::Discard(_) => todo!(),
-			Choice::Sacrifice(_) => todo!(),
+			Choice::SetCompletion(persist) => format!(
+				"{}'s completion is {:?}.",
+				game.player_name(player_index),
+				persist,
+			),
+			Choice::Modify(_, _, _) => format!(
+				"{} chose to modify something by something.",
+				game.player_name(player_index),
+			),
+			Choice::Challenge => format!(
+				"{} chose to challenge!",
+				game.player_name(player_index),
+			),
+			Choice::SetPlayerParam(_, _) => format!(
+				"{} chose a player.",
+				game.player_name(player_index),
+			),
+			Choice::SetCardParameter(_, _) => format!(
+				"{} chose a card",
+				game.player_name(player_index),
+			),
+			Choice::ChooseDiscardedCard(_) => format!(
+				"{} chose a card from the discard pile",
+				game.player_name(player_index),
+			),
+			Choice::ReturnItem(_, _) => format!(
+				"{} chose to return an item card.",
+				game.player_name(player_index),
+			),
+			Choice::PlayImmediately(card) => format!(
+				"{} decided whether to play {} immediately.",
+				game.player_name(player_index),
+				card.label(),
+			),
+			Choice::DoNotPlayImmediately => format!(
+				"{} does not want to play immediately",
+				game.player_name(player_index),
+			),
+			Choice::Discard(_) => format!(
+				"{} chose to discard a certain card.",
+				game.player_name(player_index),
+			),
+			Choice::Sacrifice(_) => format!(
+				"{} chose to sacrifice a certain something.",
+				game.player_name(player_index),
+			),
 		}
 	}
 }
@@ -230,11 +303,11 @@ impl ChoicesType {
 				card.get_card_spec_creation().label,
 			),
 			ChoicesType::ModifyRoll => String::from("Choose whether to modify the current roll."),
-			ChoicesType::Discard => todo!(),
-			ChoicesType::ReturnAnItemCard => todo!(),
-			ChoicesType::ChoosePlayerParam(_) => todo!(),
-			ChoicesType::ChooseCardParam(_) => todo!(),
-			ChoicesType::Sacrifice => todo!(),
+			ChoicesType::Discard => String::from("Choose a card in your hand to discard."),
+			ChoicesType::ReturnAnItemCard => String::from("Return an item card to someone's (TODO) hand."),
+			ChoicesType::ChoosePlayerParam(_) => String::from("Choose a player"),
+			ChoicesType::ChooseCardParam(_) => String::from("Choose a card."),
+			ChoicesType::Sacrifice => String::from("Choose a hero card to sacrifice."),
 		}
 	}
 }

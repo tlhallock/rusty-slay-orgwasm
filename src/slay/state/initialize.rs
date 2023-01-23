@@ -16,6 +16,20 @@ use crate::slay::state::player::Player;
 use crate::slay::state::stack::Card;
 use crate::slay::state::stack::Stack;
 
+
+
+fn bot_name(player_index: usize) -> &'static str {
+	match player_index {
+		0 => "Henry",
+		1 => "Ralph",
+		2 => "Jessica",
+		3 => "Amanda",
+		4 => "Mark",
+		5 => "Lenny",
+		_ => "think of more names, asshole...",
+	}
+}
+
 fn initialize_global_decks(context: &mut GameBookKeeping, game: &mut Game) {
 	let (draw_capacity, leaders_capacity, monsters_capacity) = (101, 10, 20);
 	let mut draw = Vec::with_capacity(draw_capacity);
@@ -60,7 +74,7 @@ fn initialize_global_decks(context: &mut GameBookKeeping, game: &mut Game) {
 fn initialize_players(_context: &mut GameBookKeeping, game: &mut Game) {
 	for player_index in 0..4 {
 		let player = Player::new(
-			format!("Unnamed bot {}", player_index + 1),
+			format!("{} (Player {})", bot_name(player_index), player_index + 1),
 			player_index,
 			game.leaders.deal().top,
 		);

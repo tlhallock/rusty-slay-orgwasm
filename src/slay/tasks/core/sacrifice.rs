@@ -7,6 +7,7 @@ use crate::slay::deadlines;
 use crate::slay::errors::SlayResult;
 use crate::slay::game_context::GameBookKeeping;
 use crate::slay::ids;
+use crate::slay::specs::cards::SlayCardSpec;
 use crate::slay::state::deck::DeckPath;
 use crate::slay::state::game::Game;
 use crate::slay::tasks::player_tasks::PlayerTask;
@@ -74,16 +75,20 @@ impl PlayerTask for Sacrifice {
 			.tops()
 			// .filter(card_is_sacrificable)
 			.map(|card| {
-				TasksChoice::new(
-					context.id_generator.generate(),
-					Choice::Sacrifice(card.card_type),
-					card.as_choice(),
-					vec![Box::new(MoveCardTask {
-						source: DeckPath::Party(player_index),
-						destination: DeckPath::Discard,
-						card_id: card.id,
-					})],
-				)
+				if let SlayCardSpec::HeroCard(hero_card) = card.card_type {
+					TasksChoice::new(
+						context.id_generator.generate(),
+						Choice::Sacrifice(hero_card),
+						card.as_choice(),
+						vec![Box::new(MoveCardTask {
+							source: DeckPath::Party(victim_index),
+							destination: DeckPath::Discard,
+							card_id: card.id,
+						})],
+					)
+				} else {
+					unreachable!();
+				}
 			})
 			.collect();
 

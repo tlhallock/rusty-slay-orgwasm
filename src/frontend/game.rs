@@ -87,19 +87,21 @@ pub fn view_game(props: &GamePerspectiveProps) -> Html {
 		}
 	});
 	html! {
-			<div>
-					{for choices_instructions}
-					{for card_view}
-					{for roll}
-					{for offer}
-					{for challenge}
-					<div class={classes!("global-decks")}>
-							{for decks}
-					</div>
-					<div class={classes!("players")}>
-							{for players}
-					</div>
+		<div>
+			{for card_view}
+			{for roll}
+			{for offer}
+			{for challenge}
+			<br/>
+			{for choices_instructions}
+			<br/>
+			<div class={classes!("global-decks")}>
+					{for decks}
 			</div>
+			<div class={classes!("players")}>
+				{for players}
+			</div>
+		</div>
 	}
 }
 

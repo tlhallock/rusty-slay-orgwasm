@@ -191,7 +191,24 @@ pub struct ChallengeModalProps {
 
 #[function_component(ChallengeModalView)]
 pub fn view_challenge_modal(props: &ChallengeModalProps) -> Html {
-	let _open = use_state(|| false);
+	// Does this need to be one higher?
+	// TODO: DRY?
+	let is_open = use_state(|| true);
+	let close = {
+		let open_handle = is_open.clone();
+		Callback::from(move |_| open_handle.set(false))
+	};
+	let open = {
+		let open_handle = is_open.clone();
+		Callback::from(move |_| open_handle.set(true))
+	};
+	if !*is_open {
+		return html! {
+			<button onclick={open}>
+				{ "Back to challenge modifications" }
+			</button>
+		};
+	}
 	html! {
 		<div class={classes!("modal")}>
 			<div class={classes!("modal-content")}>
@@ -217,7 +234,7 @@ pub fn view_challenge_modal(props: &ChallengeModalProps) -> Html {
 					common={props.common.to_owned()}
 				/>
 				<br/>
-				<div>
+				<div onclick={close}>
 					<img
 						src={"imgs/icons/back.png"}
 						alt={"Go back"}

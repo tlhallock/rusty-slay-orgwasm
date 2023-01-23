@@ -379,7 +379,7 @@ pub fn assign_action_choices(context: &mut GameBookKeeping, game: &mut Game) {
 				let hero_type_counts = &mut HeroTypeCounter::new();
 				game.players[player_index].count_hero_types(hero_type_counts);
 				let requirements = &mut monster.create_spec().requirements.to_vec();
-				println!(
+/*				println!(
 					"Does\n\t\tleader={:?}\n\t\tparty={:?}\nsatisfy requirements\n\t\t{:?}?",
 					game.players[player_index].leader.card_type,
 					game.players[player_index]
@@ -388,12 +388,12 @@ pub fn assign_action_choices(context: &mut GameBookKeeping, game: &mut Game) {
 						.map(|stack| stack.get_hero_type())
 						.collect::<Vec<_>>(),
 					requirements,
-				);
+				); */
 				if !monster::player_satisfies_requirements(hero_type_counts, requirements) {
-					println!("NO");
+//					println!("NO");
 					continue;
 				}
-				println!("YES");
+//				println!("YES");
 				// /////////////////////////////////////////////////////////////////////
 				options.push(create_attack_monster_choice(
 					context,

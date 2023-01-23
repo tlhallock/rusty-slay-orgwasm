@@ -149,7 +149,24 @@ fn view_roll_timer(props: &SimplerRollModalProps) -> Html {
 
 #[function_component(RollModalView)]
 pub fn view_roll_modal(props: &RollModalProps) -> Html {
-	let _open = use_state(|| false);
+	// Does this need to be one higher?
+	// TODO: DRY?
+	let is_open = use_state(|| true);
+	let close = {
+		let open_handle = is_open.clone();
+		Callback::from(move |_| open_handle.set(false))
+	};
+	let open = {
+		let open_handle = is_open.clone();
+		Callback::from(move |_| open_handle.set(true))
+	};
+	if !*is_open {
+		return html! {
+			<button onclick={open}>
+				{ "Back to roll modifications" }
+			</button>
+		};
+	}
 	html! {
 		<div class={classes!("modal")}>
 			<div class={classes!("modal-content")}>
@@ -186,7 +203,7 @@ pub fn view_roll_modal(props: &RollModalProps) -> Html {
 				<div>
 				</div>
 				<br/>
-				<div>
+				<div onclick={close}>
 					<img
 						src={"imgs/icons/back.png"}
 						alt={"Go back"}

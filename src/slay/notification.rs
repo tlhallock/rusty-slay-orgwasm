@@ -4,7 +4,7 @@ use crate::slay::ids;
 use crate::slay::state::game::GameStaticInformation;
 use crate::slay::state::summarizable::Summarizable;
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum Notification {
 	PlayerChose(ids::PlayerIndex, Choice),
 	PlayerIsChoosing(ids::PlayerIndex, ChoicesType),

@@ -116,11 +116,24 @@ fn view_offer_choices(props: &OfferModalProps) -> Html {
 
 #[function_component(OfferChallengesView)]
 pub fn view_roll_modal(props: &OfferModalProps) -> Html {
-	let _open = use_state(|| false);
-	// let clear_card = {
-	//     let view_card = props.view_card.clone();
-	//     move |_| view_card.emit(None)
-	// };
+	// Does this need to be one higher?
+	// TODO: DRY?
+	let is_open = use_state(|| true);
+	let close = {
+		let open_handle = is_open.clone();
+		Callback::from(move |_| open_handle.set(false))
+	};
+	let open = {
+		let open_handle = is_open.clone();
+		Callback::from(move |_| open_handle.set(true))
+	};
+	if !*is_open {
+		return html! {
+			<button onclick={open}>
+				{ "Back to challenge offers" }
+			</button>
+		};
+	}
 	html! {
 		<div class={classes!("modal")}>
 			<div class={classes!("modal-content")}>
@@ -141,7 +154,7 @@ pub fn view_roll_modal(props: &OfferModalProps) -> Html {
 					common={props.common.to_owned()}
 				/>
 				<br/>
-				<div>
+				<div onclick={close}>
 					<img
 						src={"imgs/icons/back.png"}
 						alt={"Go back"}

@@ -11,6 +11,8 @@ use crate::slay::tasks::core::destroy::DestroyCardTask;
 use crate::slay::tasks::core::destroy::DestroyModifiersDestination;
 use crate::slay::tasks::core::destroy::DestroyTask;
 use crate::slay::tasks::core::discard::Discard;
+use crate::slay::tasks::core::discard::DiscardFromParam;
+use crate::slay::tasks::core::discard::PlayersWithHeroTypeDiscard;
 use crate::slay::tasks::core::draw::DrawTask;
 use crate::slay::tasks::core::pull::PullFromTask;
 use crate::slay::tasks::core::sacrifice::Sacrifice;
@@ -241,10 +243,13 @@ impl HeroAbilityType {
 					TaskParamName::HeavyBearVictim,
 					"who has to discard 2 cards (Heavy bear)",
 				),
-				Discard::from_param(2, TaskParamName::HeavyBearVictim),
+				DiscardFromParam::create(2, TaskParamName::HeavyBearVictim),
+				ClearParamsTask::create(),
 			],
 			HeroAbilityType::BadAxe => vec![DestroyTask::create()],
-			HeroAbilityType::ToughTeddy => vec![Discard::each_player_with(HeroType::Fighter)],
+			HeroAbilityType::ToughTeddy => vec![
+				PlayersWithHeroTypeDiscard::create(HeroType::Fighter)
+			],
 			HeroAbilityType::BearClaw => vec![], /////////////////////////////////////
 			HeroAbilityType::FuryKnuckle => vec![], //////////////////////////////////
 			HeroAbilityType::BearyWise => vec![], ////////////////////////////////////
@@ -263,7 +268,10 @@ impl HeroAbilityType {
 			HeroAbilityType::Peanut => vec![DrawTask::create(2)],
 			HeroAbilityType::NappingNibbles => vec![/* This one actually is empty. */],
 			HeroAbilityType::TipsyTootie => vec![], ///////////////////////////////////
-			HeroAbilityType::MellowDee => vec![DrawTask::into_param(TaskParamName::MellowDeeVictim)],
+			HeroAbilityType::MellowDee => vec![
+				DrawTask::into_param(TaskParamName::MellowDeeVictim),
+				ClearParamsTask::create(),
+			],
 			HeroAbilityType::LuckBucky => vec![], /////////////////////////////////////
 			HeroAbilityType::DodgyDealer => vec![
 				ChoosePlayerParameterTask::exclude_self(

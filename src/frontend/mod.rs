@@ -10,3 +10,4 @@ pub mod player;
 pub mod showdown;
 pub mod stack;
 pub mod view;
+pub mod notifications;
