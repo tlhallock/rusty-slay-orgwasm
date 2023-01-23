@@ -1,4 +1,3 @@
-use crate::slay::choices::ChoiceDisplay;
 use crate::slay::choices::ChoiceDisplayType;
 use crate::slay::choices::TasksChoice;
 use crate::slay::errors::SlayResult;

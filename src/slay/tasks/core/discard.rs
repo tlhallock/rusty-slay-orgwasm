@@ -1,7 +1,8 @@
 use std::collections::HashSet;
 
-use crate::slay::choices::ChoiceDisplay;
+use crate::slay::choices::Choice;
 use crate::slay::choices::Choices;
+use crate::slay::choices::ChoicesType;
 use crate::slay::choices::TasksChoice;
 use crate::slay::deadlines;
 use crate::slay::errors::SlayResult;
@@ -110,10 +111,8 @@ impl PlayerTask for Discard {
 				.map(|card| {
 					TasksChoice::prepend(
 						context.id_generator.generate(),
-						ChoiceDisplay {
-							display_type: card.as_choice(),
-							label: format!("Discard {}", card.get_spec().label),
-						},
+						Choice::Discard(card.card_type),
+						card.as_choice(),
 						vec![Box::new(MoveCardTask {
 							source: DeckPath::Hand(player_index),
 							destination: DeckPath::Discard,
@@ -130,7 +129,7 @@ impl PlayerTask for Discard {
 				options,
 				None,
 				deadlines::get_discard_deadline(),
-				"Choose a card to discard.".to_owned(),
+				ChoicesType::Discard,
 			));
 		}
 		Ok(TaskProgressResult::TaskComplete)

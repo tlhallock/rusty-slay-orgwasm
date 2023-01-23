@@ -45,8 +45,13 @@ pub fn player_has_won(player: &Player) -> bool {
 	false
 }
 
-pub fn game_is_over(game: &Game) -> bool {
-	game.players.iter().any(player_has_won)
+pub fn game_is_over(game: &Game) -> Option<ids::PlayerIndex> {
+	for player in game.players.iter() {
+		if player_has_won(player) {
+			return Some(player.player_index);
+		}
+	}
+	None
 }
 
 fn use_action_points(context: &mut GameBookKeeping, game: &mut Game) {
@@ -57,6 +62,7 @@ fn use_action_points(context: &mut GameBookKeeping, game: &mut Game) {
 	}
 	game.current_player_mut().turn_end();
 	game.increment();
+	context.emit(&Notification::PlayersTurn(game.active_player_index()));
 	game.clear_expired_modifiers();
 	game.current_player_mut().turn_begin();
 	actions::assign_action_choices(context, game);
@@ -99,7 +105,8 @@ pub fn advance_game(
 			unreachable!();
 		}
 
-		if game_is_over(game) {
+		if let Some(winner_index) = game_is_over(game) {
+			context.emit(&Notification::PlayerWon(winner_index));
 			return Ok(AdvanceGameResult::GameOver);
 		}
 		if let Some(mut showdown) = game.showdown.take_complete() {
@@ -145,7 +152,10 @@ pub fn make_selection(
 		.ok_or_else(|| SlayError::new("Choice not found."))?;
 
 	/*context.emit*/
-	notify(Notification::PlayerChose(player_index, choice.choice));
+	notify(Notification::PlayerChose(
+		player_index,
+		choice.choice.to_owned(),
+	));
 	choice.select(game, player_index)?;
 	Ok(())
 }
@@ -205,9 +215,13 @@ pub fn game_loop() -> SlayResult<()> {
 		// let perspective = GamePerspective::from(game, 1);
 		// let html = view::show_perspective(perspective);
 
-		let (player_id, choice_id) = strategy::pick_a_random_choice(context, game)?;
-		make_selection(game, player_id, choice_id, &mut |notification| {
-			log::info!("Notification: '{}'", notification.message_text);
+		let (player_index, choice_id) = strategy::pick_a_random_choice(context, game)?;
+		let statics = &game.to_statics(player_index);
+		make_selection(game, player_index, choice_id, &mut |notification| {
+			log::info!(
+				"Notification: '{}'",
+				notification.get_description(statics, player_index)
+			);
 		})?;
 		match advance_game(context, game)? {
 			AdvanceGameResult::GameOver => {
@@ -224,6 +238,9 @@ pub fn game_loop() -> SlayResult<()> {
 Tests
 	Place a hero card without challenging.
 	replentishing the draw pile
+
+
+
 
 
 

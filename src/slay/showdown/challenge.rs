@@ -5,6 +5,7 @@ use rand::rngs::ThreadRng;
 use crate::slay::choices::ChoicePerspective;
 use crate::slay::choices::Choices;
 use crate::slay::choices::ChoicesPerspective;
+use crate::slay::choices::ChoicesType;
 use crate::slay::deadlines;
 use crate::slay::game_context::GameBookKeeping;
 use crate::slay::ids;
@@ -88,12 +89,7 @@ impl ChallengeRoll {
 			choices
 				.options
 				.iter()
-				.filter(|choice| {
-					choice
-						.display
-						.display_type
-						.belongs_to_challenge_roll(self.path)
-				})
+				.filter(|choice| choice.display.belongs_to_challenge_roll(self.path))
 				.map(|choice| choice.to_owned())
 				.collect()
 		} else {
@@ -171,7 +167,7 @@ impl ShowDown for ChallengeState {
 	) -> Choices {
 		let default_choice = context.id_generator.generate();
 		Choices {
-			instructions: "Choose whether to modify the current challenge.".to_string(),
+			choices_type: ChoicesType::ModifyChallenge,
 			default_choice: Some(default_choice),
 			timeline: self.tracker().timeline.to_owned(),
 			options: list_modification_choices(
@@ -251,7 +247,7 @@ impl ChallengePerspective {
 			choices
 				.options
 				.iter()
-				.filter(|choice| choice.display.display_type.belongs_to_challenge())
+				.filter(|choice| choice.display.belongs_to_challenge())
 				.map(|x| x.to_owned())
 				.collect()
 		} else {

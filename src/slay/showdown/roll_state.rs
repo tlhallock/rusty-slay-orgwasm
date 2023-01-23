@@ -4,6 +4,7 @@ use std::vec;
 use crate::slay::choices::ChoicePerspective;
 use crate::slay::choices::Choices;
 use crate::slay::choices::ChoicesPerspective;
+use crate::slay::choices::ChoicesType;
 use crate::slay::choices::TasksChoice;
 use crate::slay::deadlines;
 use crate::slay::game_context::GameBookKeeping;
@@ -116,7 +117,7 @@ impl ShowDown for RollState {
 	) -> Choices {
 		let default_choice = context.id_generator.generate();
 		Choices {
-			instructions: "Choose whether to modify the current roll.".to_string(),
+			choices_type: ChoicesType::ModifyRoll,
 			default_choice: Some(default_choice),
 			timeline: self.tracker().timeline.to_owned(),
 			options: list_modification_choices(
@@ -233,7 +234,7 @@ impl RollPerspective {
 			choices
 				.options
 				.iter()
-				.filter(|choice| choice.display.display_type.belongs_to_roll())
+				.filter(|choice| choice.display.belongs_to_roll())
 				.map(|choice| choice.to_owned())
 				.collect()
 		} else {

@@ -8,6 +8,11 @@ use crate::slay::specs::monster::Monster;
 
 use crate::slay::specs::hero::HeroAbilityType;
 
+#[derive(Debug, Clone, Sequence, PartialEq, Copy)]
+pub enum ChallengeType {
+	Standard,
+	Warrior,
+}
 
 // Rename this: remove the Slay
 #[derive(Debug, Clone, Sequence, PartialEq, Copy)]
@@ -18,7 +23,7 @@ pub enum SlayCardSpec {
 	MagicCard(MagicSpell),
 	ModifierCard(ModifierKinds),
 	Item(AnotherItemType),
-	Challenge,
+	Challenge, /*(ChallengeType)*/
 }
 
 impl SlayCardSpec {

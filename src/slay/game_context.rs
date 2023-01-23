@@ -26,7 +26,7 @@ impl GameBookKeeping {
 	}
 
 	pub fn emit(&mut self, notification: &notification::Notification) {
-		log::info!("Notification: {}", notification.message_text);
+		log::info!("Notification: {:?}", notification);
 		// self.notifier.iter().for_each(|f| f(notification.to_owned()));
 	}
 }

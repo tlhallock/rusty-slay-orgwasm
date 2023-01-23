@@ -7,7 +7,6 @@ use crate::frontend::game::GamePerspectiveView;
 use crate::slay::specs::cards::SlayCardSpec;
 use crate::slay::specs::hero::HeroAbilityType;
 
-
 // View the notifications
 // View the hero leader...
 // Make players clickable?
@@ -24,9 +23,11 @@ fn app() -> Html {
 
 	let test = {
 		let current_game = current_game.clone();
-		move |_| current_game.set(AppState::test(
-			&SlayCardSpec::HeroCard(HeroAbilityType::PlunderingPuma)
-		))
+		move |_| {
+			current_game.set(AppState::test(&SlayCardSpec::HeroCard(
+				HeroAbilityType::PlunderingPuma,
+			)))
+		}
 	};
 
 	let choose = {

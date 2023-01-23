@@ -21,12 +21,23 @@ use super::specs::magic::MagicSpell;
 use super::specs::modifier::ModifierKinds;
 use super::specs::monster::Monster;
 use super::state::game::GameStaticInformation;
+use super::tasks::task_params::TaskParamName;
 use super::tasks::tasks::search_discard::SearchDiscardFilters;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum ChoicesType {
 	SpendActionPoints,
 	SearchDiscard(SearchDiscardFilters),
+	ChoosePlayerParam(TaskParamName),
+	ChooseCardParam(TaskParamName),
+	OfferChallenges,
+	PlayImmediately(SlayCardSpec),
+	ReturnAnItemCard,
+	Discard,
+	Sacrifice,
+	ModifyChallenge, /*(ChallengeReason)*/
+	// Do we need the player?
+	ModifyRoll, // different from modify challenge?
 }
 
 #[derive(Clone, Debug)]
@@ -57,11 +68,12 @@ pub enum Action {
 	RollForAbility(HeroAbilityType),
 }
 
-#[derive(Clone, PartialEq, Debug)]
-pub enum PlayerParameter {}
+// TODO: switch to these:
+// #[derive(Clone, PartialEq, Debug)]
+// pub enum PlayerParameter {}
 
-#[derive(Clone, PartialEq, Debug)]
-pub enum CardParameter {}
+// #[derive(Clone, PartialEq, Debug)]
+// pub enum CardParameter {}
 
 #[derive(Clone, PartialEq, Debug)]
 pub enum Choice {
@@ -69,9 +81,16 @@ pub enum Choice {
 	SetCompletion(Completion),
 	Modify(ModificationPath, ModifierKinds, i32),
 	Challenge,
+	ChooseDiscardedCard(SlayCardSpec),
+	ReturnItem(AnotherItemType, HeroAbilityType),
 
-	SetPlayerParam(PlayerParameter),
-	SetCardParameter(PlayerParameter),
+	SetPlayerParam(TaskParamName, ids::PlayerIndex),
+	SetCardParameter(TaskParamName, SlayCardSpec),
+
+	PlayImmediately(SlayCardSpec),
+	DoNotPlayImmediately,
+	Discard(SlayCardSpec),
+	Sacrifice(SlayCardSpec),
 	// SetParameter
 }
 
@@ -130,9 +149,7 @@ impl Choice {
 				Action::Draw => String::from("Draw a card."),
 				Action::ReplaceHand => String::from("Use 3 action points to replace your entire hand."),
 				Action::AttackMonster(monster) => format!("Attack {}", monster.label()),
-				Action::UseLeader(leader_type) => {
-					String::from("Use Shadow Claw to pull from another player's hand.")
-				}
+				Action::UseLeader(_) => String::from("Use Shadow Claw to pull from another player's hand."),
 				Action::RollForAbility(hero_card) => format!("Roll for {}", hero_card.label()),
 			},
 			Choice::SetCompletion(completion) => match completion {
@@ -146,8 +163,14 @@ impl Choice {
 				format!("Use {:?} to modify {:?} by {}", kind, path, amount,)
 			}
 			Choice::Challenge => String::from("Challenge!"),
-			Choice::SetPlayerParam(parameter) => format!("choosing {:?}", parameter),
-			Choice::SetCardParameter(parameter) => format!("choosing {:?}", parameter),
+			Choice::SetPlayerParam(parameter, player_index) => format!("choosing {:?}", parameter),
+			Choice::SetCardParameter(parameter, card) => format!("choosing {:?}", parameter),
+			Choice::ChooseDiscardedCard(spec) => spec.get_card_spec_creation().label,
+			Choice::ReturnItem(_, _) => todo!(),
+			Choice::PlayImmediately(_) => todo!(),
+			Choice::DoNotPlayImmediately => todo!(),
+			Choice::Discard(_) => todo!(),
+			Choice::Sacrifice(_) => todo!(),
 		}
 	}
 	pub fn get_notification(
@@ -175,8 +198,14 @@ impl Choice {
 			Choice::SetCompletion(_) => todo!(),
 			Choice::Modify(_, _, _) => todo!(),
 			Choice::Challenge => todo!(),
-			Choice::SetPlayerParam(_) => todo!(),
-			Choice::SetCardParameter(_) => todo!(),
+			Choice::SetPlayerParam(_, _) => todo!(),
+			Choice::SetCardParameter(_, _) => todo!(),
+			Choice::ChooseDiscardedCard(_) => todo!(),
+			Choice::ReturnItem(_, _) => todo!(),
+			Choice::PlayImmediately(_) => todo!(),
+			Choice::DoNotPlayImmediately => todo!(),
+			Choice::Discard(_) => todo!(),
+			Choice::Sacrifice(_) => todo!(),
 		}
 	}
 }
@@ -191,14 +220,21 @@ impl ChoicesType {
 			ChoicesType::SpendActionPoints => {
 				String::from("How would you like to use your action points?")
 			}
-			ChoicesType::SearchDiscard(filters) => match filters {
-				SearchDiscardFilters::IsHero => {
-					String::from("Search the discard pile for a hero to add to your hand.")
-				}
-				SearchDiscardFilters::IsItem => {
-					String::from("Search the discard pile for an item to add to your hand.")
-				}
-			},
+			ChoicesType::SearchDiscard(filters) => {
+				format!("Search the discard pile for {}.", filters.description())
+			}
+			ChoicesType::ModifyChallenge => String::from("Choose whether to modify the challenge."),
+			ChoicesType::OfferChallenges => String::from("Choose whether to challenge."),
+			ChoicesType::PlayImmediately(card) => format!(
+				"You have received {}, would you like to play it immediately?",
+				card.get_card_spec_creation().label,
+			),
+			ChoicesType::ModifyRoll => String::from("Choose whether to modify the current roll."),
+			ChoicesType::Discard => todo!(),
+			ChoicesType::ReturnAnItemCard => todo!(),
+			ChoicesType::ChoosePlayerParam(_) => todo!(),
+			ChoicesType::ChooseCardParam(_) => todo!(),
+			ChoicesType::Sacrifice => todo!(),
 		}
 	}
 }
@@ -466,7 +502,7 @@ impl ChoicesPerspective {
 		self
 			.options
 			.iter()
-			.filter(|choice| choice.display.display_type.represents(display_path))
+			.filter(|choice| choice.display.represents(display_path))
 			.map(|choice| choice.to_owned())
 			.collect()
 	}
@@ -474,7 +510,7 @@ impl ChoicesPerspective {
 		self
 			.options
 			.iter()
-			.filter(|choice| choice.display.display_type.represents_card(card_id))
+			.filter(|choice| choice.display.represents_card(card_id))
 			.map(|choice| choice.to_owned())
 			.collect()
 	}

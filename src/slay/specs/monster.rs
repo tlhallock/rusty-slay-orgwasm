@@ -1,5 +1,3 @@
-use std::iter::repeat_with;
-
 use enum_iterator::Sequence;
 
 use crate::slay::ids;
@@ -76,7 +74,6 @@ pub enum Monster {
 }
 
 impl Monster {
-
 	pub fn label(&self) -> String {
 		SlayCardSpec::MonsterCard(*self).label()
 	}

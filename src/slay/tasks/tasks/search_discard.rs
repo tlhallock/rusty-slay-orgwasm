@@ -1,4 +1,4 @@
-use crate::slay::choices::ChoiceDisplay;
+use crate::slay::choices::Choice;
 use crate::slay::choices::Choices;
 use crate::slay::choices::ChoicesType;
 use crate::slay::choices::TasksChoice;
@@ -13,7 +13,7 @@ use crate::slay::tasks::player_tasks::PlayerTask;
 use crate::slay::tasks::player_tasks::TaskProgressResult;
 use crate::slay::tasks::tasks::move_card::MoveCardTask;
 
-#[derive(Clone, Debug, Copy)]
+#[derive(Clone, Debug, Copy, PartialEq)]
 pub enum SearchDiscardFilters {
 	IsHero,
 	IsModifier,
@@ -28,6 +28,14 @@ impl SearchDiscardFilters {
 			SearchDiscardFilters::IsModifier => card.is_modifier(),
 			SearchDiscardFilters::IsItem => card.is_item(),
 			SearchDiscardFilters::IsMagic => card.is_magic(),
+		}
+	}
+	pub fn description(&self) -> &'static str {
+		match self {
+			SearchDiscardFilters::IsHero => "a hero card",
+			SearchDiscardFilters::IsModifier => "a modifier card",
+			SearchDiscardFilters::IsItem => "an item card",
+			SearchDiscardFilters::IsMagic => "a magic card",
 		}
 	}
 }
@@ -90,10 +98,8 @@ pub fn create_search_discard_choices(
 		.map(|card| {
 			TasksChoice::new(
 				context.id_generator.generate(),
-				ChoiceDisplay {
-					display_type: card.as_choice(),
-					label: card.get_spec().label,
-				},
+				Choice::ChooseDiscardedCard(card.card_type),
+				card.as_choice(),
 				vec![Box::new(MoveCardTask {
 					source: DeckPath::Discard,
 					destination: DeckPath::Hand(player_index),
@@ -107,7 +113,6 @@ pub fn create_search_discard_choices(
 	}
 	Some(Choices {
 		choices_type: ChoicesType::SearchDiscard(filter),
-		instructions: "Choose a hero card to add to your hand.".to_owned(),
 		default_choice: None,
 		options,
 		timeline: deadlines::get_refactor_me_deadline(), // This one should probably be longer...

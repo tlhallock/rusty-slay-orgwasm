@@ -1,5 +1,5 @@
 use crate::slay::choices::CardPath;
-use crate::slay::choices::ChoiceDisplay;
+use crate::slay::choices::Choice;
 use crate::slay::choices::ChoiceDisplayType;
 use crate::slay::choices::DisplayPath;
 use crate::slay::choices::TasksChoice;
@@ -35,17 +35,12 @@ pub fn create_modify_roll_choice(
 		DisplayPath::CardAt(CardPath::TopCardIn(DeckPath::Hand(player_index), card_id));
 	TasksChoice::new(
 		choice_id,
-		ChoiceDisplay {
-			display_type: ChoiceDisplayType::Modify(RollModificationChoiceType::from_card(
-				modifier_kind,
-				modification_amount,
-				*modification_path,
-			)),
-			label: format!(
-				"Use {} to modify {}'s roll by {}",
-				card_id, "somebody", modification_amount,
-			),
-		},
+		Choice::Modify(*modification_path, *modifier_kind, modification_amount),
+		ChoiceDisplayType::Modify(RollModificationChoiceType::from_card(
+			modifier_kind,
+			modification_amount,
+			*modification_path,
+		)),
 		vec![
 			Box::new(MoveCardTask {
 				source: DeckPath::Hand(player_index),
@@ -142,10 +137,8 @@ pub fn create_challenge_choice(
 ) -> TasksChoice {
 	TasksChoice::new(
 		id,
-		ChoiceDisplay {
-			display_type: ChoiceDisplayType::Challenge(challenge_card.card_type),
-			label: "Challenge!".to_string(),
-		},
+		Choice::Challenge,
+		ChoiceDisplayType::Challenge(challenge_card.card_type),
 		vec![
 			Box::new(MoveCardTask {
 				source: DeckPath::Hand(player_index),

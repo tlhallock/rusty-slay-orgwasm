@@ -1,6 +1,7 @@
-use crate::slay::choices::ChoiceDisplay;
+use crate::slay::choices::Choice;
 use crate::slay::choices::ChoiceDisplayType;
 use crate::slay::choices::Choices;
+use crate::slay::choices::ChoicesType;
 use crate::slay::choices::DisplayPath;
 use crate::slay::choices::TasksChoice;
 use crate::slay::deadlines;
@@ -115,6 +116,9 @@ impl PlayerTask for ChoosePlayerParameterTask {
 		player_index: ids::PlayerIndex,
 	) -> SlayResult<TaskProgressResult> {
 		game.players[player_index].choices = Some(Choices {
+			choices_type: ChoicesType::ChoosePlayerParam(self.param_name),
+			default_choice: None,
+			timeline: deadlines::get_refactor_me_deadline(),
 			options: self
 				.get_player_indices(game, player_index)
 				.iter()
@@ -122,10 +126,8 @@ impl PlayerTask for ChoosePlayerParameterTask {
 				.map(|victim_index| {
 					TasksChoice::prepend(
 						context.id_generator.generate(),
-						ChoiceDisplay {
-							display_type: ChoiceDisplayType::HighlightPath(DisplayPath::Player(*victim_index)),
-							label: format!("choose player {}", victim_index),
-						},
+						Choice::SetPlayerParam(self.param_name, *victim_index),
+						ChoiceDisplayType::HighlightPath(DisplayPath::Player(*victim_index)),
 						vec![
 							Box::new(SetParameterTask::set_player(self.param_name, *victim_index))
 								as Box<dyn PlayerTask>,
@@ -133,9 +135,6 @@ impl PlayerTask for ChoosePlayerParameterTask {
 					)
 				})
 				.collect(),
-			default_choice: None,
-			timeline: deadlines::get_refactor_me_deadline(),
-			instructions: self.instructions.to_owned(),
 		});
 		Ok(TaskProgressResult::TaskComplete)
 	}
@@ -338,15 +337,16 @@ impl PlayerTask for ChooseCardFromPlayerParameterTask {
 			return Ok(TaskProgressResult::TaskComplete);
 		}
 		game.players[chooser_index].choices = Some(Choices {
+			default_choice: None,
+			choices_type: ChoicesType::ChooseCardParam(self.card_param),
+			timeline: deadlines::get_refactor_me_deadline(),
 			options: card_choices
 				.iter()
 				.map(|card_choice| {
 					TasksChoice::prepend(
 						context.id_generator.generate(),
-						ChoiceDisplay {
-							display_type: card_choice.as_choice(),
-							label: card_choice.card_type.get_card_spec_creation().label,
-						},
+						Choice::SetCardParameter(self.card_param, card_choice.card_type),
+						card_choice.as_choice(),
 						vec![
 							Box::new(SetParameterTask::set_card(self.card_param, card_choice.id))
 								as Box<dyn PlayerTask>,
@@ -354,9 +354,6 @@ impl PlayerTask for ChooseCardFromPlayerParameterTask {
 					)
 				})
 				.collect(),
-			default_choice: None,
-			timeline: deadlines::get_refactor_me_deadline(),
-			instructions: self.instructions.to_owned(),
 		});
 		Ok(TaskProgressResult::TaskComplete)
 	}

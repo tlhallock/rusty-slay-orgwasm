@@ -1,7 +1,8 @@
 use crate::slay::actions;
-use crate::slay::choices::ChoiceDisplay;
+use crate::slay::choices::Choice;
 use crate::slay::choices::ChoiceDisplayType;
 use crate::slay::choices::Choices;
+use crate::slay::choices::ChoicesType;
 use crate::slay::choices::TasksChoice;
 use crate::slay::deadlines;
 use crate::slay::errors::SlayError;
@@ -75,34 +76,26 @@ impl PlayerTask for OfferPlayImmediately {
 				game,
 				player_index,
 				card,
-				item_modifier,
 				players_with_stacks,
 			));
 		}
 
 		let default_choice = context.id_generator.generate();
 		game.players[player_index].choices = Some(Choices {
-			instructions: format!(
-				"You have received {}, would you like to play it immediately?",
-				card.label()
-			),
+			choices_type: ChoicesType::PlayImmediately(card.card_type),
 			timeline: deadlines::get_refactor_me_deadline(),
 			default_choice: Some(default_choice),
 			options: vec![
 				TasksChoice::prepend(
 					context.id_generator.generate(),
-					ChoiceDisplay {
-						display_type: ChoiceDisplayType::Yes,
-						label: "Yes".to_string(),
-					},
+					Choice::PlayImmediately(card.card_type),
+					ChoiceDisplayType::Yes,
 					play_immediately_tasks,
 				),
 				TasksChoice::prepend(
 					default_choice,
-					ChoiceDisplay {
-						display_type: ChoiceDisplayType::No,
-						label: "No".to_string(),
-					},
+					Choice::DoNotPlayImmediately,
+					ChoiceDisplayType::No,
 					vec![],
 				),
 			],

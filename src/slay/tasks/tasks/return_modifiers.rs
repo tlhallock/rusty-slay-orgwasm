@@ -1,11 +1,13 @@
-use crate::slay::choices::ChoiceDisplay;
+use crate::slay::choices::Choice;
 use crate::slay::choices::ChoiceDisplayType;
 use crate::slay::choices::Choices;
+use crate::slay::choices::ChoicesType;
 use crate::slay::choices::TasksChoice;
 use crate::slay::deadlines;
 use crate::slay::errors::SlayResult;
 use crate::slay::game_context::GameBookKeeping;
 use crate::slay::ids;
+use crate::slay::specs::cards::SlayCardSpec;
 use crate::slay::state::deck::DeckPath;
 use crate::slay::state::game::Game;
 use crate::slay::tasks::player_tasks::PlayerTask;
@@ -57,23 +59,25 @@ impl PlayerTask for ReturnModifierTask {
 		let mut options = Vec::new();
 		for player_index in player_indices {
 			for stack in game.players[player_index].party.stacks() {
-				for modifier in stack.modifiers.iter() {
-					options.push(TasksChoice::new(
-						context.id_generator.generate(),
-						ChoiceDisplay {
-							display_type: ChoiceDisplayType::Card_(modifier.card_type),
-							label: format!(
-								"{} from {}",
-								modifier.get_spec().label,
-								game.players[player_index].name
-							),
-						},
-						vec![Box::new(MoveCardTask {
-							source: DeckPath::Party(player_index),
-							destination: DeckPath::Hand(player_index),
-							card_id: modifier.id,
-						})],
-					));
+				if let SlayCardSpec::HeroCard(hero_card) = stack.top.card_type {
+					for modifier in stack.modifiers.iter() {
+						if let SlayCardSpec::Item(item_type) = modifier.card_type {
+							options.push(TasksChoice::new(
+								context.id_generator.generate(),
+								Choice::ReturnItem(item_type, hero_card),
+								ChoiceDisplayType::Card_(modifier.card_type),
+								vec![Box::new(MoveCardTask {
+									source: DeckPath::Party(player_index),
+									destination: DeckPath::Hand(player_index),
+									card_id: modifier.id,
+								})],
+							));
+						} else {
+							unreachable!()
+						}
+					}
+				} else {
+					unreachable!()
 				}
 			}
 		}
@@ -81,7 +85,7 @@ impl PlayerTask for ReturnModifierTask {
 			return Ok(TaskProgressResult::TaskComplete);
 		}
 		game.players[chooser_index].choices = Some(Choices {
-			instructions: "Choose which modifier card to return".to_owned(),
+			choices_type: ChoicesType::ReturnAnItemCard,
 			default_choice: None,
 			options,
 			timeline: deadlines::get_refactor_me_deadline(),

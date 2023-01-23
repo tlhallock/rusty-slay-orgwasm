@@ -34,7 +34,9 @@ impl PlayerTask for TradeHands {
 
 		victim_cards.extend(game.players[victim_index].hand.drain(..));
 		my_cards.extend(game.players[player_index].hand.drain(..));
-		game.players[player_index].hand.extend(victim_cards.drain(..));
+		game.players[player_index]
+			.hand
+			.extend(victim_cards.drain(..));
 		game.players[victim_index].hand.extend(my_cards.drain(..));
 		Ok(TaskProgressResult::TaskComplete)
 	}

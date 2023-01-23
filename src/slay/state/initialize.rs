@@ -16,11 +16,6 @@ use crate::slay::state::player::Player;
 use crate::slay::state::stack::Card;
 use crate::slay::state::stack::Stack;
 
-
-
-
-
-
 fn initialize_global_decks(context: &mut GameBookKeeping, game: &mut Game) {
 	let (draw_capacity, leaders_capacity, monsters_capacity) = (101, 10, 20);
 	let mut draw = Vec::with_capacity(draw_capacity);
@@ -151,7 +146,10 @@ fn randomly_initialize_party(
 	}
 }
 
-pub fn initialize_game_to_random_state_without_assigning_player(context: &mut GameBookKeeping, game: &mut Game) {
+pub fn initialize_game_to_random_state_without_assigning_player(
+	context: &mut GameBookKeeping,
+	game: &mut Game,
+) {
 	initialize_global_decks(context, game);
 	initialize_players(context, game);
 	game.monsters.extend(game.next_monsters.drain(0..3));
@@ -165,7 +163,6 @@ pub fn initialize_game_to_random_state_without_assigning_player(context: &mut Ga
 	}
 }
 
-
 pub fn initialize_game_to_random_state(context: &mut GameBookKeeping, game: &mut Game) {
 	initialize_game_to_random_state_without_assigning_player(context, game);
 	// initialize the first first random player
@@ -173,9 +170,6 @@ pub fn initialize_game_to_random_state(context: &mut GameBookKeeping, game: &mut
 	game.current_player_mut().turn_begin();
 	actions::assign_action_choices(context, game);
 }
-
-
-
 
 fn stack_from(context: &mut GameBookKeeping, card: &SlayCardSpec) -> Stack {
 	Stack::new(Card::new(context.id_generator.generate(), card.to_owned()))
@@ -185,26 +179,30 @@ pub fn create_state_to_test(context: &mut GameBookKeeping, game: &mut Game, card
 	initialize_game_to_random_state_without_assigning_player(context, game);
 
 	match card {
-    SlayCardSpec::HeroCard(_) => {
+		SlayCardSpec::HeroCard(_) => {
 			game.players[0].hand.add(stack_from(context, card));
 			game.players[0].party.add(stack_from(context, card));
-		},
-    SlayCardSpec::PartyLeader(_) => game.players[0].leader = stack_from(context, card).top,
-    SlayCardSpec::MonsterCard(_) => {
+		}
+		SlayCardSpec::PartyLeader(_) => game.players[0].leader = stack_from(context, card).top,
+		SlayCardSpec::MonsterCard(_) => {
 			// Fill in the requirements...
-			game.players[0].slain_monsters.add(stack_from(context, card));
+			game.players[0]
+				.slain_monsters
+				.add(stack_from(context, card));
 			game.monsters.add(stack_from(context, card));
-		},
-    SlayCardSpec::MagicCard(_) => game.players[0].hand.add(stack_from(context, card)),
-    SlayCardSpec::ModifierCard(_) => {
-			let mut stack = stack_from(context, &SlayCardSpec::HeroCard(HeroAbilityType::PlunderingPuma));
+		}
+		SlayCardSpec::MagicCard(_) => game.players[0].hand.add(stack_from(context, card)),
+		SlayCardSpec::ModifierCard(_) => {
+			let mut stack = stack_from(
+				context,
+				&SlayCardSpec::HeroCard(HeroAbilityType::PlunderingPuma),
+			);
 			stack.modifiers.push(stack_from(context, card).top);
 			game.players[0].party.add(stack);
 			game.players[0].hand.add(stack_from(context, card));
-			
-		},
-    SlayCardSpec::Item(_) => game.players[0].hand.add(stack_from(context, card)),
-    SlayCardSpec::Challenge => game.players[0].hand.add(stack_from(context, card)),
+		}
+		SlayCardSpec::Item(_) => game.players[0].hand.add(stack_from(context, card)),
+		SlayCardSpec::Challenge => game.players[0].hand.add(stack_from(context, card)),
 	}
 
 	game.set_active_player(0);
@@ -212,11 +210,6 @@ pub fn create_state_to_test(context: &mut GameBookKeeping, game: &mut Game, card
 	actions::assign_action_choices(context, game);
 }
 
-
-
-
 pub struct InitialAssignmentRequirements {
-	pub player0_cards: Vec<ids::CardId>
+	pub player0_cards: Vec<ids::CardId>,
 }
-
-

@@ -1,5 +1,3 @@
-use slay::driver;
-
 pub mod backend;
 pub mod common;
 pub mod frontend;
@@ -11,5 +9,21 @@ pub fn main() {
 	// We need state on the player to determine if they have made a play this turn already
 	// It would be nice to have a go back, part way through an action
 	// Maybe a redo method on the actions...
+	// Modifier should be item...
+	// cards can only have one item...
+	// Let users know that they cannot choose to destroy a hero from a player that can
+
+	/*
+	Emit the following notifications:
+
+
+	PlayerIsChoosing(ids::PlayerIndex, ChoicesType),
+	Modification,
+	InitialRoll(i32),
+	RollResult(bool), // show the roll value and threshold?
+	OfferResult, // Option<ids::PlayerIndex>
+	ChallengeResult(bool),
+
+	*/
 	frontend::view::render();
 }

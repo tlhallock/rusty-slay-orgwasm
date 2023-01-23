@@ -38,11 +38,10 @@ pub enum MagicSpell {
 	CallToTheFallen,
 }
 impl MagicSpell {
-
 	pub fn label(&self) -> String {
 		SlayCardSpec::MagicCard(*self).label()
 	}
-	
+
 	pub fn perform_spell(
 		&self,
 		context: &mut GameBookKeeping,

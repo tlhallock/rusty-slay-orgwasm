@@ -111,13 +111,16 @@ impl HeroAbilityType {
 	}
 
 	pub fn to_consequences(&self) -> RollConsequences {
-		if let Some(ability) = SlayCardSpec::HeroCard(*self).get_card_spec_creation().hero_ability {
+		if let Some(ability) = SlayCardSpec::HeroCard(*self)
+			.get_card_spec_creation()
+			.hero_ability
+		{
 			return ability.to_consequences();
-		} {
+		}
+		{
 			unreachable!();
 		}
 	}
-
 
 	pub fn create_tasks(&self) -> Vec<Box<dyn PlayerTask>> {
 		match self {

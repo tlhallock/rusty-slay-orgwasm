@@ -3,6 +3,7 @@ use crate::slay::choices::ChoicesPerspective;
 use crate::slay::errors::SlayError;
 use crate::slay::errors::SlayResult;
 use crate::slay::ids;
+use crate::slay::notification::Notification;
 use crate::slay::showdown::challenge::ChallengePerspective;
 use crate::slay::showdown::current_showdown::CurrentShowdown;
 use crate::slay::showdown::offer::OfferChallengesPerspective;
@@ -386,5 +387,16 @@ impl Game {
 impl GameStaticInformation {
 	pub fn player_name(&self, player_index: ids::PlayerIndex) -> &String {
 		&self.players[player_index].name
+	}
+	pub fn players_name_from_perspective(
+		&self,
+		viewer: ids::PlayerIndex,
+		viewed: ids::PlayerIndex,
+	) -> String {
+		if viewer == viewed {
+			String::from("You")
+		} else {
+			self.player_name(viewed).to_owned()
+		}
 	}
 }

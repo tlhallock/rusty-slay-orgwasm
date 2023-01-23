@@ -1,5 +1,7 @@
+use crate::slay::choices::Choice;
 use crate::slay::choices::ChoiceDisplay;
 use crate::slay::choices::Choices;
+use crate::slay::choices::ChoicesType;
 use crate::slay::choices::TasksChoice;
 use crate::slay::deadlines;
 use crate::slay::errors::SlayResult;
@@ -47,8 +49,7 @@ impl Sacrifice {
 	) -> SlayResult<ids::PlayerIndex> {
 		match self.victim {
 			SacrificeVictim::Myself => Ok(player_index),
-			SacrificeVictim::FromParam(param) => 
-				game.player_param(player_index, &param),
+			SacrificeVictim::FromParam(param) => game.player_param(player_index, &param),
 		}
 	}
 }
@@ -75,10 +76,8 @@ impl PlayerTask for Sacrifice {
 			.map(|card| {
 				TasksChoice::new(
 					context.id_generator.generate(),
-					ChoiceDisplay {
-						display_type: card.as_choice(),
-						label: format!("Sacrifice {}.", card.label()),
-					},
+					Choice::Sacrifice(card.card_type),
+					card.as_choice(),
 					vec![Box::new(MoveCardTask {
 						source: DeckPath::Party(player_index),
 						destination: DeckPath::Discard,
@@ -100,7 +99,7 @@ impl PlayerTask for Sacrifice {
 		}
 
 		game.players[victim_index].choices = Some(Choices {
-			instructions: "Choose a card to sacrifice.".to_string(),
+			choices_type: ChoicesType::Sacrifice,
 			options,
 			default_choice: None,
 			timeline: deadlines::get_sacrifice_deadline(),

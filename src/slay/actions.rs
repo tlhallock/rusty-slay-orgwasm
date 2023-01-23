@@ -1,5 +1,4 @@
 use crate::slay::choices::CardPath;
-use crate::slay::choices::ChoiceDisplay;
 use crate::slay::choices::ChoiceDisplayType;
 use crate::slay::choices::Choices;
 use crate::slay::choices::ChoicesType;
@@ -8,7 +7,6 @@ use crate::slay::choices::TasksChoice;
 use crate::slay::deadlines;
 use crate::slay::game_context::GameBookKeeping;
 use crate::slay::ids;
-use crate::slay::modifiers::ItemModifier;
 use crate::slay::modifiers::PlayerModifier;
 use crate::slay::showdown::consequences::Condition;
 use crate::slay::showdown::consequences::RollConsequence;
@@ -18,9 +16,7 @@ use crate::slay::showdown::roll::ChallengeReason;
 use crate::slay::showdown::roll_state::RollReason;
 use crate::slay::showdown::roll_state::RollState;
 use crate::slay::specification::HeroType;
-use crate::slay::specification::MonsterSpec;
 use crate::slay::specs::cards::SlayCardSpec;
-use crate::slay::specs::hero::HeroAbility;
 use crate::slay::specs::magic::MagicSpell;
 use crate::slay::specs::monster;
 use crate::slay::state::deck::DeckPath;
@@ -81,7 +77,6 @@ fn create_place_hero_choice(
 	TasksChoice::new(
 		context.id_generator.generate(),
 		Choice::UseActionPoints(Action::PlaceHeroInParty(hero_card)),
-
 		card_path.display().to_highlight(),
 		vec![
 			Box::new(RemoveActionPointsTask::new(1)),
@@ -167,12 +162,7 @@ pub fn create_place_item_choice(
 		display_type,
 		vec![
 			Box::new(RemoveActionPointsTask::new(1)),
-			create_place_item_challenge_offer(
-				game,
-				placer_index,
-				card,
-				players_with_stacks,
-			),
+			create_place_item_challenge_offer(game, placer_index, card, players_with_stacks),
 		],
 	)
 }
@@ -311,7 +301,7 @@ fn create_hand_action_choice(
 		));
 	}
 	if let SlayCardSpec::Item(item_card) = game.card(card_path).card_type {
-	// .get_spec().card_modifier.as_ref() {
+		// .get_spec().card_modifier.as_ref() {
 		let players_with_stacks = game.players_with_stacks();
 		if !players_with_stacks.is_empty() {
 			return Some(create_place_item_choice(
