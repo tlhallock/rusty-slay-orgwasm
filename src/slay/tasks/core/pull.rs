@@ -25,11 +25,11 @@ impl PullFromTask {
 	}
 	pub fn record_pulled(
 		victim_param: TaskParamName,
-		output_param: Option<TaskParamName>,
+		output_param: TaskParamName,
 	) -> Box<dyn PlayerTask> {
 		Box::new(Self {
 			victim_param,
-			output_param,
+			output_param: Some(output_param),
 		}) as Box<dyn PlayerTask>
 	}
 }

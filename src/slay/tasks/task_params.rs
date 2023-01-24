@@ -7,6 +7,10 @@ use crate::slay::state::summarizable::Summarizable;
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
 pub enum TaskParamName {
+	PanChuckFirstCard,
+	PanChuckSecondCard,
+	LuckBuckyVictim,
+	LuckBuckyCard,
 	PlayerToStealFrom,
 	CardToSteal,
 	PlayerToPullFrom,

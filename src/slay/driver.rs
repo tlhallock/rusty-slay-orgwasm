@@ -1,5 +1,3 @@
-use log::LevelFilter;
-
 use crate::slay::actions;
 use crate::slay::errors::SlayError;
 use crate::slay::errors::SlayResult;
@@ -96,8 +94,6 @@ pub fn advance_game(
 	context: &mut GameBookKeeping,
 	game: &mut Game,
 ) -> SlayResult<AdvanceGameResult> {
-	// TODO: We never check if the choices have expired!
-
 	let mut iteration = 0;
 	loop {
 		iteration += 1;
@@ -110,6 +106,7 @@ pub fn advance_game(
 			return Ok(AdvanceGameResult::GameOver);
 		}
 		if let Some(mut showdown) = game.showdown.take_complete() {
+			game.clear_choices();
 			showdown.finish(context, game);
 			continue;
 		}

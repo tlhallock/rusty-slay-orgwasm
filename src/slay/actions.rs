@@ -67,6 +67,38 @@ fn create_roll_for_ability_task(
 	})
 }
 
+pub fn create_place_hero_challenges(
+	context: &mut GameBookKeeping,
+	game: &Game,
+	player_index: ids::PlayerIndex,
+	card_path: CardPath,
+	hero_card: HeroAbilityType,
+) -> Box<dyn PlayerTask> {
+	Box::new(OfferChallengesTask::new(OfferChallengesState::new(
+		player_index,
+		RollConsequences {
+			success: RollConsequence {
+				condition: Condition::challenge_denied(),
+				tasks: vec![
+					card_path.get_place_task(),
+					create_roll_for_ability_task(
+						context,
+						game,
+						player_index,
+						game.card(card_path),
+						hero_card,
+					),
+				],
+			},
+			loss: Some(RollConsequence {
+				condition: Condition::challenge_sustained(),
+				tasks: vec![card_path.get_discard_task()],
+			}),
+		},
+		ChallengeReason::PlaceHeroCard(game.card(card_path).card_type),
+	))) as Box<dyn PlayerTask>
+}
+
 fn create_place_hero_choice(
 	context: &mut GameBookKeeping,
 	game: &Game,
@@ -80,40 +112,21 @@ fn create_place_hero_choice(
 		card_path.display().to_highlight(),
 		vec![
 			Box::new(RemoveActionPointsTask::new(1)),
-			Box::new(OfferChallengesTask::new(OfferChallengesState::new(
-				player_index,
-				RollConsequences {
-					success: RollConsequence {
-						condition: Condition::challenge_denied(),
-						tasks: vec![
-							card_path.get_place_task(),
-							create_roll_for_ability_task(
-								context,
-								game,
-								player_index,
-								game.card(card_path),
-								hero_card,
-							),
-						],
-					},
-					loss: Some(RollConsequence {
-						condition: Condition::challenge_sustained(),
-						tasks: vec![card_path.get_discard_task()],
-					}),
-				},
-				ChallengeReason::PlaceHeroCard(game.card(card_path).card_type),
-			))) as Box<dyn PlayerTask>,
+			create_place_hero_challenges(context, game, player_index, card_path, hero_card),
 		],
 	)
 }
 
 pub fn create_place_item_task(players_with_stacks: Vec<ids::PlayerIndex>) -> Box<dyn PlayerTask> {
 	Box::new(AddTasks {
-		tasks: vec![ChoosePlayerParameterTask::one_of(
-			TaskParamName::PlayerToGiveItem,
-			"Choose a player to give this item to.",
-			players_with_stacks,
-		)],
+		tasks: vec![
+			ChoosePlayerParameterTask::one_of(
+				TaskParamName::PlayerToGiveItem,
+				"Choose a player to give this item to.",
+				players_with_stacks,
+			),
+			ClearParamsTask::create(),
+		],
 	})
 }
 
@@ -379,7 +392,7 @@ pub fn assign_action_choices(context: &mut GameBookKeeping, game: &mut Game) {
 				let hero_type_counts = &mut HeroTypeCounter::new();
 				game.players[player_index].count_hero_types(hero_type_counts);
 				let requirements = &mut monster.create_spec().requirements.to_vec();
-/*				println!(
+				/*				println!(
 					"Does\n\t\tleader={:?}\n\t\tparty={:?}\nsatisfy requirements\n\t\t{:?}?",
 					game.players[player_index].leader.card_type,
 					game.players[player_index]
@@ -390,10 +403,10 @@ pub fn assign_action_choices(context: &mut GameBookKeeping, game: &mut Game) {
 					requirements,
 				); */
 				if !monster::player_satisfies_requirements(hero_type_counts, requirements) {
-//					println!("NO");
+					//					println!("NO");
 					continue;
 				}
-//				println!("YES");
+				//				println!("YES");
 				// /////////////////////////////////////////////////////////////////////
 				options.push(create_attack_monster_choice(
 					context,

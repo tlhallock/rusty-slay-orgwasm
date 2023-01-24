@@ -61,6 +61,21 @@ pub fn view_spec(props: &SpecProps) -> Html {
 				onclick={view_this_card}
 			>
 				{ props.spec.get_card_spec_creation().label.to_owned() }
+				<br/>
+				{ for
+					if let Some(hero_type) = props.spec.get_hero_type() {
+						Some(html! {
+							<img
+								width={30}
+								src={hero_type.icon().to_owned()}
+								alt={hero_type.label()}
+							/>
+						})
+						// Some(hero_type.label().to_owned())
+					} else {
+						None
+					}
+				}
 			</div>
 		}
 	}

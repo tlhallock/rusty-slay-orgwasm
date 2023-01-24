@@ -60,6 +60,8 @@ pub struct CardSpec {
 	pub hero_ability: Option<HeroAbility>,
 	pub spell: Option<MagicSpell>,
 	pub card_modifier: Option<ItemModifier>,
+
+	pub ignore: bool,
 }
 
 impl CardSpec {
@@ -108,6 +110,7 @@ impl Default for CardSpec {
 			hero_ability: None,
 			spell: None,
 			card_modifier: None,
+			ignore: false,
 		}
 	}
 }
@@ -136,6 +139,14 @@ impl CardType {
 	}
 }
 
+#[derive(Debug, Clone, PartialEq, Copy, Sequence)]
+pub enum GameVersion {
+	Original,
+	WarriorsAndDruids,
+	BeserkersAndNecromancers,
+	HereToSleigh,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy, Sequence)]
 pub enum HeroType {
 	Bard,
@@ -144,6 +155,70 @@ pub enum HeroType {
 	Gaurdian,
 	Ranger,
 	Thief,
+	Beserker,
+	Necromancer,
+	Druid,
+	Warrior,
+	Sorcerer,
+}
+
+impl HeroType {
+	pub fn get_game_version(&self) -> GameVersion {
+		match self {
+			HeroType::Bard => GameVersion::Original,
+			HeroType::Wizard => GameVersion::Original,
+			HeroType::Fighter => GameVersion::Original,
+			HeroType::Gaurdian => GameVersion::Original,
+			HeroType::Ranger => GameVersion::Original,
+			HeroType::Thief => GameVersion::Original,
+			HeroType::Beserker => GameVersion::BeserkersAndNecromancers,
+			HeroType::Necromancer => GameVersion::BeserkersAndNecromancers,
+			HeroType::Druid => GameVersion::WarriorsAndDruids,
+			HeroType::Warrior => GameVersion::WarriorsAndDruids,
+			HeroType::Sorcerer => GameVersion::HereToSleigh, // ?
+		}
+	}
+
+	// pub fn color(&self) -> &'static str {
+	//   match self {
+	//     HeroType::Bard => "0xffffff",
+	//     HeroType::Wizard => "0xffffff",
+	//     HeroType::Fighter => "0xffffff",
+	//     HeroType::Gaurdian => "0xffffff",
+	//     HeroType::Ranger => "0xffffff",
+	//     HeroType::Thief => "0xffffff",
+	//   }
+	// }
+	pub fn icon(&self) -> &'static str {
+		match self {
+			HeroType::Bard => "imgs/icons/hero_icons/bard.png",
+			HeroType::Wizard => "imgs/icons/hero_icons/wizard.png",
+			HeroType::Fighter => "imgs/icons/hero_icons/fighter.png",
+			HeroType::Gaurdian => "imgs/icons/hero_icons/guardian.png",
+			HeroType::Ranger => "imgs/icons/hero_icons/ranger.png",
+			HeroType::Thief => "imgs/icons/hero_icons/thief.png",
+			HeroType::Beserker => "imgs/icons/hero_icons/beserker.png",
+			HeroType::Necromancer => "imgs/icons/hero_icons/necromancer.png",
+			HeroType::Druid => "imgs/icons/hero_icons/druid.png",
+			HeroType::Warrior => "imgs/icons/hero_icons/warrior.png",
+			HeroType::Sorcerer => "imgs/icons/hero_icons/sourcerer.png",
+		}
+	}
+	pub fn label(&self) -> &'static str {
+		match self {
+			HeroType::Bard => "Bard",
+			HeroType::Wizard => "Wizard",
+			HeroType::Fighter => "Fighter",
+			HeroType::Gaurdian => "Guardian",
+			HeroType::Ranger => "Ranger",
+			HeroType::Thief => "Thief",
+			HeroType::Beserker => "Beserker",
+			HeroType::Necromancer => "Necromancer",
+			HeroType::Druid => "Druid",
+			HeroType::Warrior => "Warrior",
+			HeroType::Sorcerer => "Sorcerer",
+		}
+	}
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]

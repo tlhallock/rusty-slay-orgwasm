@@ -4,7 +4,6 @@ pub mod frontend;
 pub mod slay;
 
 pub fn main() {
-	
 	// There should be a way to tell if an action is not needed, as in, don't roll for something that you can't do
 	// We need state on the player to determine if they have made a play this turn already
 	// It would be nice to have a go back, part way through an action
@@ -12,8 +11,8 @@ pub fn main() {
 	// Modifier should be item...
 	// cards can only have one item...
 	// Let users know that they cannot choose to destroy a hero from a player that can
-// View the hero leader...
-// Make players clickable?
+	// View the hero leader...
+	// Make players clickable?
 
 	/*
 	Emit the following notifications:
@@ -27,7 +26,7 @@ pub fn main() {
 	ChallengeResult(bool),
 
 	*/
-	
+
 	// slay::driver::game_loop().expect("oops");
 	frontend::view::render();
 }

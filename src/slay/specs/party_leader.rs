@@ -13,6 +13,12 @@ impl SlayCardSpec {
 				HeroType::Gaurdian => Some(PlayerModifier::ModifierBonus),
 				HeroType::Ranger => Some(PlayerModifier::AddToRollForAttack(1)),
 				HeroType::Thief => None,
+
+				HeroType::Beserker => todo!(),
+				HeroType::Necromancer => todo!(),
+				HeroType::Druid => todo!(),
+				HeroType::Warrior => todo!(),
+				HeroType::Sorcerer => todo!(),
 			},
 			_ => None,
 		}

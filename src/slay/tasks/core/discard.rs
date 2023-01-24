@@ -16,8 +16,6 @@ use crate::slay::tasks::player_tasks::TaskProgressResult;
 use crate::slay::tasks::task_params::TaskParamName;
 use crate::slay::tasks::tasks::move_card::MoveCardTask;
 
-
-
 // #[derive(Debug, Clone)]
 // pub enum DiscardVictimSpec {
 // 	Myself,
@@ -36,10 +34,7 @@ impl Discard {
 		Box::new(Self::new(num))
 	}
 	pub fn new(num: u32) -> Self {
-		Self {
-			num,
-			include: None,
-		}
+		Self { num, include: None }
 	}
 	pub fn discard_one_of(include: HashSet<ids::CardId>) -> Self {
 		Self {
@@ -104,11 +99,6 @@ impl PlayerTask for Discard {
 	}
 }
 
-
-
-
-
-
 #[derive(Debug, Clone)]
 pub struct DiscardFromParam {
 	num: u32,
@@ -123,20 +113,22 @@ impl DiscardFromParam {
 	}
 }
 impl PlayerTask for DiscardFromParam {
-    fn make_progress(
+	fn make_progress(
 		&mut self,
 		context: &mut GameBookKeeping,
 		game: &mut Game,
 		player_index: ids::PlayerIndex,
 	) -> SlayResult<TaskProgressResult> {
-			let victim_index = game.player_param(player_index, &self.victim_param)?;
-			game.players[victim_index].tasks.prepend(Discard::create(self.num));
-			Ok(TaskProgressResult::TaskComplete)
-    }
+		let victim_index = game.player_param(player_index, &self.victim_param)?;
+		game.players[victim_index]
+			.tasks
+			.prepend(Discard::create(self.num));
+		Ok(TaskProgressResult::TaskComplete)
+	}
 
-    fn label(&self) -> String {
-			format!("{:?} will have to discard.", self.victim_param)
-    }
+	fn label(&self) -> String {
+		format!("{:?} will have to discard.", self.victim_param)
+	}
 }
 
 #[derive(Debug, Clone)]
@@ -147,19 +139,16 @@ pub struct PlayersWithHeroTypeDiscard {
 
 impl PlayersWithHeroTypeDiscard {
 	pub fn create(hero_type: HeroType) -> Box<dyn PlayerTask> {
-		Box::new(Self {
-			num: 1,
-			hero_type,
-		})
+		Box::new(Self { num: 1, hero_type })
 	}
 }
 
 impl PlayerTask for PlayersWithHeroTypeDiscard {
-    fn make_progress(
+	fn make_progress(
 		&mut self,
-		context: &mut GameBookKeeping,
+		_context: &mut GameBookKeeping,
 		game: &mut Game,
-		player_index: ids::PlayerIndex,
+		_player_index: ids::PlayerIndex,
 	) -> SlayResult<TaskProgressResult> {
 		for player in game.players.iter_mut() {
 			if !player.has_hero_type(&self.hero_type) {
@@ -168,9 +157,12 @@ impl PlayerTask for PlayersWithHeroTypeDiscard {
 			player.tasks.prepend(Discard::create(self.num));
 		}
 		Ok(TaskProgressResult::TaskComplete)
-  }
+	}
 
-  fn label(&self) -> String {
-		format!("All players with {:?} will have to discard {} cards.", self.hero_type, self.num)
-  }
+	fn label(&self) -> String {
+		format!(
+			"All players with {:?} will have to discard {} cards.",
+			self.hero_type, self.num
+		)
+	}
 }

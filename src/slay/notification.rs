@@ -4,6 +4,8 @@ use crate::slay::ids;
 use crate::slay::state::game::GameStaticInformation;
 use crate::slay::state::summarizable::Summarizable;
 
+use super::specs::cards::SlayCardSpec;
+
 #[derive(Clone, Debug, PartialEq)]
 pub enum Notification {
 	PlayerChose(ids::PlayerIndex, Choice),
@@ -16,6 +18,9 @@ pub enum Notification {
 	// Player Complete?
 	PlayerWon(ids::PlayerIndex),
 	PlayersTurn(ids::PlayerIndex),
+
+	NoWhereToPlaceItem,
+	PlayerDrew(ids::PlayerIndex, SlayCardSpec),
 }
 
 impl Notification {
@@ -49,6 +54,12 @@ impl Notification {
 			Notification::PlayersTurn(viewed) => format!(
 				"It is now {}'s turn.",
 				statics.players_name_from_perspective(viewer, *viewed),
+			),
+			Notification::NoWhereToPlaceItem => String::from("There was no where to place an item card."),
+			Notification::PlayerDrew(player_index, spec) => format!(
+				"{} drew {}",
+				statics.player_name(*player_index),
+				spec.label(),
 			),
 		}
 	}

@@ -16,8 +16,6 @@ use crate::slay::state::player::Player;
 use crate::slay::state::stack::Card;
 use crate::slay::state::stack::Stack;
 
-
-
 fn bot_name(player_index: usize) -> &'static str {
 	match player_index {
 		0 => "Henry",
@@ -37,6 +35,9 @@ fn initialize_global_decks(context: &mut GameBookKeeping, game: &mut Game) {
 	let mut monsters = Vec::with_capacity(monsters_capacity);
 	all::<SlayCardSpec>().for_each(|spec_type| {
 		let spec = spec_type.get_card_spec_creation();
+		if spec.ignore {
+			return;
+		}
 
 		for _ in 0..spec.repeat {
 			let stack = Stack::new(Card::new(

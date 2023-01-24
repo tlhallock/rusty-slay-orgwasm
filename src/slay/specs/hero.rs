@@ -18,7 +18,10 @@ use crate::slay::tasks::core::pull::PullFromTask;
 use crate::slay::tasks::core::sacrifice::Sacrifice;
 use crate::slay::tasks::core::steal::StealCardFromTask;
 use crate::slay::tasks::core::steal::StealTask;
+use crate::slay::tasks::heros::greedy_cheeks::GreedyCheeks;
 use crate::slay::tasks::heros::mimimeow::Mimimeow;
+use crate::slay::tasks::heros::pan_chucks::PanChucksDestroy;
+use crate::slay::tasks::heros::qi_bear::QiBear;
 use crate::slay::tasks::heros::slippery_paws::SlipperyPaws;
 use crate::slay::tasks::player_tasks::PlayerTask;
 use crate::slay::tasks::task_params::TaskParamName;
@@ -112,6 +115,68 @@ impl HeroAbilityType {
 		SlayCardSpec::HeroCard(*self).label()
 	}
 
+	pub fn get_hero_type(&self) -> HeroType {
+		let ret = match self {
+			HeroAbilityType::PlunderingPuma
+			| HeroAbilityType::SlipperyPaws
+			| HeroAbilityType::SmoothMimimeow
+			| HeroAbilityType::Meowzio
+			| HeroAbilityType::Shurikitty
+			| HeroAbilityType::KitNapper
+			| HeroAbilityType::SilentShadow
+			| HeroAbilityType::SlyPickings => HeroType::Thief,
+			HeroAbilityType::HolyCurselifter
+			| HeroAbilityType::IronResolve
+			| HeroAbilityType::CalmingVoice
+			| HeroAbilityType::VibrantGlow
+			| HeroAbilityType::MightyBlade
+			| HeroAbilityType::RadiantHorn
+			| HeroAbilityType::GuidingLight
+			| HeroAbilityType::WiseShield => HeroType::Gaurdian,
+			HeroAbilityType::QiBear
+			| HeroAbilityType::PanChucks
+			| HeroAbilityType::HeavyBear
+			| HeroAbilityType::BadAxe
+			| HeroAbilityType::ToughTeddy
+			| HeroAbilityType::BearClaw
+			| HeroAbilityType::FuryKnuckle
+			| HeroAbilityType::BearyWise => HeroType::Fighter,
+			HeroAbilityType::Hook
+			| HeroAbilityType::Wildshot
+			| HeroAbilityType::SeriousGrey
+			| HeroAbilityType::WilyRed
+			| HeroAbilityType::QuickDraw
+			| HeroAbilityType::LookieRookie
+			| HeroAbilityType::Bullseye
+			| HeroAbilityType::SharpFox => HeroType::Ranger,
+			HeroAbilityType::FuzzyCheeks
+			| HeroAbilityType::Peanut
+			| HeroAbilityType::NappingNibbles
+			| HeroAbilityType::TipsyTootie
+			| HeroAbilityType::MellowDee
+			| HeroAbilityType::LuckBucky
+			| HeroAbilityType::DodgyDealer
+			| HeroAbilityType::GreedyCheeks => HeroType::Bard,
+			HeroAbilityType::Fluffy
+			| HeroAbilityType::Wiggles
+			| HeroAbilityType::Spooky
+			| HeroAbilityType::Snowball
+			| HeroAbilityType::Buttons
+			| HeroAbilityType::BunBun
+			| HeroAbilityType::Hopper
+			| HeroAbilityType::Whiskers => HeroType::Wizard,
+		};
+		if Some(ret)
+			!= SlayCardSpec::HeroCard(*self)
+				.get_card_spec_creation()
+				.get_unmodified_hero_type()
+		{
+			log::info!("Mismatch hero type {:?}", self);
+			unreachable!()
+		}
+		ret
+	}
+
 	pub fn to_consequences(&self) -> RollConsequences {
 		if let Some(ability) = SlayCardSpec::HeroCard(*self)
 			.get_card_spec_creation()
@@ -143,11 +208,11 @@ impl HeroAbilityType {
 				),
 				PullFromTask::record_pulled(
 					TaskParamName::SlipperyPawsVictim,
-					Some(TaskParamName::SlipperyPawsVictimPulledCard1),
+					TaskParamName::SlipperyPawsVictimPulledCard1,
 				),
 				PullFromTask::record_pulled(
 					TaskParamName::SlipperyPawsVictim,
-					Some(TaskParamName::SlipperyPawsVictimPulledCard2),
+					TaskParamName::SlipperyPawsVictimPulledCard2,
 				),
 				SlipperyPaws::create(),
 				ClearParamsTask::create(),
@@ -205,7 +270,7 @@ impl HeroAbilityType {
 				),
 				PullFromTask::record_pulled(
 					TaskParamName::SlyPickinsVictim,
-					Some(TaskParamName::SlyPickinsCard),
+					TaskParamName::SlyPickinsCard,
 				),
 				OfferPlayImmediately::create(
 					TaskParamName::SlyPickinsCard,
@@ -236,8 +301,13 @@ impl HeroAbilityType {
 				PlayerModifier::AddToAllRolls(3),
 				ModifierOrigin::FromHeroAbility,
 			)],
-			HeroAbilityType::QiBear => vec![], ///////////////////////////////////////
-			HeroAbilityType::PanChucks => vec![], ////////////////////////////////////
+			HeroAbilityType::QiBear => vec![QiBear::create()],
+			HeroAbilityType::PanChucks => vec![
+				DrawTask::into_param(TaskParamName::PanChuckFirstCard),
+				DrawTask::into_param(TaskParamName::PanChuckSecondCard),
+				PanChucksDestroy::create(),
+				ClearParamsTask::create(),
+			],
 			HeroAbilityType::HeavyBear => vec![
 				ChoosePlayerParameterTask::exclude_self(
 					TaskParamName::HeavyBearVictim,
@@ -247,9 +317,7 @@ impl HeroAbilityType {
 				ClearParamsTask::create(),
 			],
 			HeroAbilityType::BadAxe => vec![DestroyTask::create()],
-			HeroAbilityType::ToughTeddy => vec![
-				PlayersWithHeroTypeDiscard::create(HeroType::Fighter)
-			],
+			HeroAbilityType::ToughTeddy => vec![PlayersWithHeroTypeDiscard::create(HeroType::Fighter)],
 			HeroAbilityType::BearClaw => vec![], /////////////////////////////////////
 			HeroAbilityType::FuryKnuckle => vec![], //////////////////////////////////
 			HeroAbilityType::BearyWise => vec![], ////////////////////////////////////
@@ -272,7 +340,15 @@ impl HeroAbilityType {
 				DrawTask::into_param(TaskParamName::MellowDeeVictim),
 				ClearParamsTask::create(),
 			],
-			HeroAbilityType::LuckBucky => vec![], /////////////////////////////////////
+			HeroAbilityType::LuckBucky => vec![
+				ChoosePlayerParameterTask::exclude_self(
+					TaskParamName::LuckBuckyVictim,
+					"Who would you like to pull from?",
+				),
+				PullFromTask::record_pulled(TaskParamName::LuckBuckyVictim, TaskParamName::LuckBuckyCard),
+				OfferPlayImmediately::create(TaskParamName::LuckBuckyCard, PlayImmediatelyFilter::IsHero),
+				ClearParamsTask::create(),
+			], /////////////////////////////////////
 			HeroAbilityType::DodgyDealer => vec![
 				ChoosePlayerParameterTask::exclude_self(
 					TaskParamName::DodgyDealerVictim,
@@ -281,7 +357,7 @@ impl HeroAbilityType {
 				TradeHands::create(TaskParamName::DodgyDealerVictim),
 				ClearParamsTask::create(),
 			],
-			HeroAbilityType::GreedyCheeks => vec![], //////////////////////////////////
+			HeroAbilityType::GreedyCheeks => vec![GreedyCheeks::create()],
 			HeroAbilityType::Fluffy => vec![DestroyTask::create(), DestroyTask::create()],
 			HeroAbilityType::Wiggles => vec![], ///////////////////////////////////////
 			HeroAbilityType::Spooky => vec![],  ////////////////////////////////////////

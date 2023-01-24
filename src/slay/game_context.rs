@@ -1,8 +1,9 @@
 use crate::slay::ids;
-use crate::slay::notification;
 
 use rand::rngs::ThreadRng;
 use rand::thread_rng;
+
+use super::notification::Notification;
 
 #[derive(Clone)]
 pub struct GameBookKeeping {
@@ -25,7 +26,7 @@ impl GameBookKeeping {
 		}
 	}
 
-	pub fn emit(&mut self, notification: &notification::Notification) {
+	pub fn emit(&mut self, notification: &Notification) {
 		log::info!("Notification: {:?}", notification);
 		// self.notifier.iter().for_each(|f| f(notification.to_owned()));
 	}

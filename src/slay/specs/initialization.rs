@@ -892,7 +892,6 @@ impl SlayCardSpec {
                   label: "Bard Mask".to_string(),
                   image_path: "cards/items/bard_mask.jpg".to_string(),
                   description: "The equipped Hero card is considered a Bard instead of its original class.".to_string(),
-                  spell: Some(MagicSpell::CallToTheFallen),
                   card_modifier: Some(ItemModifier::Mask(HeroType::Bard)),
                   ..Default::default()
                 },
@@ -901,7 +900,6 @@ impl SlayCardSpec {
                   label: "Wizard Mask".to_string(),
                   image_path: "cards/items/wizard_mask.jpg".to_string(),
                   description: "The equipped Hero card is considered a Wizard instead of its original class.".to_string(),
-                  spell: Some(MagicSpell::CallToTheFallen),
                   card_modifier: Some(ItemModifier::Mask(HeroType::Wizard)),
                   ..Default::default()
                 },
@@ -910,7 +908,6 @@ impl SlayCardSpec {
                   label: "Fighter Mask".to_string(),
                   image_path: "cards/items/fighter_mask.jpg".to_string(),
                   description: "The equipped Hero card is considered a Fighter instead of its original class.".to_string(),
-                  spell: Some(MagicSpell::CallToTheFallen),
                   card_modifier: Some(ItemModifier::Mask(HeroType::Fighter)),
                   ..Default::default()
                 },
@@ -919,7 +916,6 @@ impl SlayCardSpec {
                   label: "Guardian Mask".to_string(),
                   image_path: "cards/items/guardian_mask.jpg".to_string(),
                   description: "The equipped Hero card is considered a Guardian instead of its original class.".to_string(),
-                  spell: Some(MagicSpell::CallToTheFallen),
                   card_modifier: Some(ItemModifier::Mask(HeroType::Gaurdian)),
                   ..Default::default()
                 },
@@ -928,7 +924,6 @@ impl SlayCardSpec {
                   label: "Ranger Mask".to_string(),
                   image_path: "cards/items/ranger_mask.jpg".to_string(),
                   description: "The equipped Hero card is considered a Ranger instead of its original class.".to_string(),
-                  spell: Some(MagicSpell::CallToTheFallen),
                   card_modifier: Some(ItemModifier::Mask(HeroType::Ranger)),
                   ..Default::default()
                 },
@@ -937,8 +932,27 @@ impl SlayCardSpec {
                   label: "Thief Mask".to_string(),
                   image_path: "cards/items/thief_mask.jpg".to_string(),
                   description: "The equipped Hero card is considered a Thief instead of its original class.".to_string(),
-                  spell: Some(MagicSpell::CallToTheFallen),
                   card_modifier: Some(ItemModifier::Mask(HeroType::Thief)),
+                  ..Default::default()
+                },
+                HeroType::Beserker => CardSpec {
+                  ignore: true,
+                  ..Default::default()
+                },
+                HeroType::Necromancer =>CardSpec {
+                  ignore: true,
+                  ..Default::default()
+                },
+                HeroType::Druid => CardSpec {
+                  ignore: true,
+                  ..Default::default()
+                },
+                HeroType::Warrior => CardSpec {
+                  ignore: true,
+                  ..Default::default()
+                },
+                HeroType::Sorcerer => CardSpec {
+                  ignore: true,
                   ..Default::default()
                 },
             },
@@ -1046,12 +1060,32 @@ impl SlayCardSpec {
           description: "Each time you roll to ATTACK a Monster card, +1 to your roll.".to_string(),
           ..Default::default()
       },
-        HeroType::Thief => CardSpec {
-          card_type: CardType::PartyLeader(HeroType::Thief),
-          label: "The Shadow Claw".to_string(),
-          image_path: "cards/party_leaders/shadow_claw.jpg".to_string(),
-          description: "Once per turn on your turn, you may spend an action point to pull a card from another player's hand.".to_string(),
-          ..Default::default()
+      HeroType::Thief => CardSpec {
+        card_type: CardType::PartyLeader(HeroType::Thief),
+        label: "The Shadow Claw".to_string(),
+        image_path: "cards/party_leaders/shadow_claw.jpg".to_string(),
+        description: "Once per turn on your turn, you may spend an action point to pull a card from another player's hand.".to_string(),
+        ..Default::default()
+      },
+      HeroType::Beserker => CardSpec {
+        ignore: true,
+        ..Default::default()
+      },
+      HeroType::Necromancer => CardSpec {
+        ignore: true,
+        ..Default::default()
+      },
+      HeroType::Druid => CardSpec {
+        ignore: true,
+        ..Default::default()
+      },
+      HeroType::Warrior => CardSpec {
+        ignore: true,
+        ..Default::default()
+      },
+      HeroType::Sorcerer => CardSpec {
+        ignore: true,
+        ..Default::default()
       },
     },
     }

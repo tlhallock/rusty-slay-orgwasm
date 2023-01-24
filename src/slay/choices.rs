@@ -26,6 +26,7 @@ use super::tasks::tasks::search_discard::SearchDiscardFilters;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum ChoicesType {
+	ChooseCardToGive(ids::PlayerIndex),
 	SpendActionPoints,
 	SearchDiscard(SearchDiscardFilters),
 	ChoosePlayerParam(TaskParamName),
@@ -38,6 +39,8 @@ pub enum ChoicesType {
 	ModifyChallenge, /*(ChallengeReason)*/
 	// Do we need the player?
 	ModifyRoll, // different from modify challenge?
+	ContinueDiscardingAndDestroying(u32),
+	RevealAndDestroy,
 }
 
 #[derive(Clone, Debug)]
@@ -92,6 +95,10 @@ pub enum Choice {
 	Discard(SlayCardSpec),
 	Sacrifice(HeroAbilityType),
 	// SetParameter
+	ChooseCardToGive(SlayCardSpec, ids::PlayerIndex),
+	QuitAction,
+	ContinueDiscardingAndDestroying,
+	RevealChallengeAndDestroy,
 }
 
 // TODO: Rename this to Choice
@@ -163,26 +170,26 @@ impl Choice {
 				format!("Use {:?} to modify {:?} by {}", kind, path, amount,)
 			}
 			Choice::Challenge => String::from("Challenge!"),
-			Choice::SetPlayerParam(parameter, player_index) =>
-				format!("Set {:?} to player {}", parameter, player_index + 1),
-			Choice::SetCardParameter(parameter, card) =>
-				format!("Set {:?} to {}.", parameter, card.label()),
+			Choice::SetPlayerParam(parameter, player_index) => {
+				format!("Set {:?} to player {}", parameter, player_index + 1)
+			}
+			Choice::SetCardParameter(parameter, card) => {
+				format!("Set {:?} to {}.", parameter, card.label())
+			}
 			Choice::ChooseDiscardedCard(spec) => spec.get_card_spec_creation().label,
-			Choice::ReturnItem(item, hero) => format!(
-				"Return {} from {}", item.label(), hero.label(),
-			),
-			Choice::PlayImmediately(card) => format!(
-				"Play {} immediately",
-				card.label(),
-			),
+			Choice::ReturnItem(item, hero) => format!("Return {} from {}", item.label(), hero.label(),),
+			Choice::PlayImmediately(card) => format!("Play {} immediately", card.label(),),
 			Choice::DoNotPlayImmediately => String::from("Do not play immediately"),
-			Choice::Discard(card) => format!(
-				"Sacrifice {}",
-				card.label(),
-			),
-			Choice::Sacrifice(hero_card) => format!(
-				"Sacrifice {}",
-				hero_card.label(),
+			Choice::Discard(card) => format!("Sacrifice {}", card.label(),),
+			Choice::Sacrifice(hero_card) => format!("Sacrifice {}", hero_card.label(),),
+			Choice::ChooseCardToGive(card, player_index) => {
+				format!("Give {} to player {}.", card.label(), player_index,)
+			}
+			Choice::QuitAction => String::from("No"),
+			Choice::ContinueDiscardingAndDestroying => format!("Discard and destroy again"),
+			Choice::RevealChallengeAndDestroy => format!(
+				// Are we sure it was pulled?
+				"Reveal that you pulled a challenge card, so you can destroy a hero card.",
 			),
 		}
 	}
@@ -210,11 +217,8 @@ impl Choice {
 					game.player_name(player_index),
 					item,
 				),
-				Action::Draw => format!(
-					"{} chose to draw a card",
-					game.player_name(player_index),
-				),
-				Action::ReplaceHand =>format!(
+				Action::Draw => format!("{} chose to draw a card", game.player_name(player_index),),
+				Action::ReplaceHand => format!(
 					"{} chose to replace their hand with 5 new cards",
 					game.player_name(player_index),
 				),
@@ -242,18 +246,11 @@ impl Choice {
 				"{} chose to modify something by something.",
 				game.player_name(player_index),
 			),
-			Choice::Challenge => format!(
-				"{} chose to challenge!",
-				game.player_name(player_index),
-			),
-			Choice::SetPlayerParam(_, _) => format!(
-				"{} chose a player.",
-				game.player_name(player_index),
-			),
-			Choice::SetCardParameter(_, _) => format!(
-				"{} chose a card",
-				game.player_name(player_index),
-			),
+			Choice::Challenge => format!("{} chose to challenge!", game.player_name(player_index),),
+			Choice::SetPlayerParam(_, _) => {
+				format!("{} chose a player.", game.player_name(player_index),)
+			}
+			Choice::SetCardParameter(_, _) => format!("{} chose a card", game.player_name(player_index),),
 			Choice::ChooseDiscardedCard(_) => format!(
 				"{} chose a card from the discard pile",
 				game.player_name(player_index),
@@ -278,6 +275,20 @@ impl Choice {
 			Choice::Sacrifice(_) => format!(
 				"{} chose to sacrifice a certain something.",
 				game.player_name(player_index),
+			),
+			Choice::ChooseCardToGive(_, recipient) => format!(
+				"{} gave {} a secret card",
+				game.player_name(player_index),
+				game.player_name(*recipient),
+			),
+			Choice::QuitAction => format!("{} chose to stop.", game.player_name(player_index),),
+			Choice::ContinueDiscardingAndDestroying => format!(
+				"{} is going to continue discarding and destroying.",
+				game.player_name(player_index),
+			),
+			Choice::RevealChallengeAndDestroy => format!(
+				"{} drew a challenge card, and will now destroy a hero card.",
+				game.player_name(player_index)
 			),
 		}
 	}
@@ -304,10 +315,22 @@ impl ChoicesType {
 			),
 			ChoicesType::ModifyRoll => String::from("Choose whether to modify the current roll."),
 			ChoicesType::Discard => String::from("Choose a card in your hand to discard."),
-			ChoicesType::ReturnAnItemCard => String::from("Return an item card to someone's (TODO) hand."),
+			ChoicesType::ReturnAnItemCard => {
+				String::from("Return an item card to someone's (TODO) hand.")
+			}
 			ChoicesType::ChoosePlayerParam(_) => String::from("Choose a player"),
 			ChoicesType::ChooseCardParam(_) => String::from("Choose a card."),
 			ChoicesType::Sacrifice => String::from("Choose a hero card to sacrifice."),
+			ChoicesType::ChooseCardToGive(recipient) => {
+				format!("Pick a card to give to player {}", recipient)
+			}
+			ChoicesType::ContinueDiscardingAndDestroying(num_remaining) => format!(
+				"Would you like to discard a card so that you can destroy a hero card? (#{})",
+				num_remaining,
+			),
+			ChoicesType::RevealAndDestroy => String::from(
+				"Would you like to reveal and destroy?", // TODO: reveal what? (the card you drew? that it was a hero?)
+			),
 		}
 	}
 }

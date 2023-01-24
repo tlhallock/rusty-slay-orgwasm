@@ -3,7 +3,6 @@ use crate::slay::choices::ChoicesPerspective;
 use crate::slay::errors::SlayError;
 use crate::slay::errors::SlayResult;
 use crate::slay::ids;
-use crate::slay::notification::Notification;
 use crate::slay::showdown::challenge::ChallengePerspective;
 use crate::slay::showdown::current_showdown::CurrentShowdown;
 use crate::slay::showdown::offer::OfferChallengesPerspective;
@@ -295,6 +294,12 @@ impl Game {
 			self.players[player_index].was_card_played(&card_id)
 		} else {
 			false
+		}
+	}
+
+	pub(crate) fn clear_choices(&mut self) {
+		for player in self.players.iter_mut() {
+			player.choices = None;
 		}
 	}
 }

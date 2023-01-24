@@ -5,7 +5,39 @@ use yew::prelude::*;
 
 use crate::frontend::app::CommonProps;
 use crate::frontend::deck::DeckView;
+use crate::frontend::stack::CardSpecView;
+use crate::frontend::stack::ExtraSpecProps;
 use crate::slay::state::player::PlayerPerspective;
+use crate::slay::state::player::RepresentedHeroType;
+
+#[derive(Properties, PartialEq)]
+struct RepresentedHeroTypeProps {
+	represented_hero_types: Vec<RepresentedHeroType>,
+}
+
+#[function_component(HeroTypesView)]
+fn view_hero_types(props: &RepresentedHeroTypeProps) -> Html {
+	let represented = props
+		.represented_hero_types
+		.iter()
+		.filter(|hero_type| hero_type.represented)
+		.map(|hero_type| {
+			html! {
+				<img
+					width={40}
+					src={hero_type.hero_type.icon().to_owned()}
+					alt={hero_type.hero_type.label().to_owned()}
+				/>
+			}
+		});
+	html! {
+			<div
+					class={classes!("action-points")}
+			>
+					{ for represented }
+			</div>
+	}
+}
 
 #[derive(Properties, PartialEq)]
 struct ActionPointsProps {
@@ -16,12 +48,19 @@ struct ActionPointsProps {
 #[function_component(ActionPoints)]
 fn view_action_points(props: &ActionPointsProps) -> Html {
 	let points = (0..props.total).map(|point_index| {
-		html! {
-				<div class={classes!("action-point", if point_index < props.remaining {
-						"unused"
-				} else {
-						"used"
-				})}/>
+		if point_index < props.remaining {
+			html! {
+				<div class={classes!("action-point", "unused")}/>
+				// <img
+				// 	width={20}
+				// 	src="imgs/icons/action_point.png"
+				// 	alt="action point"
+				// />
+			}
+		} else {
+			html! {
+				<div class={classes!("action-point", "used")}/>
+			}
 		}
 	});
 	html! {
@@ -86,10 +125,26 @@ pub fn view_player(props: &PlayerProps) -> Html {
 									remaining={props.player.remaining_action_points}
 							/>
 							<div/> // For buffs
-							<div/> // For hero types in party
+							<HeroTypesView
+								represented_hero_types={
+									props.player.represented_hero_types.to_vec()
+								}
+							/> // For hero types in party
 					</div>
 					<div class={classes!("decks")}>
-							{for decks}
+						<CardSpecView
+								spec={props.player.leader.spec.to_owned()}
+								common={props.common.to_owned()}
+								extra_specs={
+									ExtraSpecProps {
+										represented_choices: Vec::new(), // TODO
+										is_default_choice: false,
+										has_been_played_this_turn: props.player.leader.played_this_turn,
+										disable_view: false,
+									}
+								}
+						/>
+						{for decks}
 					</div>
 			</div>
 	}

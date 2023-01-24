@@ -26,12 +26,15 @@ use crate::slay::state::turn::Turn;
 use crate::slay::tasks::player_tasks::PlayerTask;
 use crate::slay::tasks::player_tasks::PlayerTasks;
 
+use enum_iterator::all;
 use std::collections::HashMap;
 use std::collections::HashSet;
 use std::fmt::Debug;
 use std::io::BufWriter;
 use std::io::Write;
 use std::iter::Iterator;
+
+use super::stack::CardPerspective;
 
 pub struct HeroTypeCounter {
 	pub leader_type: Option<HeroType>,
@@ -238,6 +241,9 @@ impl Player {
 	pub fn to_perspective(&self, game: &Game, perspective: &Perspective) -> PlayerPerspective {
 		PlayerPerspective {
 			player_index: self.player_index,
+			leader: self
+				.leader
+				.to_perspective(game.was_card_played(Some(self.player_index), self.leader.id)),
 			remaining_action_points: self.get_remaining_action_points(),
 			// Could be calculated...
 			total_action_points: self.calculate_total_action_points(),
@@ -246,6 +252,12 @@ impl Player {
 				.iter()
 				.filter(|d| d.is_visible(perspective))
 				.map(|d| d.to_perspective(game, Some(self.player_index), perspective))
+				.collect(),
+			represented_hero_types: all::<HeroType>()
+				.map(|hero_type| RepresentedHeroType {
+					hero_type,
+					represented: self.has_hero_type(&hero_type),
+				})
 				.collect(),
 		}
 	}
@@ -275,10 +287,18 @@ impl Summarizable for Player {
 }
 
 #[derive(Debug, PartialEq, Clone)]
+pub struct RepresentedHeroType {
+	pub hero_type: HeroType,
+	pub represented: bool,
+}
+
+#[derive(Debug, PartialEq, Clone)]
 pub struct PlayerPerspective {
 	pub remaining_action_points: u32,
 	pub total_action_points: u32,
 	pub decks: Vec<DeckPerspective>,
+	pub represented_hero_types: Vec<RepresentedHeroType>,
+	pub leader: CardPerspective,
 	player_index: usize,
 }
 

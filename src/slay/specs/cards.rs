@@ -36,6 +36,13 @@ impl SlayCardSpec {
 	pub fn image_path(&self) -> String {
 		String::from("")
 	}
+	pub fn get_hero_type(&self) -> Option<HeroType> {
+		match self {
+			SlayCardSpec::HeroCard(hero_card) => Some(hero_card.get_hero_type()),
+			SlayCardSpec::PartyLeader(hero_type) => Some(*hero_type),
+			_ => None,
+		}
+	}
 }
 
 // // This should be done automatically...

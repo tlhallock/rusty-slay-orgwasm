@@ -4,10 +4,9 @@ use yew::prelude::*;
 
 use crate::frontend::app::AppState;
 use crate::frontend::game::GamePerspectiveView;
+use crate::frontend::notifications::Notifications;
 use crate::slay::specs::cards::SlayCardSpec;
 use crate::slay::specs::hero::HeroAbilityType;
-use crate::frontend::notifications::Notifications;
-
 
 #[function_component(App)]
 fn app() -> Html {
