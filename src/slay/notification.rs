@@ -21,6 +21,7 @@ pub enum Notification {
 
 	NoWhereToPlaceItem,
 	PlayerDrew(ids::PlayerIndex, SlayCardSpec),
+	CanPullAgain(ids::PlayerIndex, bool),
 }
 
 impl Notification {
@@ -60,6 +61,11 @@ impl Notification {
 				"{} drew {}",
 				statics.player_name(*player_index),
 				spec.label(),
+			),
+	    Notification::CanPullAgain(player_index, able) => format!(
+				"{} {} play again.", 
+				statics.player_name(*player_index),
+				if *able { "can" } else { "cannot" },
 			),
 		}
 	}

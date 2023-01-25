@@ -13,6 +13,8 @@ pub fn main() {
 	// Let users know that they cannot choose to destroy a hero from a player that can
 	// View the hero leader...
 	// Make players clickable?
+	// make a strategy that just draws cards...
+	// The only thing that should set choices are from that player's own task.
 
 	/*
 	Emit the following notifications:

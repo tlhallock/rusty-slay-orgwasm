@@ -7,6 +7,8 @@ use crate::slay::state::summarizable::Summarizable;
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
 pub enum TaskParamName {
+	ButtonsVictim,
+	ButtonsCard,
 	PanChuckFirstCard,
 	PanChuckSecondCard,
 	LuckBuckyVictim,
@@ -36,6 +38,15 @@ pub enum TaskParamName {
 	MellowDeeVictim,
 	DodgyDealerVictim,
 	HopperVictim,
+	WigglesVictim,
+	WigglesCard,
+	SnowballCard,
+	BearClawVictim,
+	BearClawCard,
+	FuryKnuckleVictim,
+	FuryKnuckleCard,
+	QuickDrawCard1,
+	QuickDrawCard2,
 }
 
 #[derive(Debug, Default, Clone)]

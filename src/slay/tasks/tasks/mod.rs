@@ -16,3 +16,9 @@ pub mod reveal;
 pub mod search_discard;
 pub mod set_complete;
 pub mod trade_hands;
+pub mod place_hero;
+
+
+
+
+

@@ -46,7 +46,7 @@ use super::specs::monster::Monster;
 
 // Emit logs like "Waiting for challenges..."
 
-fn create_roll_for_ability_task(
+pub fn create_roll_for_ability_task(
 	context: &mut GameBookKeeping,
 	game: &Game,
 	player_index: ids::PlayerIndex,
@@ -125,11 +125,18 @@ pub fn create_place_item_task(players_with_stacks: Vec<ids::PlayerIndex>) -> Box
 				"Choose a player to give this item to.",
 				players_with_stacks,
 			),
+			// TODO
 			ClearParamsTask::create(),
 		],
 	})
 }
 
+/*
+Refactor this method: 
+It should just return an option.
+If it finds that there are no places to put the item, then it returns None.
+That way, we don't have to have a bunch of calls to create players_with_stacks.
+*/
 pub fn create_place_item_challenge_offer(
 	game: &Game,
 	player_index: ids::PlayerIndex,

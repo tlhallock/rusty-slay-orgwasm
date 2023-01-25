@@ -1,5 +1,6 @@
 use crate::slay::actions;
 use crate::slay::actions::create_place_hero_challenges;
+use crate::slay::actions::create_roll_for_ability_task;
 use crate::slay::choices::CardPath;
 use crate::slay::choices::Choice;
 use crate::slay::choices::ChoiceDisplayType;
@@ -13,6 +14,7 @@ use crate::slay::game_context::GameBookKeeping;
 use crate::slay::ids;
 use crate::slay::notification::Notification;
 use crate::slay::specs::cards::SlayCardSpec;
+use crate::slay::specs::items::AnotherItemType;
 use crate::slay::state::deck::DeckPath;
 use crate::slay::state::game::Game;
 use crate::slay::state::stack::Card;
@@ -20,13 +22,15 @@ use crate::slay::tasks::player_tasks::PlayerTask;
 use crate::slay::tasks::player_tasks::TaskProgressResult;
 use crate::slay::tasks::task_params::TaskParamName;
 
-pub fn play_card_from_hand(
+
+// This should be a task...
+pub fn play_card_immediately(
 	context: &mut GameBookKeeping,
 	game: &mut Game,
 	player_index: ids::PlayerIndex,
 	card: &Card,
+	mut extra_task: Option<Box<dyn PlayerTask>>,
 ) {
-	// TODO: refactor this into a player_from_hand...
 	let mut play_immediately_tasks = Vec::new();
 	if let Some(_item_modifier) = card.get_spec().card_modifier.as_ref() {
 		// This card is an item card...
@@ -44,14 +48,34 @@ pub fn play_card_from_hand(
 			players_with_stacks,
 		));
 	} else if let SlayCardSpec::HeroCard(hero_card) = card.card_type {
-		// This card is a hero card...
-		play_immediately_tasks.push(create_place_hero_challenges(
-			context,
-			game,
-			player_index,
-			CardPath::TopCardIn(DeckPath::Hand(player_index), card.id),
-			hero_card,
-		));
+		let hand_path = CardPath::TopCardIn(DeckPath::Hand(player_index), card.id);
+		let party_path = CardPath::TopCardIn(DeckPath::Party(player_index), card.id);
+		if let Some(_) = game.maybe_card(hand_path) {
+			// This card is a hero card...
+			play_immediately_tasks.push(create_place_hero_challenges(
+				context,
+				game,
+				player_index,
+				hand_path,
+				hero_card,
+			));
+		} else if let Some(_) = game.maybe_card(party_path) {
+			play_immediately_tasks.push(create_roll_for_ability_task(
+				context,
+				game,
+				player_index,
+				card,
+				hero_card,
+			));
+		} else {
+			unreachable!();
+		}
+	} else if let SlayCardSpec::Item(item_type) = card.card_type {
+		create_place_item_challenge_offer
+	}
+
+	if let Some(task) = extra_task.take() {
+		play_immediately_tasks.push(task);
 	}
 
 	let default_choice = context.id_generator.generate();
@@ -80,6 +104,9 @@ pub fn play_card_from_hand(
 pub enum PlayImmediatelyFilter {
 	IsMagic,
 	IsHero,
+	None,
+	IsChallenge,
+	IsItem,
 }
 
 impl PlayImmediatelyFilter {
@@ -87,6 +114,9 @@ impl PlayImmediatelyFilter {
 		match self {
 			PlayImmediatelyFilter::IsMagic => card.is_magic(),
 			PlayImmediatelyFilter::IsHero => card.is_hero(),
+			PlayImmediatelyFilter::IsChallenge => card.is_challenge(),
+			PlayImmediatelyFilter::IsItem => card.is_item(),
+    	PlayImmediatelyFilter::None => true,
 		}
 	}
 }
@@ -95,11 +125,20 @@ impl PlayImmediatelyFilter {
 pub struct OfferPlayImmediately {
 	card_param: TaskParamName,
 	filter: PlayImmediatelyFilter,
+	extra_task: Option<Box<dyn PlayerTask>>,
 }
 
 impl OfferPlayImmediately {
 	pub fn create(card_param: TaskParamName, filter: PlayImmediatelyFilter) -> Box<dyn PlayerTask> {
-		Box::new(OfferPlayImmediately { card_param, filter })
+		Box::new(OfferPlayImmediately { card_param, filter, extra_task: None, })
+	}
+
+	pub fn with_an_extra_task(
+		card_param: TaskParamName,
+		filter: PlayImmediatelyFilter,
+		extra_task: Box<dyn PlayerTask>,
+	) -> Box<dyn PlayerTask> {
+		Box::new(OfferPlayImmediately { card_param, filter, extra_task: Some(extra_task) })
 	}
 }
 
@@ -124,7 +163,7 @@ impl PlayerTask for OfferPlayImmediately {
 		if !self.filter.can_play_immediately(&card) {
 			return Ok(TaskProgressResult::TaskComplete);
 		}
-		play_card_from_hand(context, game, player_index, &card);
+		play_card_immediately(context, game, player_index, &card, self.extra_task.take());
 		Ok(TaskProgressResult::TaskComplete)
 	}
 	fn label(&self) -> String {

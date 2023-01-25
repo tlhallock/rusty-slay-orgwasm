@@ -41,6 +41,7 @@ pub enum ChoicesType {
 	ModifyRoll, // different from modify challenge?
 	ContinueDiscardingAndDestroying(u32),
 	RevealAndDestroy,
+	PlaceAHeroCard,
 }
 
 #[derive(Clone, Debug)]
@@ -99,6 +100,7 @@ pub enum Choice {
 	QuitAction,
 	ContinueDiscardingAndDestroying,
 	RevealChallengeAndDestroy,
+	PlaceHeroImmediately(HeroAbilityType),
 }
 
 // TODO: Rename this to Choice
@@ -190,6 +192,10 @@ impl Choice {
 			Choice::RevealChallengeAndDestroy => format!(
 				// Are we sure it was pulled?
 				"Reveal that you pulled a challenge card, so you can destroy a hero card.",
+			),
+			
+	    Choice::PlaceHeroImmediately(hero_card) => format!(
+				"Place {} in you party immediately.", hero_card.label(),
 			),
 		}
 	}
@@ -290,6 +296,11 @@ impl Choice {
 				"{} drew a challenge card, and will now destroy a hero card.",
 				game.player_name(player_index)
 			),
+	    Choice::PlaceHeroImmediately(hero_card) => format!(
+				"{} placed {} in their party immediately",
+				game.player_name(player_index),
+				hero_card.label(),
+			),
 		}
 	}
 }
@@ -330,6 +341,9 @@ impl ChoicesType {
 			),
 			ChoicesType::RevealAndDestroy => String::from(
 				"Would you like to reveal and destroy?", // TODO: reveal what? (the card you drew? that it was a hero?)
+			),
+	    ChoicesType::PlaceAHeroCard => String::from(
+				"whice hero would you like to place in your party?"
 			),
 		}
 	}
@@ -682,6 +696,10 @@ pub enum ChoiceDisplayType {
 }
 
 impl ChoiceDisplayType {
+	pub fn hand_card(player_index: ids::PlayerIndex, card_id: ids::CardId) -> ChoiceDisplayType {
+		ChoiceDisplayType::HighlightPath(DisplayPath::CardAt(CardPath::TopCardIn(DeckPath::Hand(player_index), card_id)))
+	}
+
 	pub fn represents(&self, display_path: &DisplayPath) -> bool {
 		if let ChoiceDisplayType::HighlightPath(represents_path) = self {
 			*display_path == *represents_path
