@@ -32,7 +32,8 @@ pub enum ChoicesType {
 	ChoosePlayerParam(TaskParamName),
 	ChooseCardParam(TaskParamName),
 	OfferChallenges,
-	PlayImmediately(SlayCardSpec),
+	PlayImmediately(SlayCardSpec), // Does it really need an argument?
+	PlayOneOfImmediately,
 	ReturnAnItemCard,
 	Discard,
 	Sacrifice,

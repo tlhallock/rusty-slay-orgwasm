@@ -15,6 +15,15 @@ pub fn main() {
 	// Make players clickable?
 	// make a strategy that just draws cards...
 	// The only thing that should set choices are from that player's own task.
+	// Shadow claw and piercing howl cannot be used in two player games\
+
+
+	// full party + monster
+	// 8 card hand limit
+	// party leader does not count
+	// 6 hero max party
+	
+	// 5 monsters to win, no hero win condition
 
 	/*
 	Emit the following notifications:

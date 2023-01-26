@@ -18,11 +18,11 @@ use crate::slay::tasks::core::pull::PullFromTask;
 use crate::slay::tasks::core::sacrifice::Sacrifice;
 use crate::slay::tasks::core::steal::StealCardFromTask;
 use crate::slay::tasks::core::steal::StealTask;
-use crate::slay::tasks::heros::pull_again::PullAgain;
 use crate::slay::tasks::heros::greedy_cheeks::GreedyCheeks;
 use crate::slay::tasks::heros::mimimeow::Mimimeow;
 use crate::slay::tasks::heros::pan_chucks::PanChucksDestroy;
 use crate::slay::tasks::heros::qi_bear::QiBear;
+use crate::slay::tasks::heros::quick_draw_style::QuickDrawStyle;
 use crate::slay::tasks::heros::slippery_paws::SlipperyPaws;
 use crate::slay::tasks::heros::spooky::Spooky;
 use crate::slay::tasks::player_tasks::PlayerTask;
@@ -33,6 +33,7 @@ use crate::slay::tasks::tasks::params::ChooseCardFromPlayerParameterTask;
 use crate::slay::tasks::tasks::params::ChoosePlayerParameterTask;
 use crate::slay::tasks::tasks::params::ClearParamsTask;
 use crate::slay::tasks::tasks::place_hero::PlaceHero;
+use crate::slay::tasks::tasks::pull_again::PullAgain;
 use crate::slay::tasks::tasks::receive_modifier::ReceiveModifier;
 use crate::slay::tasks::tasks::return_modifiers::ReturnModifierTask;
 use crate::slay::tasks::tasks::search_discard::SearchDiscard;
@@ -357,6 +358,8 @@ impl HeroAbilityType {
 			],
 			HeroAbilityType::BearyWise => vec![], ////////////////////////////////////
 			HeroAbilityType::Hook => vec![
+				Hook::create(),
+				OfferPlayImmediately::with_an_extra_task,
 				// There is similar logic in... immediately.rs
 				DrawTask::create(1),
 			],
@@ -373,7 +376,9 @@ impl HeroAbilityType {
 				),
 			],
 			HeroAbilityType::LookieRookie => vec![SearchDiscard::for_item()],
-			HeroAbilityType::Bullseye => vec![], /////////////////////////////////////
+			HeroAbilityType::Bullseye => vec![
+				// Bullseye::create(),
+			],
 			HeroAbilityType::SharpFox => vec![], /////////////////////////////////////
 			HeroAbilityType::FuzzyCheeks => vec![
 				DrawTask::create(1),

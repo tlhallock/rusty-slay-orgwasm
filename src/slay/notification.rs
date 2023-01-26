@@ -22,6 +22,7 @@ pub enum Notification {
 	NoWhereToPlaceItem,
 	PlayerDrew(ids::PlayerIndex, SlayCardSpec),
 	CanPullAgain(ids::PlayerIndex, bool),
+	CanPlayImmediately(ids::PlayerIndex, bool),
 }
 
 impl Notification {

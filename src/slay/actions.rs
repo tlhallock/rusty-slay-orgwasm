@@ -8,6 +8,7 @@ use crate::slay::deadlines;
 use crate::slay::game_context::GameBookKeeping;
 use crate::slay::ids;
 use crate::slay::modifiers::PlayerModifier;
+use crate::slay::notification::Notification;
 use crate::slay::showdown::consequences::Condition;
 use crate::slay::showdown::consequences::RollConsequence;
 use crate::slay::showdown::consequences::RollConsequences;
@@ -131,23 +132,23 @@ pub fn create_place_item_task(players_with_stacks: Vec<ids::PlayerIndex>) -> Box
 	})
 }
 
-/*
-Refactor this method: 
-It should just return an option.
-If it finds that there are no places to put the item, then it returns None.
-That way, we don't have to have a bunch of calls to create players_with_stacks.
-*/
 pub fn create_place_item_challenge_offer(
+	context: &mut GameBookKeeping,
 	game: &Game,
 	player_index: ids::PlayerIndex,
 	card: &Card,
-	players_with_stacks: Vec<ids::PlayerIndex>,
-) -> Box<dyn PlayerTask> {
+) -> Option<Box<dyn PlayerTask>> {
+	let players_with_stacks = game.players_with_stacks();
+	if players_with_stacks.is_empty() {
+		log::info!("There are no places to put the item.");
+		context.emit(&Notification::NoWhereToPlaceItem);
+		return None;
+	}
 	let place_item = create_place_item_task(players_with_stacks);
 	if game.players[player_index].has_modifier(PlayerModifier::ItemsCannotBeChallenged) {
-		return place_item;
+		return Some(place_item);
 	}
-	Box::new(OfferChallengesTask::new(OfferChallengesState::new(
+	Some(Box::new(OfferChallengesTask::new(OfferChallengesState::new(
 		player_index,
 		RollConsequences {
 			success: RollConsequence {
@@ -164,27 +165,31 @@ pub fn create_place_item_challenge_offer(
 			}),
 		},
 		ChallengeReason::PlaceHeroCard(card.card_type),
-	))) as Box<dyn PlayerTask>
+	))) as Box<dyn PlayerTask>)
 }
 
 pub fn create_place_item_choice(
+	context: &mut GameBookKeeping,
 	game: &Game,
 	placer_index: ids::PlayerIndex,
 	id: ids::ChoiceId,
 	card: &Card,
 	display_type: ChoiceDisplayType,
 	item_card: AnotherItemType,
-	players_with_stacks: Vec<ids::PlayerIndex>,
-) -> TasksChoice {
-	TasksChoice::new(
-		id,
-		Choice::UseActionPoints(Action::PlaceItem(item_card)),
-		display_type,
-		vec![
-			Box::new(RemoveActionPointsTask::new(1)),
-			create_place_item_challenge_offer(game, placer_index, card, players_with_stacks),
-		],
-	)
+) -> Option<TasksChoice> {
+	create_place_item_challenge_offer(
+		context, game, placer_index, card,
+	).map(|challenge_offer| {
+		TasksChoice::new(
+			id,
+			Choice::UseActionPoints(Action::PlaceItem(item_card)),
+			display_type,
+			vec![
+				Box::new(RemoveActionPointsTask::new(1)),
+				challenge_offer,
+			],
+		)
+	})
 }
 
 fn create_cast_magic_choice(
@@ -302,40 +307,39 @@ fn create_hand_action_choice(
 	player_index: ids::PlayerIndex,
 	card_path: CardPath,
 ) -> Option<TasksChoice> {
-	if let Some(spell) = game.card(card_path).get_spec().spell.as_ref() {
-		return Some(create_cast_magic_choice(
-			game,
-			player_index,
-			context.id_generator.generate(),
-			card_path,
-			*spell,
-		));
-	}
-	if let SlayCardSpec::HeroCard(hero_card) = game.card(card_path).card_type {
-		return Some(create_place_hero_choice(
+	match game.card(card_path).card_type {
+    SlayCardSpec::HeroCard(hero_card) => Some(
+			create_place_hero_choice(
+				context,
+				game,
+				player_index,
+				card_path,
+				hero_card,
+			)
+		),
+    SlayCardSpec::Item(item_card) => create_place_item_choice(
 			context,
 			game,
 			player_index,
-			card_path,
-			hero_card,
-		));
-	}
-	if let SlayCardSpec::Item(item_card) = game.card(card_path).card_type {
-		// .get_spec().card_modifier.as_ref() {
-		let players_with_stacks = game.players_with_stacks();
-		if !players_with_stacks.is_empty() {
-			return Some(create_place_item_choice(
+			context.id_generator.generate(),
+			game.card(card_path),
+			card_path.display().to_highlight(),
+			item_card,
+		),
+    SlayCardSpec::MagicCard(spell) => Some(
+			create_cast_magic_choice(
 				game,
 				player_index,
 				context.id_generator.generate(),
-				game.card(card_path),
-				card_path.display().to_highlight(),
-				item_card,
-				players_with_stacks,
-			));
-		}
+				card_path,
+				spell,
+			)
+		),
+    SlayCardSpec::Challenge 
+		| SlayCardSpec::MonsterCard(_)
+		| SlayCardSpec::PartyLeader(_) => { unreachable!(); },
+		_ => None,
 	}
-	None
 }
 
 fn create_party_action_choice(

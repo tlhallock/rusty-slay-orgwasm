@@ -12,9 +12,7 @@ use crate::slay::errors::SlayError;
 use crate::slay::errors::SlayResult;
 use crate::slay::game_context::GameBookKeeping;
 use crate::slay::ids;
-use crate::slay::notification::Notification;
 use crate::slay::specs::cards::SlayCardSpec;
-use crate::slay::specs::items::AnotherItemType;
 use crate::slay::state::deck::DeckPath;
 use crate::slay::state::game::Game;
 use crate::slay::state::stack::Card;
@@ -22,6 +20,51 @@ use crate::slay::tasks::player_tasks::PlayerTask;
 use crate::slay::tasks::player_tasks::TaskProgressResult;
 use crate::slay::tasks::task_params::TaskParamName;
 
+
+
+pub fn create_play_card_immediately_task(
+	context: &mut GameBookKeeping,
+	game: &Game,
+	player_index: ids::PlayerIndex,
+	card: &Card,
+) -> Option<Box<dyn PlayerTask>> {
+	match card.card_type {
+    SlayCardSpec::HeroCard(hero_card) => {
+			let hand_path = CardPath::TopCardIn(DeckPath::Hand(player_index), card.id);
+			let party_path = CardPath::TopCardIn(DeckPath::Party(player_index), card.id);
+			if let Some(_) = game.maybe_card(hand_path) {
+				Some(create_place_hero_challenges(
+					context,
+					game,
+					player_index,
+					hand_path,
+					hero_card,
+				))
+			} else if let Some(_) = game.maybe_card(party_path) {
+				Some(create_roll_for_ability_task(
+					context,
+					game,
+					player_index,
+					card,
+					hero_card,
+				))
+			} else {
+				unreachable!()
+			}
+		},
+    SlayCardSpec::MagicCard(_) => todo!(),
+    SlayCardSpec::Item(_) => actions::create_place_item_challenge_offer(
+			context,
+			game,
+			player_index,
+			card,
+		),
+		SlayCardSpec::ModifierCard(_)
+    | SlayCardSpec::PartyLeader(_)
+    | SlayCardSpec::MonsterCard(_)
+    | SlayCardSpec::Challenge => None, // unreachable!(),
+	}
+}
 
 // This should be a task...
 pub fn play_card_immediately(
@@ -32,46 +75,13 @@ pub fn play_card_immediately(
 	mut extra_task: Option<Box<dyn PlayerTask>>,
 ) {
 	let mut play_immediately_tasks = Vec::new();
-	if let Some(_item_modifier) = card.get_spec().card_modifier.as_ref() {
-		// This card is an item card...
-		// src/slay/actions.rs:452
-		let players_with_stacks = game.players_with_stacks();
-		if players_with_stacks.is_empty() {
-			log::info!("There are no places to put the item.");
-			context.emit(&Notification::NoWhereToPlaceItem);
-			return;
-		}
-		play_immediately_tasks.push(actions::create_place_item_challenge_offer(
-			game,
-			player_index,
-			card,
-			players_with_stacks,
-		));
-	} else if let SlayCardSpec::HeroCard(hero_card) = card.card_type {
-		let hand_path = CardPath::TopCardIn(DeckPath::Hand(player_index), card.id);
-		let party_path = CardPath::TopCardIn(DeckPath::Party(player_index), card.id);
-		if let Some(_) = game.maybe_card(hand_path) {
-			// This card is a hero card...
-			play_immediately_tasks.push(create_place_hero_challenges(
-				context,
-				game,
-				player_index,
-				hand_path,
-				hero_card,
-			));
-		} else if let Some(_) = game.maybe_card(party_path) {
-			play_immediately_tasks.push(create_roll_for_ability_task(
-				context,
-				game,
-				player_index,
-				card,
-				hero_card,
-			));
-		} else {
-			unreachable!();
-		}
-	} else if let SlayCardSpec::Item(item_type) = card.card_type {
-		create_place_item_challenge_offer
+	if let Some(task) = create_play_card_immediately_task(
+		context,
+		game,
+		player_index,
+		card,
+	) {
+		play_immediately_tasks.push(task);
 	}
 
 	if let Some(task) = extra_task.take() {

@@ -1,9 +1,7 @@
-use crate::slay::choices::CardPath;
 use crate::slay::choices::Choice;
 use crate::slay::choices::ChoiceDisplayType;
 use crate::slay::choices::Choices;
 use crate::slay::choices::ChoicesType;
-use crate::slay::choices::DisplayPath;
 use crate::slay::choices::TasksChoice;
 use crate::slay::deadlines;
 use crate::slay::errors::SlayResult;
