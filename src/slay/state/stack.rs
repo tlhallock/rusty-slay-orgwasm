@@ -5,7 +5,7 @@ use crate::slay::modifiers::ItemModifier;
 use crate::slay::specification::CardSpec;
 use crate::slay::specification::HeroType;
 use crate::slay::specification::MonsterSpec;
-use crate::slay::specs::cards::SlayCardSpec;
+use crate::slay::specs::cards::card_type::SlayCardSpec;
 use crate::slay::specs::hero::HeroAbility;
 use crate::slay::state::game::Game;
 use crate::slay::state::summarizable::Summarizable;
@@ -62,8 +62,8 @@ impl Card {
 		self.get_spec().modifiers.to_vec() // ::<Vec<(ids::CardId, i32)>>()
 	}
 
-	pub fn label(&self) -> String {
-		self.get_spec().label
+	pub fn label(&self) -> &'static str {
+		self.card_type.label()
 	}
 
 	pub fn monster_spec(&self) -> Option<MonsterSpec> {
@@ -150,7 +150,7 @@ impl Summarizable for Card {
 			f,
 			"({}) {}",
 			self.id,
-			self.get_spec().label,
+			self.label(),
 			//  if self.played_this_turn { "X" } else { "" }
 		)
 	}

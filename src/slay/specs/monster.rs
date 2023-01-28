@@ -13,7 +13,7 @@ use crate::slay::tasks::core::discard::Discard;
 use crate::slay::tasks::core::draw::DrawTask;
 use crate::slay::tasks::core::sacrifice::Sacrifice;
 
-use super::cards::SlayCardSpec;
+use super::cards::card_type::SlayCardSpec;
 
 pub fn player_satisfies_requirements(
 	hero_type_counts: &mut HeroTypeCounter,
@@ -74,7 +74,7 @@ pub enum Monster {
 }
 
 impl Monster {
-	pub fn label(&self) -> String {
+	pub fn label(&self) -> &'static str {
 		SlayCardSpec::MonsterCard(*self).label()
 	}
 

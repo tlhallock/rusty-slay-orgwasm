@@ -3,3 +3,4 @@ dist
 output
 
 wasm-target
+venv

@@ -4,7 +4,7 @@ use crate::slay::ids;
 use crate::slay::state::game::GameStaticInformation;
 use crate::slay::state::summarizable::Summarizable;
 
-use super::specs::cards::SlayCardSpec;
+use super::specs::cards::card_type::SlayCardSpec;
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum Notification {
@@ -63,8 +63,13 @@ impl Notification {
 				statics.player_name(*player_index),
 				spec.label(),
 			),
-	    Notification::CanPullAgain(player_index, able) => format!(
-				"{} {} play again.", 
+			Notification::CanPullAgain(player_index, able) => format!(
+				"{} {} pull again.",
+				statics.player_name(*player_index),
+				if *able { "can" } else { "cannot" },
+			),
+			Notification::CanPlayImmediately(player_index, able) => format!(
+				"{} {} play again.",
 				statics.player_name(*player_index),
 				if *able { "can" } else { "cannot" },
 			),

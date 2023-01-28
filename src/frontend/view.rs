@@ -5,7 +5,7 @@ use yew::prelude::*;
 use crate::frontend::app::AppState;
 use crate::frontend::game::GamePerspectiveView;
 use crate::frontend::notifications::Notifications;
-use crate::slay::specs::cards::SlayCardSpec;
+use crate::slay::specs::cards::card_type::SlayCardSpec;
 use crate::slay::specs::hero::HeroAbilityType;
 
 #[function_component(App)]

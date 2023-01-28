@@ -1,7 +1,8 @@
 use log;
 use std::fmt;
+use thiserror::Error;
 
-#[derive(Debug)]
+#[derive(Error, Debug)]
 pub struct SlayError {
 	reason: String,
 }

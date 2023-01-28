@@ -7,7 +7,7 @@ use crate::frontend::app::CommonProps;
 use crate::frontend::card_modal::CardModalInfo;
 use crate::slay::choices::ChoicePerspective;
 use crate::slay::choices::ChoicesPerspective;
-use crate::slay::specs::cards::SlayCardSpec;
+use crate::slay::specs::cards::card_type::SlayCardSpec;
 use crate::slay::state::stack::StackPerspective;
 
 #[derive(Properties, PartialEq, Default)]
@@ -51,7 +51,7 @@ pub fn view_spec(props: &SpecProps) -> Html {
 			<div
 					class={classes!("card", c)}
 			>
-					{ props.spec.get_card_spec_creation().label.to_owned() }
+					{ props.spec.label() }
 			</div>
 		}
 	} else {
@@ -60,10 +60,10 @@ pub fn view_spec(props: &SpecProps) -> Html {
 				class={classes!("card", c)}
 				onclick={view_this_card}
 			>
-				{ props.spec.get_card_spec_creation().label.to_owned() }
+				{ props.spec.label() }
 				<br/>
 				{ for
-					if let Some(hero_type) = props.spec.get_hero_type() {
+					if let Some(hero_type) = props.spec.hero_type() {
 						Some(html! {
 							<img
 								width={30}

@@ -12,15 +12,13 @@ use crate::slay::errors::SlayError;
 use crate::slay::errors::SlayResult;
 use crate::slay::game_context::GameBookKeeping;
 use crate::slay::ids;
-use crate::slay::specs::cards::SlayCardSpec;
+use crate::slay::specs::cards::card_type::SlayCardSpec;
 use crate::slay::state::deck::DeckPath;
 use crate::slay::state::game::Game;
 use crate::slay::state::stack::Card;
 use crate::slay::tasks::player_tasks::PlayerTask;
 use crate::slay::tasks::player_tasks::TaskProgressResult;
 use crate::slay::tasks::task_params::TaskParamName;
-
-
 
 pub fn create_play_card_immediately_task(
 	context: &mut GameBookKeeping,
@@ -29,7 +27,7 @@ pub fn create_play_card_immediately_task(
 	card: &Card,
 ) -> Option<Box<dyn PlayerTask>> {
 	match card.card_type {
-    SlayCardSpec::HeroCard(hero_card) => {
+		SlayCardSpec::HeroCard(hero_card) => {
 			let hand_path = CardPath::TopCardIn(DeckPath::Hand(player_index), card.id);
 			let party_path = CardPath::TopCardIn(DeckPath::Party(player_index), card.id);
 			if let Some(_) = game.maybe_card(hand_path) {
@@ -51,18 +49,15 @@ pub fn create_play_card_immediately_task(
 			} else {
 				unreachable!()
 			}
-		},
-    SlayCardSpec::MagicCard(_) => todo!(),
-    SlayCardSpec::Item(_) => actions::create_place_item_challenge_offer(
-			context,
-			game,
-			player_index,
-			card,
-		),
+		}
+		SlayCardSpec::MagicCard(_) => todo!(),
+		SlayCardSpec::Item(_) => {
+			actions::create_place_item_challenge_offer(context, game, player_index, card)
+		}
 		SlayCardSpec::ModifierCard(_)
-    | SlayCardSpec::PartyLeader(_)
-    | SlayCardSpec::MonsterCard(_)
-    | SlayCardSpec::Challenge => None, // unreachable!(),
+		| SlayCardSpec::PartyLeader(_)
+		| SlayCardSpec::MonsterCard(_)
+		| SlayCardSpec::Challenge => None, // unreachable!(),
 	}
 }
 
@@ -75,12 +70,7 @@ pub fn play_card_immediately(
 	mut extra_task: Option<Box<dyn PlayerTask>>,
 ) {
 	let mut play_immediately_tasks = Vec::new();
-	if let Some(task) = create_play_card_immediately_task(
-		context,
-		game,
-		player_index,
-		card,
-	) {
+	if let Some(task) = create_play_card_immediately_task(context, game, player_index, card) {
 		play_immediately_tasks.push(task);
 	}
 
@@ -126,7 +116,7 @@ impl PlayImmediatelyFilter {
 			PlayImmediatelyFilter::IsHero => card.is_hero(),
 			PlayImmediatelyFilter::IsChallenge => card.is_challenge(),
 			PlayImmediatelyFilter::IsItem => card.is_item(),
-    	PlayImmediatelyFilter::None => true,
+			PlayImmediatelyFilter::None => true,
 		}
 	}
 }
@@ -140,7 +130,11 @@ pub struct OfferPlayImmediately {
 
 impl OfferPlayImmediately {
 	pub fn create(card_param: TaskParamName, filter: PlayImmediatelyFilter) -> Box<dyn PlayerTask> {
-		Box::new(OfferPlayImmediately { card_param, filter, extra_task: None, })
+		Box::new(OfferPlayImmediately {
+			card_param,
+			filter,
+			extra_task: None,
+		})
 	}
 
 	pub fn with_an_extra_task(
@@ -148,7 +142,11 @@ impl OfferPlayImmediately {
 		filter: PlayImmediatelyFilter,
 		extra_task: Box<dyn PlayerTask>,
 	) -> Box<dyn PlayerTask> {
-		Box::new(OfferPlayImmediately { card_param, filter, extra_task: Some(extra_task) })
+		Box::new(OfferPlayImmediately {
+			card_param,
+			filter,
+			extra_task: Some(extra_task),
+		})
 	}
 }
 

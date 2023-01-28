@@ -15,10 +15,8 @@ use crate::slay::state::game::Game;
 use crate::slay::tasks::core::draw::DrawTask;
 use crate::slay::tasks::player_tasks::PlayerTask;
 use crate::slay::tasks::player_tasks::TaskProgressResult;
-use crate::slay::tasks::tasks::immediate::PlayImmediatelyFilter;
 use crate::slay::tasks::tasks::immediate::create_play_card_immediately_task;
-
-
+use crate::slay::tasks::tasks::immediate::PlayImmediatelyFilter;
 
 #[derive(Clone, Debug)]
 pub struct Hook {
@@ -28,7 +26,9 @@ pub struct Hook {
 
 impl Hook {
 	pub fn create(filter: PlayImmediatelyFilter) -> Box<dyn PlayerTask> {
-		Box::new(Hook { filter, /*extra_task: None,*/ })
+		Box::new(Hook {
+			filter, /*extra_task: None,*/
+		})
 	}
 }
 
@@ -39,52 +39,51 @@ impl PlayerTask for Hook {
 		game: &mut Game,
 		player_index: ids::PlayerIndex,
 	) -> SlayResult<TaskProgressResult> {
-    let mut cards = game.players[player_index].hand.tops()
-      .filter(|card| self.filter.can_play_immediately(card))
-      .map(|card| *card)
-      .collect::<Vec<_>>();
-    
-    let mut options = cards.into_iter().map(
-      |card| create_play_card_immediately_task(
-        context,
-        game,
-        player_index,
-        &card,
-      ).map(
-        |task| TasksChoice::new(
-          context.id_generator.generate(),
-          Choice::PlayImmediately(card.card_type),
-          ChoiceDisplayType::HighlightPath(DisplayPath::CardAt(CardPath::TopCardIn(DeckPath::Hand(player_index), card.id))),
-          vec![
-            task,
-            DrawTask::create(1),
-          ],
-        )
-      )
-    ).flatten().collect::<Vec<_>>();
-    let able = !options.is_empty();
-    context.emit(&Notification::CanPlayImmediately(player_index, able));
+		let mut cards = game.players[player_index]
+			.hand
+			.tops()
+			.filter(|card| self.filter.can_play_immediately(card))
+			.map(|card| card.to_owned())
+			.collect::<Vec<_>>();
 
-    if !able {
-      return Ok(TaskProgressResult::TaskComplete);
-    }
+		let mut options = cards
+			.into_iter()
+			.map(|card| {
+				create_play_card_immediately_task(context, game, player_index, &card).map(|task| {
+					TasksChoice::new(
+						context.id_generator.generate(),
+						Choice::PlayImmediately(card.card_type),
+						ChoiceDisplayType::HighlightPath(DisplayPath::CardAt(CardPath::TopCardIn(
+							DeckPath::Hand(player_index),
+							card.id,
+						))),
+						vec![task, DrawTask::create(1)],
+					)
+				})
+			})
+			.flatten()
+			.collect::<Vec<_>>();
+		let able = !options.is_empty();
+		context.emit(&Notification::CanPlayImmediately(player_index, able));
 
-    let default_choice = context.id_generator.generate();
-    options.push(
-      TasksChoice::new(
-        default_choice,
-        Choice::DoNotPlayImmediately,
-        ChoiceDisplayType::No,
-        vec![],
-      ),
-    );
-    
-    game.players[player_index].choices = Some(Choices {
-      choices_type: ChoicesType::PlayOneOfImmediately,
-      options,
-      default_choice: Some(default_choice),
-      timeline: deadlines::get_refactor_me_deadline(),
-    });
+		if !able {
+			return Ok(TaskProgressResult::TaskComplete);
+		}
+
+		let default_choice = context.id_generator.generate();
+		options.push(TasksChoice::new(
+			default_choice,
+			Choice::DoNotPlayImmediately,
+			ChoiceDisplayType::No,
+			vec![],
+		));
+
+		game.players[player_index].choices = Some(Choices {
+			choices_type: ChoicesType::PlayOneOfImmediately,
+			options,
+			default_choice: Some(default_choice),
+			timeline: deadlines::get_refactor_me_deadline(),
+		});
 		Ok(TaskProgressResult::TaskComplete)
 	}
 	fn label(&self) -> String {

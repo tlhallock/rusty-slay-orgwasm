@@ -25,6 +25,7 @@ yew = { version = "0.20.0", features = ["csr"] }
 
 strum = "0.24.1"
 enum-iterator = "1.2.0"
+thiserror = "1.0.38"
 
 # Has to be disabled to run in browser...
 # simple-logging = "2.0.2"

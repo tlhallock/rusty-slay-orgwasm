@@ -4,7 +4,7 @@ use crate::slay::specification::CardSpec;
 use crate::slay::specification::CardType;
 use crate::slay::specification::HeroType;
 use crate::slay::specification::ItemType;
-use crate::slay::specs::cards::SlayCardSpec;
+use crate::slay::specs::cards::card_type::SlayCardSpec;
 use crate::slay::specs::hero::HeroAbility;
 use crate::slay::specs::hero::HeroAbilityType;
 use crate::slay::specs::items::Item;
@@ -12,6 +12,8 @@ use crate::slay::specs::magic::MagicSpell;
 use crate::slay::specs::modifier::ModifierKinds;
 use crate::slay::specs::monster::Monster;
 
+
+// TODO: Turn this into a test to ensure nothing changed in the refactor...
 impl SlayCardSpec {
 	pub fn get_card_spec_creation(self: &SlayCardSpec) -> CardSpec {
 		match self {
@@ -962,7 +964,6 @@ impl SlayCardSpec {
                   label: "Decoy Doll".to_string(),
                   image_path: "cards/items/decoy_doll.jpg".to_string(),
                   description: "If the equipped Hero card would be sacrificed or destroyed, move Decoy Doll to the discard pile instead.".to_string(),
-                  spell: Some(MagicSpell::CallToTheFallen),
                   card_modifier: Some(ItemModifier::SacrificeMeInstead),
                   ..Default::default()
                 },
@@ -971,7 +972,6 @@ impl SlayCardSpec {
                   label: "Really Big Ring".to_string(),
                   image_path: "cards/items/really_big_ring.jpg".to_string(),
                   description: "Each time you roll to use the equipped Hero card's effect, +2 to your roll.".to_string(),
-                  spell: Some(MagicSpell::CallToTheFallen),
                   card_modifier: Some(ItemModifier::AddToRollForAbility(2)),
                   repeat: 2,
                   ..Default::default()
@@ -981,7 +981,6 @@ impl SlayCardSpec {
                   label: "Particularly Rusty Coin".to_string(),
                   image_path: "cards/items/particularly_rusty_coin.jpg".to_string(),
                   description: "If you unsuccessfully roll to use the equipped Hero card's effect, DRAW a card.".to_string(),
-                  spell: Some(MagicSpell::CallToTheFallen),
                   card_modifier: Some(ItemModifier::DrawOnUnsuccessfulRollForAbility(1)),
                   repeat: 2,
                   ..Default::default()
@@ -991,7 +990,6 @@ impl SlayCardSpec {
                   label: "Sealing Key".to_string(),
                   image_path: "cards/cursed_items/sealing_key.jpg".to_string(),
                   description: "You cannot use the equipped Hero card's effect.".to_string(),
-                  spell: Some(MagicSpell::CallToTheFallen),
                   card_modifier: Some(ItemModifier::RemoveAbility),
                   ..Default::default()
                 },
@@ -1000,7 +998,6 @@ impl SlayCardSpec {
                   label: "Suspiciously Shiny Coin".to_string(),
                   image_path: "cards/cursed_items/suspiciously_shiny_coin.jpg".to_string(),
                   description: "If you sucessfully roll to use the equipped Hero card's effect, DISCARD a card.".to_string(),
-                  spell: Some(MagicSpell::CallToTheFallen),
                   card_modifier: Some(ItemModifier::DiscardOnSuccessfulRollForAbility(1)),
                   ..Default::default()
                 },
@@ -1009,7 +1006,6 @@ impl SlayCardSpec {
                   label: "Curse of the Snake's Eyes".to_string(),
                   image_path: "cards/cursed_items/curse_of_the_snakes_eyes.jpg".to_string(),
                   description: "Each time you roll to use the equipped Hero card's effect, -2 to your roll.".to_string(),
-                  spell: Some(MagicSpell::CallToTheFallen),
                   card_modifier: Some(ItemModifier::AddToRollForAbility(-2)),
                   repeat: 2,
                   ..Default::default()

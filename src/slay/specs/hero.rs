@@ -39,7 +39,7 @@ use crate::slay::tasks::tasks::return_modifiers::ReturnModifierTask;
 use crate::slay::tasks::tasks::search_discard::SearchDiscard;
 use crate::slay::tasks::tasks::trade_hands::TradeHands;
 
-use super::cards::SlayCardSpec;
+use super::cards::card_type::SlayCardSpec;
 
 #[derive(Debug, Clone)]
 pub struct HeroAbility {
@@ -114,12 +114,12 @@ pub enum HeroAbilityType {
 }
 
 impl HeroAbilityType {
-	pub fn label(&self) -> String {
+	pub fn label(&self) -> &'static str {
 		// Kind of backwards: that method should call this one...
 		SlayCardSpec::HeroCard(*self).label()
 	}
 
-	pub fn get_hero_type(&self) -> HeroType {
+	pub fn hero_type(&self) -> HeroType {
 		let ret = match self {
 			HeroAbilityType::PlunderingPuma
 			| HeroAbilityType::SlipperyPaws
@@ -321,18 +321,13 @@ impl HeroAbilityType {
 				ClearParamsTask::create(),
 			],
 			HeroAbilityType::BadAxe => vec![DestroyTask::create()],
-			HeroAbilityType::ToughTeddy => vec![
-				PlayersWithHeroTypeDiscard::create(HeroType::Fighter)
-			],
+			HeroAbilityType::ToughTeddy => vec![PlayersWithHeroTypeDiscard::create(HeroType::Fighter)],
 			HeroAbilityType::BearClaw => vec![
 				ChoosePlayerParameterTask::exclude_self(
 					TaskParamName::BearClawVictim,
 					"BearClaw: Who would you like to pull from?",
 				),
-				PullFromTask::record_pulled(
-					TaskParamName::BearClawVictim,
-					TaskParamName::BearClawCard,
-				),
+				PullFromTask::record_pulled(TaskParamName::BearClawVictim, TaskParamName::BearClawCard),
 				PullAgain::create(
 					TaskParamName::BearClawVictim,
 					TaskParamName::BearClawCard,
@@ -358,8 +353,8 @@ impl HeroAbilityType {
 			],
 			HeroAbilityType::BearyWise => vec![], ////////////////////////////////////
 			HeroAbilityType::Hook => vec![
-				Hook::create(),
-				OfferPlayImmediately::with_an_extra_task,
+				// Hook::create(),
+				// OfferPlayImmediately::with_an_extra_task(),
 				// There is similar logic in... immediately.rs
 				DrawTask::create(1),
 			],
@@ -380,10 +375,7 @@ impl HeroAbilityType {
 				// Bullseye::create(),
 			],
 			HeroAbilityType::SharpFox => vec![], /////////////////////////////////////
-			HeroAbilityType::FuzzyCheeks => vec![
-				DrawTask::create(1),
-				PlaceHero::create(),
-			], //////////////////////////////////
+			HeroAbilityType::FuzzyCheeks => vec![DrawTask::create(1), PlaceHero::create()], //////////////////////////////////
 			HeroAbilityType::Peanut => vec![DrawTask::create(2)],
 			HeroAbilityType::NappingNibbles => vec![/* This one actually is empty. */],
 			HeroAbilityType::TipsyTootie => vec![], //////////////////////////////////
@@ -420,23 +412,13 @@ impl HeroAbilityType {
 					TaskParamName::CardToSteal,
 					"Which hero card would you like to steal?",
 				),
-				StealCardFromTask::create(
-					TaskParamName::WigglesVictim,
-					TaskParamName::WigglesCard,
-				),
-				OfferPlayImmediately::create(
-					TaskParamName::WigglesCard,
-					PlayImmediatelyFilter::None,
-				),
+				StealCardFromTask::create(TaskParamName::WigglesVictim, TaskParamName::WigglesCard),
+				OfferPlayImmediately::create(TaskParamName::WigglesCard, PlayImmediatelyFilter::None),
 				ClearParamsTask::create(),
 			],
-			HeroAbilityType::Spooky => vec![
-				Spooky::create(),
-			],
+			HeroAbilityType::Spooky => vec![Spooky::create()],
 			HeroAbilityType::Snowball => vec![
-				DrawTask::into_param(
-					TaskParamName::SnowballCard
-				),
+				DrawTask::into_param(TaskParamName::SnowballCard),
 				OfferPlayImmediately::with_an_extra_task(
 					TaskParamName::SnowballCard,
 					PlayImmediatelyFilter::IsMagic,

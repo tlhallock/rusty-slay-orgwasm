@@ -17,7 +17,7 @@ use crate::slay::showdown::roll::ChallengeReason;
 use crate::slay::showdown::roll_state::RollReason;
 use crate::slay::showdown::roll_state::RollState;
 use crate::slay::specification::HeroType;
-use crate::slay::specs::cards::SlayCardSpec;
+use crate::slay::specs::cards::card_type::SlayCardSpec;
 use crate::slay::specs::magic::MagicSpell;
 use crate::slay::specs::monster;
 use crate::slay::state::deck::DeckPath;
@@ -177,17 +177,12 @@ pub fn create_place_item_choice(
 	display_type: ChoiceDisplayType,
 	item_card: AnotherItemType,
 ) -> Option<TasksChoice> {
-	create_place_item_challenge_offer(
-		context, game, placer_index, card,
-	).map(|challenge_offer| {
+	create_place_item_challenge_offer(context, game, placer_index, card).map(|challenge_offer| {
 		TasksChoice::new(
 			id,
 			Choice::UseActionPoints(Action::PlaceItem(item_card)),
 			display_type,
-			vec![
-				Box::new(RemoveActionPointsTask::new(1)),
-				challenge_offer,
-			],
+			vec![Box::new(RemoveActionPointsTask::new(1)), challenge_offer],
 		)
 	})
 }
@@ -307,37 +302,35 @@ fn create_hand_action_choice(
 	player_index: ids::PlayerIndex,
 	card_path: CardPath,
 ) -> Option<TasksChoice> {
+	// unnecessary...
+	let id = context.id_generator.generate();
 	match game.card(card_path).card_type {
-    SlayCardSpec::HeroCard(hero_card) => Some(
-			create_place_hero_choice(
-				context,
-				game,
-				player_index,
-				card_path,
-				hero_card,
-			)
-		),
-    SlayCardSpec::Item(item_card) => create_place_item_choice(
+		SlayCardSpec::HeroCard(hero_card) => Some(create_place_hero_choice(
 			context,
 			game,
 			player_index,
-			context.id_generator.generate(),
+			card_path,
+			hero_card,
+		)),
+		SlayCardSpec::Item(item_card) => create_place_item_choice(
+			context,
+			game,
+			player_index,
+			id,
 			game.card(card_path),
 			card_path.display().to_highlight(),
 			item_card,
 		),
-    SlayCardSpec::MagicCard(spell) => Some(
-			create_cast_magic_choice(
-				game,
-				player_index,
-				context.id_generator.generate(),
-				card_path,
-				spell,
-			)
-		),
-    SlayCardSpec::Challenge 
-		| SlayCardSpec::MonsterCard(_)
-		| SlayCardSpec::PartyLeader(_) => { unreachable!(); },
+		SlayCardSpec::MagicCard(spell) => Some(create_cast_magic_choice(
+			game,
+			player_index,
+			id,
+			card_path,
+			spell,
+		)),
+		SlayCardSpec::Challenge | SlayCardSpec::MonsterCard(_) | SlayCardSpec::PartyLeader(_) => {
+			unreachable!();
+		}
 		_ => None,
 	}
 }

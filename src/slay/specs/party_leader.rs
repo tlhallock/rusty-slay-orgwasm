@@ -1,7 +1,7 @@
 use crate::slay::modifiers::PlayerModifier;
 use crate::slay::specification::HeroType;
 
-use crate::slay::specs::cards::SlayCardSpec;
+use crate::slay::specs::cards::card_type::SlayCardSpec;
 
 impl SlayCardSpec {
 	pub fn create_party_leader_buffs(&self) -> Option<PlayerModifier> {

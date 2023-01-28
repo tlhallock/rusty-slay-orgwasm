@@ -9,7 +9,7 @@ use crate::slay::driver::AdvanceGameResult;
 use crate::slay::game_context::GameBookKeeping;
 use crate::slay::ids;
 use crate::slay::notification::Notification;
-use crate::slay::specs::cards::SlayCardSpec;
+use crate::slay::specs::cards::card_type::SlayCardSpec;
 use crate::slay::state::game::Game;
 use crate::slay::state::game::GamePerspective;
 use crate::slay::state::game::GameStaticInformation;

@@ -1,4 +1,3 @@
-
 use crate::slay::errors::SlayResult;
 use crate::slay::game_context::GameBookKeeping;
 use crate::slay::ids;
@@ -27,9 +26,9 @@ impl PlayerTask for Spooky {
 			if player_index == victim_index {
 				continue;
 			}
-      game.players[victim_index].tasks.prepend(
-        Sacrifice::create(1)
-      );
+			game.players[victim_index]
+				.tasks
+				.prepend(Sacrifice::create(1));
 		}
 		Ok(TaskProgressResult::TaskComplete)
 	}

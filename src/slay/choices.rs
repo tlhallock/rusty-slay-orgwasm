@@ -7,7 +7,7 @@ use crate::slay::ids;
 use crate::slay::showdown::completion::Completion;
 use crate::slay::showdown::roll_modification::ModificationPath;
 use crate::slay::showdown::roll_modification::RollModificationChoiceType;
-use crate::slay::specs::cards::SlayCardSpec;
+use crate::slay::specs::cards::card_type::SlayCardSpec;
 use crate::slay::state::deck::DeckPath;
 use crate::slay::state::game::Game;
 use crate::slay::state::summarizable::Summarizable;
@@ -179,7 +179,7 @@ impl Choice {
 			Choice::SetCardParameter(parameter, card) => {
 				format!("Set {:?} to {}.", parameter, card.label())
 			}
-			Choice::ChooseDiscardedCard(spec) => spec.get_card_spec_creation().label,
+			Choice::ChooseDiscardedCard(spec) => spec.label().to_owned(),
 			Choice::ReturnItem(item, hero) => format!("Return {} from {}", item.label(), hero.label(),),
 			Choice::PlayImmediately(card) => format!("Play {} immediately", card.label(),),
 			Choice::DoNotPlayImmediately => String::from("Do not play immediately"),
@@ -194,10 +194,10 @@ impl Choice {
 				// Are we sure it was pulled?
 				"Reveal that you pulled a challenge card, so you can destroy a hero card.",
 			),
-			
-	    Choice::PlaceHeroImmediately(hero_card) => format!(
-				"Place {} in you party immediately.", hero_card.label(),
-			),
+
+			Choice::PlaceHeroImmediately(hero_card) => {
+				format!("Place {} in you party immediately.", hero_card.label(),)
+			}
 		}
 	}
 	pub fn get_notification(
@@ -297,7 +297,7 @@ impl Choice {
 				"{} drew a challenge card, and will now destroy a hero card.",
 				game.player_name(player_index)
 			),
-	    Choice::PlaceHeroImmediately(hero_card) => format!(
+			Choice::PlaceHeroImmediately(hero_card) => format!(
 				"{} placed {} in their party immediately",
 				game.player_name(player_index),
 				hero_card.label(),
@@ -323,7 +323,7 @@ impl ChoicesType {
 			ChoicesType::OfferChallenges => String::from("Choose whether to challenge."),
 			ChoicesType::PlayImmediately(card) => format!(
 				"You have received {}, would you like to play it immediately?",
-				card.get_card_spec_creation().label,
+				card.label(),
 			),
 			ChoicesType::ModifyRoll => String::from("Choose whether to modify the current roll."),
 			ChoicesType::Discard => String::from("Choose a card in your hand to discard."),
@@ -343,9 +343,10 @@ impl ChoicesType {
 			ChoicesType::RevealAndDestroy => String::from(
 				"Would you like to reveal and destroy?", // TODO: reveal what? (the card you drew? that it was a hero?)
 			),
-	    ChoicesType::PlaceAHeroCard => String::from(
-				"whice hero would you like to place in your party?"
-			),
+			ChoicesType::PlaceAHeroCard => {
+				String::from("whice hero would you like to place in your party?")
+			}
+			ChoicesType::PlayOneOfImmediately => String::from("Which card would you like to play?"),
 		}
 	}
 }
@@ -698,7 +699,10 @@ pub enum ChoiceDisplayType {
 
 impl ChoiceDisplayType {
 	pub fn hand_card(player_index: ids::PlayerIndex, card_id: ids::CardId) -> ChoiceDisplayType {
-		ChoiceDisplayType::HighlightPath(DisplayPath::CardAt(CardPath::TopCardIn(DeckPath::Hand(player_index), card_id)))
+		ChoiceDisplayType::HighlightPath(DisplayPath::CardAt(CardPath::TopCardIn(
+			DeckPath::Hand(player_index),
+			card_id,
+		)))
 	}
 
 	pub fn represents(&self, display_path: &DisplayPath) -> bool {

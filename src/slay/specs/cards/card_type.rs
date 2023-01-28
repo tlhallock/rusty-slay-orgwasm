@@ -27,18 +27,9 @@ pub enum SlayCardSpec {
 }
 
 impl SlayCardSpec {
-	pub fn label(&self) -> String {
-		self.get_card_spec_creation().label
-	}
-	pub fn description(&self) -> String {
-		String::from("")
-	}
-	pub fn image_path(&self) -> String {
-		String::from("")
-	}
-	pub fn get_hero_type(&self) -> Option<HeroType> {
+	pub fn hero_type(&self) -> Option<HeroType> {
 		match self {
-			SlayCardSpec::HeroCard(hero_card) => Some(hero_card.get_hero_type()),
+			SlayCardSpec::HeroCard(hero_card) => Some(hero_card.hero_type()),
 			SlayCardSpec::PartyLeader(hero_type) => Some(*hero_type),
 			_ => None,
 		}

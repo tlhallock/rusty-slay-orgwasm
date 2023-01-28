@@ -2,7 +2,7 @@ use enum_iterator::Sequence;
 
 use crate::slay::specification::HeroType;
 
-use super::cards::SlayCardSpec;
+use crate::slay::specs::cards::card_type::SlayCardSpec;
 
 #[derive(Debug, Clone, Sequence, PartialEq, Copy)]
 pub enum Item {
@@ -26,7 +26,7 @@ pub enum AnotherItemType {
 	NotMask(Item),
 }
 impl AnotherItemType {
-	pub fn label(&self) -> String {
+	pub fn label(&self) -> &'static str {
 		SlayCardSpec::Item(*self).label()
 	}
 }

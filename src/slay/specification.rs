@@ -80,21 +80,18 @@ impl CardSpec {
 		}
 	}
 
-	pub(crate) fn is_magic(&self) -> bool {
-		matches!(&self.card_type, CardType::Magic)
-	}
+	// pub(crate) fn is_magic(&self) -> bool {
+	// 	matches!(&self.card_type, CardType::Magic)
+	// }
 
-	pub(crate) fn is_hero(&self) -> bool {
-		matches!(&self.card_type, CardType::Hero(_))
-	}
+	// pub(crate) fn is_hero(&self) -> bool {
+	// 	matches!(&self.card_type, CardType::Hero(_))
+	// }
 
 	pub(crate) fn is_challenge(&self) -> bool {
 		matches!(&self.card_type, CardType::Challenge)
 	}
 
-	pub(crate) fn get_image_path(&self) -> String {
-		format!("imgs/{}", self.image_path)
-	}
 }
 
 impl Default for CardSpec {
@@ -163,7 +160,7 @@ pub enum HeroType {
 }
 
 impl HeroType {
-	pub fn get_game_version(&self) -> GameVersion {
+	pub fn game_version(&self) -> GameVersion {
 		match self {
 			HeroType::Bard => GameVersion::Original,
 			HeroType::Wizard => GameVersion::Original,

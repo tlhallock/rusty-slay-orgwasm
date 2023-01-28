@@ -1,3 +1,4 @@
+pub mod card_descriptions;
 pub mod cards;
 pub mod challenge;
 pub mod hero;

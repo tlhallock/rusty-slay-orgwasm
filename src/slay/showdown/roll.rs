@@ -1,4 +1,4 @@
-use crate::slay::specs::cards::SlayCardSpec;
+use crate::slay::specs::cards::card_type::SlayCardSpec;
 
 use rand::Rng;
 

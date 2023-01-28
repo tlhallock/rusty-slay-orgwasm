@@ -23,7 +23,7 @@ use crate::slay::tasks::tasks::return_modifiers::ReturnModifierTask;
 use crate::slay::tasks::tasks::search_discard::create_search_discard_choices;
 use crate::slay::tasks::tasks::search_discard::SearchDiscardFilters;
 
-use super::cards::SlayCardSpec;
+use super::cards::card_type::SlayCardSpec;
 
 // Rename this to magic card.
 #[derive(Debug, Clone, Copy, Sequence, PartialEq)]
@@ -32,13 +32,14 @@ pub enum MagicSpell {
 	CriticalBoost,
 	DestructiveSpell,
 	WindsOfChange,
+	// TODO: rename this
 	EnchangedSpell,
 	ForcedExchange,
 	ForcefulWinds,
 	CallToTheFallen,
 }
 impl MagicSpell {
-	pub fn label(&self) -> String {
+	pub fn label(&self) -> &'static str {
 		SlayCardSpec::MagicCard(*self).label()
 	}
 

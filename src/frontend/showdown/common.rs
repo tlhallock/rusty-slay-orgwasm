@@ -17,7 +17,7 @@ use crate::slay::showdown::completion::Completion;
 use crate::slay::showdown::roll_modification::ModificationOrigin;
 use crate::slay::showdown::roll_modification::RollModification;
 use crate::slay::showdown::roll_modification::RollModificationChoiceType;
-use crate::slay::specs::cards::SlayCardSpec;
+use crate::slay::specs::cards::card_type::SlayCardSpec;
 use crate::slay::specs::modifier::ModifierKinds;
 
 #[derive(Properties, PartialEq)]

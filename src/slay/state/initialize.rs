@@ -7,7 +7,7 @@ use rand::Rng;
 use crate::slay::actions;
 use crate::slay::game_context::GameBookKeeping;
 use crate::slay::ids;
-use crate::slay::specs::cards::SlayCardSpec;
+use crate::slay::specs::cards::card_type::SlayCardSpec;
 use crate::slay::specs::hero::HeroAbilityType;
 use crate::slay::state::game::Game;
 
@@ -39,7 +39,7 @@ fn initialize_global_decks(context: &mut GameBookKeeping, game: &mut Game) {
 			return;
 		}
 
-		for _ in 0..spec.repeat {
+		for _ in 0..spec_type.repeat() {
 			let stack = Stack::new(Card::new(
 				context.id_generator.generate(),
 				spec_type.to_owned(),

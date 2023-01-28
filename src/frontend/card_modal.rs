@@ -5,7 +5,7 @@ use yew::prelude::*;
 
 use crate::frontend::app::CommonProps;
 use crate::slay::choices::ChoicePerspective;
-use crate::slay::specs::cards::SlayCardSpec;
+use crate::slay::specs::cards::card_type::SlayCardSpec;
 
 #[derive(Clone, PartialEq)]
 pub struct CardModalInfo {
@@ -48,18 +48,18 @@ pub fn view_card_details(props: &CardModalProps) -> Html {
 			<div class={classes!("card-modal")} onclick={clear_card}>
 					<div class={classes!("modal-content")}>
 							<h1>
-									{props.info.spec.get_card_spec_creation().label}
+									{props.info.spec.label()}
 							</h1>
 							<br/>
 							<label>
-									{props.info.spec.get_card_spec_creation().description}
+									{props.info.spec.description()}
 							</label>
 							<br/>
 							{for choices}
 							<br/>
 							<img
-									src={props.info.spec.get_card_spec_creation().get_image_path()}
-									alt={props.info.spec.get_card_spec_creation().description}
+									src={props.info.spec.image_path()}
+									alt={props.info.spec.description()}
 									width={500}
 							/>
 					</div>

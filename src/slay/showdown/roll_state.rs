@@ -18,7 +18,7 @@ use crate::slay::showdown::roll::Roll;
 use crate::slay::showdown::roll_choices;
 use crate::slay::showdown::roll_modification::ModificationPath;
 use crate::slay::showdown::roll_modification::RollModification;
-use crate::slay::specs::cards::SlayCardSpec;
+use crate::slay::specs::cards::card_type::SlayCardSpec;
 use crate::slay::state::game::Game;
 use crate::slay::state::game::GameStaticInformation;
 use crate::slay::tasks::tasks::set_complete;
