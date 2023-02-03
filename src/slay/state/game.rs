@@ -299,7 +299,7 @@ impl Game {
 
 	pub(crate) fn clear_choices(&mut self) {
 		for player in self.players.iter_mut() {
-			player.choices = None;
+			player.choices_ = None;
 		}
 	}
 }
@@ -355,6 +355,7 @@ impl Game {
 			players: self
 				.players
 				.iter()
+				// TODO: Visible hands!!!!
 				.map(|p| PlayerStaticInformation {
 					name: p.name.to_owned(),
 					leader: p.leader.to_owned(),
@@ -364,7 +365,7 @@ impl Game {
 	}
 	pub fn to_player_perspective(&self, viewing_player: Option<ids::PlayerIndex>) -> GamePerspective {
 		let choices = &if let Some(player_index) = viewing_player {
-			self.players[player_index].choices.as_ref()
+			self.players[player_index].choices_.as_ref()
 		} else {
 			None
 		};

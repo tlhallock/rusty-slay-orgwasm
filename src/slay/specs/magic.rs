@@ -82,25 +82,20 @@ impl MagicSpell {
 			}
 			MagicSpell::ForcedExchange => {
 				let tasks = &mut vec![
-					ChoosePlayerParameterTask::exclude_self(
-						TaskParamName::ForcedExchangeVictim,
-						"Choose a player to forcefully exchange heros with.",
-					),
+					ChoosePlayerParameterTask::exclude_self(TaskParamName::ForcedExchangeVictim),
 					ChooseCardFromPlayerParameterTask::from_party(
 						TaskParamName::ForcedExchangeVictim,
 						TaskParamName::ForcedExchangeVictimCard,
-						"Which hero card would you like to steal?",
 					),
 					StealCardFromTask::create(
 						TaskParamName::ForcedExchangeVictim,
 						TaskParamName::ForcedExchangeVictimCard,
 					),
-					// Note: Should we check if we win here?!?!?!
+					// TODO: Should we check if we win here?!?!?!
 					SetParameterToMyself::create(TaskParamName::ForcedExchangeSelf),
 					ChooseCardFromPlayerParameterTask::from_party(
 						TaskParamName::ForcedExchangeSelf,
 						TaskParamName::ForcedExchangeVictimDonationCard,
-						"Which hero card would you like to move to their hand?",
 					),
 					UnStealCardFromTask::create(
 						TaskParamName::ForcedExchangeSelf,
@@ -124,8 +119,9 @@ impl MagicSpell {
 				Ok(TaskProgressResult::TaskComplete)
 			}
 			MagicSpell::CallToTheFallen => {
-				game.players[player_index].choices =
+				let choices =
 					create_search_discard_choices(context, game, player_index, SearchDiscardFilters::IsHero);
+				game.players[player_index].set_choices(choices);
 				Ok(TaskProgressResult::TaskComplete)
 			}
 		}

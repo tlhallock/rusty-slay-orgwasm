@@ -100,7 +100,7 @@ impl RollConsequences {
 		roll_sum: i32,
 		player_index: ids::PlayerIndex,
 	) {
-		game.players.iter_mut().for_each(|p| p.choices = None);
+		game.players.iter_mut().for_each(|p| p.clear_choices());
 		// TODO: An extra copy here...
 		let mut tasks = self.take_tasks_for(roll_sum);
 		game.players[player_index].tasks.take_from(&mut tasks);

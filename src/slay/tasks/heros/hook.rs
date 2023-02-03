@@ -39,7 +39,7 @@ impl PlayerTask for Hook {
 		game: &mut Game,
 		player_index: ids::PlayerIndex,
 	) -> SlayResult<TaskProgressResult> {
-		let mut cards = game.players[player_index]
+		let cards = game.players[player_index]
 			.hand
 			.tops()
 			.filter(|card| self.filter.can_play_immediately(card))
@@ -78,7 +78,7 @@ impl PlayerTask for Hook {
 			vec![],
 		));
 
-		game.players[player_index].choices = Some(Choices {
+		game.players[player_index].choose(Choices {
 			choices_type: ChoicesType::PlayOneOfImmediately,
 			options,
 			default_choice: Some(default_choice),

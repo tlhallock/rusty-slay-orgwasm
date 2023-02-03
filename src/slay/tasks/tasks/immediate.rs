@@ -1,6 +1,6 @@
 use crate::slay::actions;
-use crate::slay::actions::create_place_hero_challenges;
-use crate::slay::actions::create_roll_for_ability_task;
+use crate::slay::actions::place_item;
+use crate::slay::actions::roll_for_ability;
 use crate::slay::choices::CardPath;
 use crate::slay::choices::Choice;
 use crate::slay::choices::ChoiceDisplayType;
@@ -20,6 +20,8 @@ use crate::slay::tasks::player_tasks::PlayerTask;
 use crate::slay::tasks::player_tasks::TaskProgressResult;
 use crate::slay::tasks::task_params::TaskParamName;
 
+use crate::slay::actions::place_hero;
+
 pub fn create_play_card_immediately_task(
 	context: &mut GameBookKeeping,
 	game: &Game,
@@ -31,7 +33,7 @@ pub fn create_play_card_immediately_task(
 			let hand_path = CardPath::TopCardIn(DeckPath::Hand(player_index), card.id);
 			let party_path = CardPath::TopCardIn(DeckPath::Party(player_index), card.id);
 			if let Some(_) = game.maybe_card(hand_path) {
-				Some(create_place_hero_challenges(
+				Some(place_hero::create_place_hero_challenges(
 					context,
 					game,
 					player_index,
@@ -39,7 +41,7 @@ pub fn create_play_card_immediately_task(
 					hero_card,
 				))
 			} else if let Some(_) = game.maybe_card(party_path) {
-				Some(create_roll_for_ability_task(
+				Some(roll_for_ability::create_roll_for_ability_task(
 					context,
 					game,
 					player_index,
@@ -52,7 +54,7 @@ pub fn create_play_card_immediately_task(
 		}
 		SlayCardSpec::MagicCard(_) => todo!(),
 		SlayCardSpec::Item(_) => {
-			actions::create_place_item_challenge_offer(context, game, player_index, card)
+			place_item::create_place_item_challenge_offer(context, game, player_index, card)
 		}
 		SlayCardSpec::ModifierCard(_)
 		| SlayCardSpec::PartyLeader(_)
@@ -79,7 +81,7 @@ pub fn play_card_immediately(
 	}
 
 	let default_choice = context.id_generator.generate();
-	game.players[player_index].choices = Some(Choices {
+	game.players[player_index].choose(Choices {
 		choices_type: ChoicesType::PlayImmediately(card.card_type),
 		timeline: deadlines::get_refactor_me_deadline(),
 		default_choice: Some(default_choice),

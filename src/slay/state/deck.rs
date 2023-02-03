@@ -346,6 +346,10 @@ impl Deck {
 		}
 		None
 	}
+
+	pub fn swap_first_cards(&mut self) {
+		self.stacks.swap(0, 1);
+	}
 }
 
 impl Summarizable for Deck {

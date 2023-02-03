@@ -25,6 +25,7 @@ use crate::slay::state::summarizable::Summarizable;
 use crate::slay::state::turn::Turn;
 use crate::slay::tasks::player_tasks::PlayerTask;
 use crate::slay::tasks::player_tasks::PlayerTasks;
+use crate::slay::tasks::tasks::choose::ChooseTask;
 
 use enum_iterator::all;
 use std::collections::HashMap;
@@ -102,7 +103,7 @@ pub struct Player {
 	pub name: String,
 
 	pub temporary_buffs: PlayerBuffs,
-	pub choices: Option<Choices>,
+	pub choices_: Option<Choices>,
 	pub tasks: PlayerTasks,
 
 	pub leader: Card,
@@ -111,13 +112,22 @@ pub struct Player {
 	pub party: Deck,
 	pub slain_monsters: Deck,
 
+	pub visible_hands: HashSet<ids::PlayerIndex>,
+
 	played_this_turn: HashSet<ids::CardId>,
 	remaining_action_points: u32,
-	// current modifiers
-	// player information
 }
 
 impl Player {
+	pub fn choose(&mut self, choices: Choices) {
+		self.tasks.append(ChooseTask::create(choices));
+	}
+	pub fn set_choices(&mut self, choices: Option<Choices>) {
+		if let Some(choices) = choices {
+			self.tasks.append(ChooseTask::create(choices));
+		}
+	}
+
 	pub fn put_current_task_back(&mut self, task: Box<dyn PlayerTask>) -> errors::SlayResult<()> {
 		self.tasks.put_current_task_back(task)?;
 		Ok(())
@@ -132,7 +142,7 @@ impl Player {
 		Player {
 			player_index,
 			name,
-			choices: None,
+			choices_: None,
 			tasks: Default::default(),
 			remaining_action_points: 0,
 			leader,
@@ -150,6 +160,7 @@ impl Player {
 				path: DeckPath::SlainMonsters(player_index),
 			}),
 			played_this_turn: Default::default(),
+			visible_hands: Default::default(),
 		}
 	}
 
@@ -177,6 +188,7 @@ impl Player {
 
 	pub fn turn_end(&mut self) {
 		self.played_this_turn.clear();
+		self.visible_hands.clear();
 	}
 
 	pub fn count_hero_types(&self, hero_types: &mut HeroTypeCounter) {
@@ -261,6 +273,14 @@ impl Player {
 				.collect(),
 		}
 	}
+
+	pub(crate) fn has_choices(&self) -> bool {
+		self.choices_.is_some()
+	}
+
+	pub(crate) fn clear_choices(&mut self) {
+		self.choices_ = None;
+	}
 }
 
 impl Summarizable for Player {
@@ -277,7 +297,7 @@ impl Summarizable for Player {
 		self.party.summarize(f, indentation_level + 1)?;
 		self.slain_monsters.summarize(f, indentation_level + 1)?;
 
-		if let Some(choices) = self.choices.as_ref() {
+		if let Some(choices) = self.choices_.as_ref() {
 			choices.summarize(f, indentation_level + 1)?;
 		}
 		self.tasks.summarize(f, indentation_level + 1)?;

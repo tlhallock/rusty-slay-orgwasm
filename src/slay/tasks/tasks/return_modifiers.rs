@@ -84,7 +84,7 @@ impl PlayerTask for ReturnModifierTask {
 		if options.is_empty() {
 			return Ok(TaskProgressResult::TaskComplete);
 		}
-		game.players[chooser_index].choices = Some(Choices {
+		game.players[chooser_index].choose(Choices {
 			choices_type: ChoicesType::ReturnAnItemCard,
 			default_choice: None,
 			options,

@@ -37,7 +37,7 @@ impl PlayerTask for QiBear {
 		}
 		let default_choice = context.id_generator.generate();
 
-		game.players[player_index].choices = Some(Choices {
+		game.players[player_index].choose(Choices {
 			choices_type: ChoicesType::ContinueDiscardingAndDestroying(self.num_remaining),
 			default_choice: None,
 			timeline: deadlines::get_refactor_me_deadline(),

@@ -96,7 +96,7 @@ impl PlayerTask for QuickDrawStyle {
 		add_play_immediately_choice(context, game, player_index, card_1_option, &mut options);
 		add_play_immediately_choice(context, game, player_index, card_2_option, &mut options);
 
-		game.players[player_index].choices = Some(Choices {
+		game.players[player_index].choose(Choices {
 			choices_type: ChoicesType::PlayOneOfImmediately,
 			options,
 			default_choice: Some(default_choice),

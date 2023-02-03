@@ -60,6 +60,8 @@ impl RollState {
 		game: &Game,
 		roller_index: ids::PlayerIndex,
 		consequences: RollConsequences,
+		// We could use this to create the tasks after the roll is done,
+		// rather than creating the tasks ahead of time.
 		reason: RollReason,
 	) -> Self {
 		Self {

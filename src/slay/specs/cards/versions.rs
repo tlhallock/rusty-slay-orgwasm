@@ -1,7 +1,6 @@
-use crate::slay::specification::{GameVersion};
+use crate::slay::specification::GameVersion;
 use crate::slay::specs::cards::card_type::SlayCardSpec;
-use crate::slay::specs::items::{AnotherItemType};
-
+use crate::slay::specs::items::AnotherItemType;
 
 impl SlayCardSpec {
 	pub fn game_version(&self) -> GameVersion {

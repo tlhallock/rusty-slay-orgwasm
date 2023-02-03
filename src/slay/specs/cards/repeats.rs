@@ -6,18 +6,14 @@ use crate::slay::specs::modifier::ModifierKinds;
 impl SlayCardSpec {
 	pub fn repeat(&self) -> u32 {
 		match self {
-			SlayCardSpec::HeroCard(_)
-			| SlayCardSpec::PartyLeader(_)
-			| SlayCardSpec::MonsterCard(_) => 1,
+			SlayCardSpec::HeroCard(_) | SlayCardSpec::PartyLeader(_) | SlayCardSpec::MonsterCard(_) => 1,
 			SlayCardSpec::MagicCard(spell) => match spell {
 				MagicSpell::EnganglingTrap
 				| MagicSpell::CriticalBoost
 				| MagicSpell::DestructiveSpell
 				| MagicSpell::WindsOfChange
 				| MagicSpell::EnchangedSpell => 2,
-				MagicSpell::ForcedExchange 
-        | MagicSpell::ForcefulWinds 
-        | MagicSpell::CallToTheFallen => 1,
+				MagicSpell::ForcedExchange | MagicSpell::ForcefulWinds | MagicSpell::CallToTheFallen => 1,
 			},
 			SlayCardSpec::ModifierCard(modifier_kind) => match modifier_kind {
 				ModifierKinds::Plus4 => 4,

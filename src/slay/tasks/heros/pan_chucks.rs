@@ -48,7 +48,7 @@ impl PlayerTask for PanChucksDestroy {
 			return Ok(TaskProgressResult::TaskComplete);
 		}
 		let default_choice = context.id_generator.generate();
-		game.players[player_index].choices = Some(Choices {
+		game.players[player_index].choose(Choices {
 			choices_type: ChoicesType::RevealAndDestroy,
 			timeline: deadlines::get_refactor_me_deadline(),
 			default_choice: Some(default_choice),

@@ -1,3 +1,5 @@
+pub mod beary_wise;
+pub mod bullseye;
 pub mod greedy_cheeks;
 pub mod hook;
 pub mod mimimeow;

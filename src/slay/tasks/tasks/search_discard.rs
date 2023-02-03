@@ -75,8 +75,8 @@ impl PlayerTask for SearchDiscard {
 		game: &mut Game,
 		player_index: ids::PlayerIndex,
 	) -> SlayResult<TaskProgressResult> {
-		game.players[player_index].choices =
-			create_search_discard_choices(context, game, player_index, self.filters);
+		let choices = create_search_discard_choices(context, game, player_index, self.filters);
+		game.players[player_index].set_choices(choices);
 		Ok(TaskProgressResult::TaskComplete)
 	}
 

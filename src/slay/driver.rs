@@ -1,4 +1,5 @@
 use crate::slay::actions;
+use crate::slay::actions::list_actions;
 use crate::slay::errors::SlayError;
 use crate::slay::errors::SlayResult;
 use crate::slay::game_context::GameBookKeeping;
@@ -55,7 +56,7 @@ pub fn game_is_over(game: &Game) -> Option<ids::PlayerIndex> {
 fn use_action_points(context: &mut GameBookKeeping, game: &mut Game) {
 	if game.current_player().get_remaining_action_points() > 0 {
 		log::info!("Assigning action points");
-		actions::assign_action_choices(context, game);
+		list_actions::assign_action_choices(context, game);
 		return;
 	}
 	game.current_player_mut().turn_end();
@@ -63,7 +64,7 @@ fn use_action_points(context: &mut GameBookKeeping, game: &mut Game) {
 	context.emit(&Notification::PlayersTurn(game.active_player_index()));
 	game.clear_expired_modifiers();
 	game.current_player_mut().turn_begin();
-	actions::assign_action_choices(context, game);
+	list_actions::assign_action_choices(context, game);
 }
 
 pub enum AdvanceGameResult {
@@ -73,7 +74,7 @@ pub enum AdvanceGameResult {
 }
 
 fn waiting_for_players(game: &Game) -> bool {
-	game.players.iter().any(|p| p.choices.is_some())
+	game.players.iter().any(|p| p.has_choices())
 }
 
 fn run_tasks(context: &mut GameBookKeeping, game: &mut Game) -> SlayResult<TaskProgressResult> {
@@ -135,7 +136,7 @@ pub fn make_selection(
 	// TODO: this doesn't copy a Choices on the stack does it?
 	let choices = Some(
 		game.players[player_index]
-			.choices
+			.choices_
 			.take()
 			.ok_or_else(|| SlayError::new("No active choices."))?,
 	);

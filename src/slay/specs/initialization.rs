@@ -12,7 +12,6 @@ use crate::slay::specs::magic::MagicSpell;
 use crate::slay::specs::modifier::ModifierKinds;
 use crate::slay::specs::monster::Monster;
 
-
 // TODO: Turn this into a test to ensure nothing changed in the refactor...
 impl SlayCardSpec {
 	pub fn get_card_spec_creation(self: &SlayCardSpec) -> CardSpec {

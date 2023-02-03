@@ -16,7 +16,7 @@ pub fn pick_a_random_choice(
 	let mut count = 0;
 	let mut ret = None;
 	for player in game.players.iter_mut() {
-		if let Some(choices) = player.choices.as_mut() {
+		if let Some(choices) = player.choices_.as_mut() {
 			for choice in choices.options.iter_mut() {
 				count += 1;
 				if context.rng.gen::<f32>() < 1f32 / (count as f32) {

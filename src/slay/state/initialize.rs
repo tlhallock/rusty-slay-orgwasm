@@ -5,6 +5,7 @@ use rand::prelude::SliceRandom;
 use rand::Rng;
 
 use crate::slay::actions;
+use crate::slay::actions::list_actions;
 use crate::slay::game_context::GameBookKeeping;
 use crate::slay::ids;
 use crate::slay::specs::cards::card_type::SlayCardSpec;
@@ -15,6 +16,7 @@ use crate::slay::state::deck::DeckPath;
 use crate::slay::state::player::Player;
 use crate::slay::state::stack::Card;
 use crate::slay::state::stack::Stack;
+use crate::slay::tasks::player_tasks::continue_tasks;
 
 fn bot_name(player_index: usize) -> &'static str {
 	match player_index {
@@ -96,7 +98,8 @@ pub fn initialize_game(context: &mut GameBookKeeping, game: &mut Game) {
 	// initialize the first first random player
 	game.set_active_player(context.rng.gen_range(0..game.number_of_players()));
 	game.current_player_mut().turn_begin();
-	actions::assign_action_choices(context, game);
+	list_actions::assign_action_choices(context, game);
+	continue_tasks(context, game, game.active_player_index()).expect("uh oh");
 }
 
 fn randomly_initialize_hand(
@@ -183,7 +186,8 @@ pub fn initialize_game_to_random_state(context: &mut GameBookKeeping, game: &mut
 	// initialize the first first random player
 	game.set_active_player(context.rng.gen_range(0..game.number_of_players()));
 	game.current_player_mut().turn_begin();
-	actions::assign_action_choices(context, game);
+	list_actions::assign_action_choices(context, game);
+	continue_tasks(context, game, game.active_player_index()).expect("uh oh");
 }
 
 fn stack_from(context: &mut GameBookKeeping, card: &SlayCardSpec) -> Stack {
@@ -222,7 +226,8 @@ pub fn create_state_to_test(context: &mut GameBookKeeping, game: &mut Game, card
 
 	game.set_active_player(0);
 	game.current_player_mut().turn_begin();
-	actions::assign_action_choices(context, game);
+	list_actions::assign_action_choices(context, game);
+	continue_tasks(context, game, game.active_player_index()).expect("uh oh");
 }
 
 pub struct InitialAssignmentRequirements {

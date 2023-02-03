@@ -29,7 +29,7 @@ impl PlayerTask for SetCompleteTask {
 		game
 			.showdown
 			.set_player_completion(player_index, self.persist)?;
-		game.players[player_index].choices = None;
+		game.players[player_index].clear_choices();
 		Ok(TaskProgressResult::TaskComplete)
 	}
 	fn label(&self) -> String {

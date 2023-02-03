@@ -91,7 +91,6 @@ impl CardSpec {
 	pub(crate) fn is_challenge(&self) -> bool {
 		matches!(&self.card_type, CardType::Challenge)
 	}
-
 }
 
 impl Default for CardSpec {

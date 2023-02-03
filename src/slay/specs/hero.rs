@@ -18,7 +18,10 @@ use crate::slay::tasks::core::pull::PullFromTask;
 use crate::slay::tasks::core::sacrifice::Sacrifice;
 use crate::slay::tasks::core::steal::StealCardFromTask;
 use crate::slay::tasks::core::steal::StealTask;
+use crate::slay::tasks::heros::beary_wise::BearyWise;
+use crate::slay::tasks::heros::bullseye::Bullseye;
 use crate::slay::tasks::heros::greedy_cheeks::GreedyCheeks;
+use crate::slay::tasks::heros::hook::Hook;
 use crate::slay::tasks::heros::mimimeow::Mimimeow;
 use crate::slay::tasks::heros::pan_chucks::PanChucksDestroy;
 use crate::slay::tasks::heros::qi_bear::QiBear;
@@ -29,6 +32,7 @@ use crate::slay::tasks::player_tasks::PlayerTask;
 use crate::slay::tasks::task_params::TaskParamName;
 use crate::slay::tasks::tasks::immediate::OfferPlayImmediately;
 use crate::slay::tasks::tasks::immediate::PlayImmediatelyFilter;
+use crate::slay::tasks::tasks::move_card::MoveCardTask;
 use crate::slay::tasks::tasks::params::ChooseCardFromPlayerParameterTask;
 use crate::slay::tasks::tasks::params::ChoosePlayerParameterTask;
 use crate::slay::tasks::tasks::params::ClearParamsTask;
@@ -38,6 +42,8 @@ use crate::slay::tasks::tasks::receive_modifier::ReceiveModifier;
 use crate::slay::tasks::tasks::return_modifiers::ReturnModifierTask;
 use crate::slay::tasks::tasks::search_discard::SearchDiscard;
 use crate::slay::tasks::tasks::trade_hands::TradeHands;
+use crate::slay::tasks::tasks::unsteal_to::UnstealTo;
+use crate::slay::tasks::tasks::view_hand::ViewHand;
 
 use super::cards::card_type::SlayCardSpec;
 
@@ -196,20 +202,14 @@ impl HeroAbilityType {
 	pub fn create_tasks(&self) -> Vec<Box<dyn PlayerTask>> {
 		match self {
 			HeroAbilityType::PlunderingPuma => vec![
-				ChoosePlayerParameterTask::exclude_self(
-					TaskParamName::PlayerToPullFrom,
-					"Choose a player to pull from.",
-				),
+				ChoosePlayerParameterTask::exclude_self(TaskParamName::PlayerToPullFrom),
 				PullFromTask::create(TaskParamName::PlayerToPullFrom),
 				PullFromTask::create(TaskParamName::PlayerToPullFrom),
 				VictimDraws::create(TaskParamName::PlayerToPullFrom),
 				ClearParamsTask::create(),
 			],
 			HeroAbilityType::SlipperyPaws => vec![
-				ChoosePlayerParameterTask::exclude_self(
-					TaskParamName::SlipperyPawsVictim,
-					"Choose a player to pull 2 cards from, you will have to discard one of them.",
-				),
+				ChoosePlayerParameterTask::exclude_self(TaskParamName::SlipperyPawsVictim),
 				PullFromTask::record_pulled(
 					TaskParamName::SlipperyPawsVictim,
 					TaskParamName::SlipperyPawsVictimPulledCard1,
@@ -223,55 +223,41 @@ impl HeroAbilityType {
 			],
 			HeroAbilityType::SmoothMimimeow => vec![Mimimeow::create(), ClearParamsTask::create()],
 			HeroAbilityType::Meowzio => vec![
-				ChoosePlayerParameterTask::exclude_self(
-					TaskParamName::MeowzioVictim,
-					"Choose a player to steal and pull from.",
-				),
+				ChoosePlayerParameterTask::exclude_self(TaskParamName::MeowzioVictim),
 				PullFromTask::create(TaskParamName::MeowzioVictim),
 				ChooseCardFromPlayerParameterTask::from_party(
 					TaskParamName::MeowzioVictim,
 					TaskParamName::MeowzioCard,
-					"Which hero card would you like to steal?",
 				),
 				StealCardFromTask::create(TaskParamName::MeowzioVictim, TaskParamName::MeowzioCard),
 				ClearParamsTask::create(),
 			],
 			HeroAbilityType::Shurikitty => vec![
-				ChoosePlayerParameterTask::exclude_self(
-					TaskParamName::PlayerToDestroy,
-					"to destroy a hero card (Shurikitty)",
-				),
+				ChoosePlayerParameterTask::exclude_self(TaskParamName::ShurikittyVictim),
 				ChooseCardFromPlayerParameterTask::from_party(
-					TaskParamName::PlayerToDestroy,
-					TaskParamName::CardToSteal,
-					"Which hero card would you like to destroy?",
+					TaskParamName::ShurikittyVictim,
+					TaskParamName::ShurikittyCard,
 				),
 				DestroyCardTask::create(
-					TaskParamName::PlayerToDestroy,
-					TaskParamName::CardToSteal,
+					TaskParamName::ShurikittyVictim,
+					TaskParamName::ShurikittyCard,
 					DestroyModifiersDestination::Myself,
 				),
 				ClearParamsTask::create(),
 			],
 			HeroAbilityType::KitNapper => vec![StealTask::create()],
 			HeroAbilityType::SilentShadow => vec![
-				ChoosePlayerParameterTask::exclude_self(
-					TaskParamName::SilentShadowVictim,
-					"Who's hand do you want to see?",
-				),
+				ChoosePlayerParameterTask::exclude_self(TaskParamName::SilentShadowVictim),
 				ChooseCardFromPlayerParameterTask::from_party(
 					TaskParamName::SilentShadowVictim,
 					TaskParamName::SilentShadowCard,
-					"Which hero card would you like to take?",
 				),
 				// TODO
+				// "Steal a Hero card."
 				ClearParamsTask::create(),
 			],
 			HeroAbilityType::SlyPickings => vec![
-				ChoosePlayerParameterTask::exclude_self(
-					TaskParamName::SlyPickinsVictim,
-					"Sly Pickings: Who do you want to steal from?",
-				),
+				ChoosePlayerParameterTask::exclude_self(TaskParamName::SlyPickinsVictim),
 				PullFromTask::record_pulled(
 					TaskParamName::SlyPickinsVictim,
 					TaskParamName::SlyPickinsCard,
@@ -313,20 +299,14 @@ impl HeroAbilityType {
 				ClearParamsTask::create(),
 			],
 			HeroAbilityType::HeavyBear => vec![
-				ChoosePlayerParameterTask::exclude_self(
-					TaskParamName::HeavyBearVictim,
-					"who has to discard 2 cards (Heavy bear)",
-				),
+				ChoosePlayerParameterTask::exclude_self(TaskParamName::HeavyBearVictim),
 				DiscardFromParam::create(2, TaskParamName::HeavyBearVictim),
 				ClearParamsTask::create(),
 			],
 			HeroAbilityType::BadAxe => vec![DestroyTask::create()],
 			HeroAbilityType::ToughTeddy => vec![PlayersWithHeroTypeDiscard::create(HeroType::Fighter)],
 			HeroAbilityType::BearClaw => vec![
-				ChoosePlayerParameterTask::exclude_self(
-					TaskParamName::BearClawVictim,
-					"BearClaw: Who would you like to pull from?",
-				),
+				ChoosePlayerParameterTask::exclude_self(TaskParamName::BearClawVictim),
 				PullFromTask::record_pulled(TaskParamName::BearClawVictim, TaskParamName::BearClawCard),
 				PullAgain::create(
 					TaskParamName::BearClawVictim,
@@ -336,10 +316,7 @@ impl HeroAbilityType {
 				ClearParamsTask::create(),
 			],
 			HeroAbilityType::FuryKnuckle => vec![
-				ChoosePlayerParameterTask::exclude_self(
-					TaskParamName::FuryKnuckleVictim,
-					"Fury Knuckle: Who would you like to pull from?",
-				),
+				ChoosePlayerParameterTask::exclude_self(TaskParamName::FuryKnuckleVictim),
 				PullFromTask::record_pulled(
 					TaskParamName::FuryKnuckleVictim,
 					TaskParamName::FuryKnuckleCard,
@@ -351,13 +328,8 @@ impl HeroAbilityType {
 				),
 				ClearParamsTask::create(),
 			],
-			HeroAbilityType::BearyWise => vec![], ////////////////////////////////////
-			HeroAbilityType::Hook => vec![
-				// Hook::create(),
-				// OfferPlayImmediately::with_an_extra_task(),
-				// There is similar logic in... immediately.rs
-				DrawTask::create(1),
-			],
+			HeroAbilityType::BearyWise => vec![BearyWise::create()],
+			HeroAbilityType::Hook => vec![Hook::create(PlayImmediatelyFilter::IsMagic)],
 			HeroAbilityType::Wildshot => vec![DrawTask::create(3), Discard::create(1)],
 			HeroAbilityType::SeriousGrey => vec![DestroyTask::create(), DrawTask::create(1)],
 			HeroAbilityType::WilyRed => vec![DrawTask::until(7)],
@@ -371,46 +343,52 @@ impl HeroAbilityType {
 				),
 			],
 			HeroAbilityType::LookieRookie => vec![SearchDiscard::for_item()],
-			HeroAbilityType::Bullseye => vec![
-				// Bullseye::create(),
+			HeroAbilityType::Bullseye => vec![Bullseye::create()],
+			HeroAbilityType::SharpFox => vec![
+				ChoosePlayerParameterTask::exclude_self(TaskParamName::SharpFoxVictim),
+				ViewHand::create(TaskParamName::SharpFoxVictim),
 			],
-			HeroAbilityType::SharpFox => vec![], /////////////////////////////////////
-			HeroAbilityType::FuzzyCheeks => vec![DrawTask::create(1), PlaceHero::create()], //////////////////////////////////
+			HeroAbilityType::FuzzyCheeks => vec![DrawTask::create(1), PlaceHero::create()],
 			HeroAbilityType::Peanut => vec![DrawTask::create(2)],
 			HeroAbilityType::NappingNibbles => vec![/* This one actually is empty. */],
-			HeroAbilityType::TipsyTootie => vec![], //////////////////////////////////
+			HeroAbilityType::TipsyTootie => vec![
+				ChoosePlayerParameterTask::exclude_self(TaskParamName::TipsyTootieVictim),
+				ChooseCardFromPlayerParameterTask::from_party(
+					TaskParamName::TipsyTootieVictim,
+					TaskParamName::TipsyTootieCard,
+				),
+				StealCardFromTask::create(
+					TaskParamName::TipsyTootieVictim,
+					TaskParamName::TipsyTootieCard,
+				),
+				ClearParamsTask::create(),
+				UnstealTo::create(),
+				// Choose a player. STEAL a Hero card from that player's Party and
+				//  move this card to that player's Party.
+			], //////////////////////////////////
 			HeroAbilityType::MellowDee => vec![
-				DrawTask::into_param(TaskParamName::MellowDeeVictim),
+				DrawTask::into_param(TaskParamName::MellowDeeCard),
+				OfferPlayImmediately::create(TaskParamName::MellowDeeCard, PlayImmediatelyFilter::IsHero),
 				ClearParamsTask::create(),
 			],
 			HeroAbilityType::LuckBucky => vec![
-				ChoosePlayerParameterTask::exclude_self(
-					TaskParamName::LuckBuckyVictim,
-					"LuckBucky: Who would you like to pull from?",
-				),
+				ChoosePlayerParameterTask::exclude_self(TaskParamName::LuckBuckyVictim),
 				PullFromTask::record_pulled(TaskParamName::LuckBuckyVictim, TaskParamName::LuckBuckyCard),
 				OfferPlayImmediately::create(TaskParamName::LuckBuckyCard, PlayImmediatelyFilter::IsHero),
 				ClearParamsTask::create(),
 			],
 			HeroAbilityType::DodgyDealer => vec![
-				ChoosePlayerParameterTask::exclude_self(
-					TaskParamName::DodgyDealerVictim,
-					"Dodger Dealer: Who do you want to trade hands with?",
-				),
+				ChoosePlayerParameterTask::exclude_self(TaskParamName::DodgyDealerVictim),
 				TradeHands::create(TaskParamName::DodgyDealerVictim),
 				ClearParamsTask::create(),
 			],
 			HeroAbilityType::GreedyCheeks => vec![GreedyCheeks::create()],
 			HeroAbilityType::Fluffy => vec![DestroyTask::create(), DestroyTask::create()],
 			HeroAbilityType::Wiggles => vec![
-				ChoosePlayerParameterTask::exclude_self(
-					TaskParamName::WigglesVictim,
-					"Wiggles: Who do you want to steal a hero card from?",
-				),
+				ChoosePlayerParameterTask::exclude_self(TaskParamName::WigglesVictim),
 				ChooseCardFromPlayerParameterTask::from_party(
 					TaskParamName::PlayerToStealFrom,
 					TaskParamName::CardToSteal,
-					"Which hero card would you like to steal?",
 				),
 				StealCardFromTask::create(TaskParamName::WigglesVictim, TaskParamName::WigglesCard),
 				OfferPlayImmediately::create(TaskParamName::WigglesCard, PlayImmediatelyFilter::None),
@@ -427,24 +405,81 @@ impl HeroAbilityType {
 				ClearParamsTask::create(),
 			],
 			HeroAbilityType::Buttons => vec![
-				ChoosePlayerParameterTask::exclude_self(
-					TaskParamName::ButtonsVictim,
-					"Buttons: Who would you like to pull from?",
-				),
+				ChoosePlayerParameterTask::exclude_self(TaskParamName::ButtonsVictim),
 				PullFromTask::record_pulled(TaskParamName::ButtonsVictim, TaskParamName::ButtonsCard),
 				OfferPlayImmediately::create(TaskParamName::ButtonsCard, PlayImmediatelyFilter::IsMagic),
 				ClearParamsTask::create(),
 			],
 			HeroAbilityType::BunBun => vec![SearchDiscard::for_magic()],
 			HeroAbilityType::Hopper => vec![
-				ChoosePlayerParameterTask::exclude_self(
-					TaskParamName::HopperVictim,
-					"Hopper: Who do you want to sacrifice",
-				),
+				ChoosePlayerParameterTask::exclude_self(TaskParamName::HopperVictim),
 				Sacrifice::from_param(TaskParamName::HopperVictim),
 				ClearParamsTask::create(),
 			],
 			HeroAbilityType::Whiskers => vec![StealTask::create(), DestroyTask::create()],
+		}
+	}
+
+	pub fn condition(&self) -> Condition {
+		match self {
+			HeroAbilityType::PlunderingPuma => Condition::ge(6),
+			HeroAbilityType::SlipperyPaws => Condition::ge(6),
+			HeroAbilityType::SmoothMimimeow => Condition::ge(7),
+			HeroAbilityType::Meowzio => Condition::ge(10),
+			HeroAbilityType::Shurikitty => Condition::ge(9),
+			HeroAbilityType::KitNapper => Condition::ge(9),
+			HeroAbilityType::SilentShadow => Condition::ge(8),
+			HeroAbilityType::SlyPickings => Condition::ge(6),
+			HeroAbilityType::HolyCurselifter => Condition::ge(5),
+			HeroAbilityType::IronResolve => Condition::ge(8),
+			HeroAbilityType::CalmingVoice => Condition::ge(9),
+			HeroAbilityType::VibrantGlow => Condition::ge(9),
+			HeroAbilityType::MightyBlade => Condition::ge(8),
+			HeroAbilityType::RadiantHorn => Condition::ge(6),
+			HeroAbilityType::GuidingLight => Condition::ge(7),
+			HeroAbilityType::WiseShield => Condition::ge(6),
+			HeroAbilityType::QiBear => Condition::ge(10),
+			HeroAbilityType::PanChucks => Condition::ge(8),
+			HeroAbilityType::HeavyBear => Condition::ge(5),
+			HeroAbilityType::BadAxe => Condition::ge(8),
+			HeroAbilityType::ToughTeddy => Condition::ge(4),
+			HeroAbilityType::BearClaw => Condition::ge(7),
+			HeroAbilityType::FuryKnuckle => Condition::ge(5),
+			HeroAbilityType::BearyWise => Condition::ge(7),
+			HeroAbilityType::Hook => Condition::ge(6),
+			HeroAbilityType::Wildshot => Condition::ge(8),
+			HeroAbilityType::SeriousGrey => Condition::ge(9),
+			HeroAbilityType::WilyRed => Condition::ge(10),
+			HeroAbilityType::QuickDraw => Condition::ge(8),
+			HeroAbilityType::LookieRookie => Condition::ge(5),
+			HeroAbilityType::Bullseye => Condition::ge(7),
+			HeroAbilityType::SharpFox => Condition::ge(5),
+			HeroAbilityType::FuzzyCheeks => Condition::ge(8),
+			HeroAbilityType::Peanut => Condition::ge(7),
+			HeroAbilityType::NappingNibbles => Condition::ge(2),
+			HeroAbilityType::TipsyTootie => Condition::ge(6),
+			HeroAbilityType::MellowDee => Condition::ge(7),
+			HeroAbilityType::LuckBucky => Condition::ge(7),
+			HeroAbilityType::DodgyDealer => Condition::ge(9),
+			HeroAbilityType::GreedyCheeks => Condition::ge(8),
+			HeroAbilityType::Fluffy => Condition::ge(10),
+			HeroAbilityType::Wiggles => Condition::ge(10),
+			HeroAbilityType::Spooky => Condition::ge(10),
+			HeroAbilityType::Snowball => Condition::ge(6),
+			HeroAbilityType::Buttons => Condition::ge(6),
+			HeroAbilityType::BunBun => Condition::ge(5),
+			HeroAbilityType::Hopper => Condition::ge(7),
+			HeroAbilityType::Whiskers => Condition::ge(11),
+		}
+	}
+
+	pub fn consequences(&self) -> RollConsequences {
+		RollConsequences {
+			success: RollConsequence {
+				condition: self.condition(),
+				tasks: self.create_tasks(),
+			},
+			loss: None,
 		}
 	}
 }

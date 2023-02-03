@@ -43,6 +43,9 @@ pub enum ChoicesType {
 	ContinueDiscardingAndDestroying(u32),
 	RevealAndDestroy,
 	PlaceAHeroCard,
+
+	BullseyeKeep,
+	BullseyeOrdering(SlayCardSpec, SlayCardSpec),
 }
 
 #[derive(Clone, Debug)]
@@ -102,6 +105,9 @@ pub enum Choice {
 	ContinueDiscardingAndDestroying,
 	RevealChallengeAndDestroy,
 	PlaceHeroImmediately(HeroAbilityType),
+	BullseyeKeep(SlayCardSpec),
+	BullseyeReorder,
+	BullseyeDoNotReorder,
 }
 
 // TODO: Rename this to Choice
@@ -194,10 +200,12 @@ impl Choice {
 				// Are we sure it was pulled?
 				"Reveal that you pulled a challenge card, so you can destroy a hero card.",
 			),
-
 			Choice::PlaceHeroImmediately(hero_card) => {
 				format!("Place {} in you party immediately.", hero_card.label(),)
 			}
+			Choice::BullseyeKeep(spec) => format!("Place {} in your hand.", spec.label(),),
+			Choice::BullseyeReorder => String::from("Change the order."),
+			Choice::BullseyeDoNotReorder => String::from("Keep the current order."),
 		}
 	}
 	pub fn get_notification(
@@ -302,6 +310,17 @@ impl Choice {
 				game.player_name(player_index),
 				hero_card.label(),
 			),
+			Choice::BullseyeKeep(_) => {
+				format!("{} kept one of the cards.", game.player_name(player_index),)
+			}
+			Choice::BullseyeReorder => format!(
+				"{} changed the order of the next two cards.",
+				game.player_name(player_index),
+			),
+			Choice::BullseyeDoNotReorder => format!(
+				"{} did not change the order of the next two cards.",
+				game.player_name(player_index),
+			),
 		}
 	}
 }
@@ -347,6 +366,12 @@ impl ChoicesType {
 				String::from("whice hero would you like to place in your party?")
 			}
 			ChoicesType::PlayOneOfImmediately => String::from("Which card would you like to play?"),
+			ChoicesType::BullseyeKeep => String::from("Which card would you like to keep?"),
+			ChoicesType::BullseyeOrdering(first, second) => format!(
+				"The next two cards are {} and then {}. Would you like to swap the order?",
+				first.label(),
+				second.label(),
+			),
 		}
 	}
 }

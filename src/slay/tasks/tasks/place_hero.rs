@@ -1,4 +1,4 @@
-use crate::slay::actions::create_place_hero_challenges;
+use crate::slay::actions::place_hero;
 use crate::slay::choices::CardPath;
 use crate::slay::choices::Choice;
 use crate::slay::choices::ChoiceDisplayType;
@@ -40,7 +40,7 @@ impl PlayerTask for PlaceHero {
 					context.id_generator.generate(),
 					Choice::PlaceHeroImmediately(hero_card),
 					ChoiceDisplayType::hand_card(player_index, card.id),
-					vec![create_place_hero_challenges(
+					vec![place_hero::create_place_hero_challenges(
 						context,
 						game,
 						player_index,
@@ -53,7 +53,7 @@ impl PlayerTask for PlaceHero {
 		if options.len() == 0 {
 			return Ok(TaskProgressResult::TaskComplete);
 		}
-		game.players[player_index].choices = Some(Choices {
+		game.players[player_index].choose(Choices {
 			choices_type: ChoicesType::PlaceAHeroCard,
 			options,
 			default_choice: None,

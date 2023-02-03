@@ -12,7 +12,7 @@ SPELL = re.compile("MagicSpell::([^ ]*) => CardSpec {")
 DESCRIPTION_RE = re.compile('description: "([^"]*)".to_string\\(\\)')
 LABEL_RE = re.compile('label: "([^"]*)".to_string\\(\\)')
 IMAGE = re.compile('image_path: "([^"]*)".to_string\\(\\)')
-
+IMAGE = re.compile('condition: Condition::ge\\(([0-9]+)\\),')
 
 
 def print_descriptions(language, file_path):
@@ -21,7 +21,7 @@ def print_descriptions(language, file_path):
 		description = None
 
 		for line in fp:
-			m = ITEM.search(line)
+			m = HERO_RE.search(line)
 			if m:
 				label = m.group(1)
 
@@ -30,7 +30,8 @@ def print_descriptions(language, file_path):
 				description = m.group(1)
 
 				if label and description:
-					print(f'Item::{label} => "{description}",')
+					# print(f'HeroAbilityType::{label} => "{description}",')
+					print(f'HeroAbilityType::{label} => Condition::ge({description}),')
 					label = None
 					description = None
 

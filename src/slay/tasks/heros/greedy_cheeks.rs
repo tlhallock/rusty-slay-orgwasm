@@ -59,7 +59,7 @@ impl PlayerTask for GreedyCheeks {
 			if options.is_empty() {
 				continue;
 			}
-			game.players[victim_index].choices = Some(Choices {
+			game.players[victim_index].choose(Choices {
 				choices_type: ChoicesType::ChooseCardToGive(player_index),
 				default_choice: None,
 				timeline: deadlines::get_refactor_me_deadline(),

@@ -102,7 +102,7 @@ impl PlayerTask for Sacrifice {
 			return Ok(TaskProgressResult::TaskComplete);
 		}
 
-		game.players[victim_index].choices = Some(Choices {
+		game.players[victim_index].choose(Choices {
 			choices_type: ChoicesType::Sacrifice,
 			options,
 			default_choice: None,

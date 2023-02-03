@@ -25,6 +25,7 @@ pub enum AnotherItemType {
 	MaskCard(HeroType),
 	NotMask(Item),
 }
+
 impl AnotherItemType {
 	pub fn label(&self) -> &'static str {
 		SlayCardSpec::Item(*self).label()

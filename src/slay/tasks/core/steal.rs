@@ -26,7 +26,7 @@ impl PlayerTask for StealTask {
 		thief_index: ids::PlayerIndex,
 	) -> SlayResult<TaskProgressResult> {
 		game.players[thief_index].tasks.prepend_from(&mut vec![
-			ChoosePlayerParameterTask::exclude_self(TaskParamName::PlayerToStealFrom, "to steal from"),
+			ChoosePlayerParameterTask::exclude_self(TaskParamName::PlayerToStealFrom),
 			// This one coulds just be a method call, all it does is assign a new task...
 			// (Kinda like the steal action...)
 			// I guess it should just be renamed to 'choose card from player's party' or smh...
@@ -34,7 +34,6 @@ impl PlayerTask for StealTask {
 			ChooseCardFromPlayerParameterTask::from_party(
 				TaskParamName::PlayerToStealFrom,
 				TaskParamName::CardToSteal,
-				"Which hero card would you like to steal?",
 			),
 			StealCardFromTask::create(TaskParamName::PlayerToStealFrom, TaskParamName::CardToSteal),
 			ClearParamsTask::create(),

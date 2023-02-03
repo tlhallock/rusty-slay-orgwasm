@@ -124,6 +124,9 @@ impl PlayerTasks {
 	pub fn prepend(&mut self, next_task: Box<dyn PlayerTask>) {
 		self.prepend.push(next_task);
 	}
+	pub fn append(&mut self, next_task: Box<dyn PlayerTask>) {
+		self.upcoming.push_back(next_task);
+	}
 
 	pub fn put_current_task_back(&mut self, task: Box<dyn PlayerTask>) -> SlayResult<()> {
 		// reviewer: How do you make this a one liner?
@@ -218,7 +221,7 @@ pub(crate) fn continue_tasks(
 	*/
 	let mut result = TaskProgressResult::NothingDone;
 	loop {
-		if game.players[player_index].choices.is_some() {
+		if game.players[player_index].has_choices() {
 			log::debug!("Player {} already has choices", player_index);
 			return Ok(TaskProgressResult::NothingDone);
 		}

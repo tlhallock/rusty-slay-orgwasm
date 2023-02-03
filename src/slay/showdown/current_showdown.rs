@@ -51,8 +51,9 @@ pub struct ModificationTask {
 
 impl ModificationTask {
 	pub fn apply(&self, _context: &mut GameBookKeeping, game: &mut Game) {
+		// Extra copy...
 		for (player_index, choices) in self.choices_to_assign.iter() {
-			game.players[*player_index].choices = Some(choices.to_owned());
+			game.players[*player_index].choose(choices.to_owned());
 		}
 	}
 }
@@ -313,8 +314,8 @@ pub trait ShowDown: Debug + dyn_clone::DynClone {
 	fn assign_all_choices(&self, context: &mut GameBookKeeping, game: &mut Game) {
 		let nb_players = game.number_of_players();
 		for player_index in 0..nb_players {
-			let choices = Some(self.create_choice_for(context, game, player_index));
-			game.players[player_index].choices = choices;
+			let choices = self.create_choice_for(context, game, player_index);
+			game.players[player_index].choose(choices);
 		}
 	}
 

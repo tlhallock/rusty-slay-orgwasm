@@ -59,27 +59,27 @@ pub fn current_time() -> DateTime<Utc> {
 }
 
 pub fn get_action_point_choice_deadline() -> Timeline {
-	Timeline::new(Some(30))
+	Timeline::new(Some(300))
 }
 
 pub fn get_refactor_me_deadline() -> Timeline {
-	Timeline::new(Some(30))
+	Timeline::new(Some(300))
 }
 pub fn get_discard_deadline() -> Timeline {
-	Timeline::new(Some(30))
+	Timeline::new(Some(300))
 }
 
 pub fn get_sacrifice_deadline() -> Timeline {
-	Timeline::new(Some(30))
+	Timeline::new(Some(300))
 }
 
 pub fn get_roll_deadline() -> Timeline {
-	Timeline::new(Some(30))
+	Timeline::new(Some(300))
 }
 
 pub fn get_challenge_deadline() -> Timeline {
-	Timeline::new(Some(30))
+	Timeline::new(Some(300))
 }
 pub fn get_offer_challenges_deadline() -> Timeline {
-	Timeline::new(Some(30))
+	Timeline::new(Some(300))
 }

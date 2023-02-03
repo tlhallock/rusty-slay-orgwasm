@@ -28,14 +28,10 @@ impl PlayerTask for DestroyTask {
 		thief_index: ids::PlayerIndex,
 	) -> SlayResult<TaskProgressResult> {
 		game.players[thief_index].tasks.prepend_from(&mut vec![
-			ChoosePlayerParameterTask::exclude_self(
-				TaskParamName::PlayerToDestroy,
-				"to destroy a hero card",
-			),
+			ChoosePlayerParameterTask::exclude_self(TaskParamName::PlayerToDestroy),
 			ChooseCardFromPlayerParameterTask::from_party(
 				TaskParamName::PlayerToDestroy,
 				TaskParamName::CardToDestroy,
-				"Which hero card would you like to destroy?",
 			),
 			DestroyCardTask::create(
 				TaskParamName::PlayerToDestroy,

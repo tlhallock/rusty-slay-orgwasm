@@ -103,6 +103,7 @@ dependencies = [
  "log",
  "rand",
  "strum",
+ "thiserror",
  "typetag",
  "wasm-bindgen",
  "wasm-logger",

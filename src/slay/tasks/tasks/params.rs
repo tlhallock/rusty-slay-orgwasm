@@ -50,20 +50,15 @@ use crate::slay::tasks::task_params::TaskParamName;
 pub struct ChoosePlayerParameterTask {
 	// pub parameter_type: TaskParameterType,
 	pub param_name: TaskParamName,
-	pub instructions: String,
 	pub players: Option<Vec<ids::PlayerIndex>>,
 
 	exclude_self: bool,
 }
 
 impl ChoosePlayerParameterTask {
-	pub fn exclude_self(
-		param_name: TaskParamName,
-		instructions: &'static str,
-	) -> Box<dyn PlayerTask> {
+	pub fn exclude_self(param_name: TaskParamName) -> Box<dyn PlayerTask> {
 		Box::new(Self {
 			param_name,
-			instructions: instructions.to_string(),
 			players: None,
 			exclude_self: true,
 		}) as Box<dyn PlayerTask>
@@ -74,19 +69,13 @@ impl ChoosePlayerParameterTask {
 	) -> Box<dyn PlayerTask> {
 		Box::new(Self {
 			param_name,
-			instructions: instructions.to_string(),
 			players: None,
 			exclude_self: false,
 		}) as Box<dyn PlayerTask>
 	}
-	pub fn one_of(
-		param_name: TaskParamName,
-		instructions: &'static str,
-		players: Vec<ids::PlayerIndex>,
-	) -> Box<dyn PlayerTask> {
+	pub fn one_of(param_name: TaskParamName, players: Vec<ids::PlayerIndex>) -> Box<dyn PlayerTask> {
 		Box::new(Self {
 			param_name,
-			instructions: instructions.to_string(),
 			players: Some(players),
 			exclude_self: false,
 		}) as Box<dyn PlayerTask>
@@ -115,7 +104,7 @@ impl PlayerTask for ChoosePlayerParameterTask {
 		game: &mut Game,
 		player_index: ids::PlayerIndex,
 	) -> SlayResult<TaskProgressResult> {
-		game.players[player_index].choices = Some(Choices {
+		let choices = Choices {
 			choices_type: ChoicesType::ChoosePlayerParam(self.param_name),
 			default_choice: None,
 			timeline: deadlines::get_refactor_me_deadline(),
@@ -135,12 +124,13 @@ impl PlayerTask for ChoosePlayerParameterTask {
 					)
 				})
 				.collect(),
-		});
+		};
+		game.players[player_index].choose(choices);
 		Ok(TaskProgressResult::TaskComplete)
 	}
 
 	fn label(&self) -> String {
-		format!("Player is choosing a player: '{}'", self.instructions)
+		format!("Player is choosing a player: {}", self.param_name.prompt())
 	}
 }
 
@@ -248,7 +238,6 @@ pub struct ChooseCardFromPlayerParameterTask {
 	victim_param: TaskParamName,
 	card_param: TaskParamName,
 	deck_path: PartialDeckPath,
-	instructions: String,
 	card_filter: ChooseCardFilter,
 }
 
@@ -263,7 +252,6 @@ impl ChooseCardFromPlayerParameterTask {
 			victim_param,
 			card_param,
 			deck_path,
-			instructions: instructions.to_string(),
 			card_filter: ChooseCardFilter::AllTopCards,
 		}) as Box<dyn PlayerTask>
 	}
@@ -278,21 +266,15 @@ impl ChooseCardFromPlayerParameterTask {
 			victim_param,
 			card_param,
 			deck_path,
-			instructions: instructions.to_string(),
 			card_filter: ChooseCardFilter::Modifying,
 		}) as Box<dyn PlayerTask>
 	}
 
-	pub fn from_party(
-		victim_param: TaskParamName,
-		card_param: TaskParamName,
-		instructions: &'static str,
-	) -> Box<dyn PlayerTask> {
+	pub fn from_party(victim_param: TaskParamName, card_param: TaskParamName) -> Box<dyn PlayerTask> {
 		Box::new(Self {
 			victim_param,
 			card_param,
 			deck_path: PartialDeckPath::Party, // DeckPath::Discard,
-			instructions: instructions.to_string(),
 			card_filter: ChooseCardFilter::AllTopCards,
 		}) as Box<dyn PlayerTask>
 	}
@@ -336,7 +318,7 @@ impl PlayerTask for ChooseCardFromPlayerParameterTask {
 				.set_card_value(self.card_param, None)?;
 			return Ok(TaskProgressResult::TaskComplete);
 		}
-		game.players[chooser_index].choices = Some(Choices {
+		game.players[chooser_index].choose(Choices {
 			default_choice: None,
 			choices_type: ChoicesType::ChooseCardParam(self.card_param),
 			timeline: deadlines::get_refactor_me_deadline(),

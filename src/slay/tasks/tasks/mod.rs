@@ -1,5 +1,6 @@
 pub mod add_tasks;
 pub mod card_used;
+pub mod choose;
 pub mod do_roll;
 pub mod immediate;
 pub mod magic;
@@ -18,3 +19,5 @@ pub mod reveal;
 pub mod search_discard;
 pub mod set_complete;
 pub mod trade_hands;
+pub mod unsteal_to;
+pub mod view_hand;

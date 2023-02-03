@@ -86,7 +86,7 @@ impl PlayerTask for Discard {
 		if options.is_empty() {
 			return Ok(TaskProgressResult::TaskComplete);
 		}
-		game.players[player_index].choices = Some(Choices::new(
+		game.players[player_index].choose(Choices::new(
 			options,
 			None,
 			deadlines::get_discard_deadline(),
@@ -166,3 +166,30 @@ impl PlayerTask for PlayersWithHeroTypeDiscard {
 		)
 	}
 }
+
+// #[derive(Debug, Clone)]
+// pub struct DiscardToSet {
+//   parameter: TaskParamName,
+// }
+
+// impl DiscardToSet {
+// 	pub fn create(parameter: TaskParamName,) -> Box<dyn PlayerTask> {
+// 		Box::new(Self {parameter})
+// 	}
+// }
+
+// impl PlayerTask for DiscardToSet {
+// 	fn make_progress(
+// 		&mut self,
+// 		context: &mut GameBookKeeping,
+// 		game: &mut Game,
+// 		player_index: ids::PlayerIndex,
+// 	) -> SlayResult<TaskProgressResult> {
+
+// 		Ok(TaskProgressResult::TaskComplete)
+// 	}
+
+// 	fn label(&self) -> String {
+// 		String::from("do discard to set.")
+//   }
+// }
