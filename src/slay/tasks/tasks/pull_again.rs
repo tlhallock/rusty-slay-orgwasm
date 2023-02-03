@@ -39,7 +39,7 @@ impl PlayerTask for PullAgain {
 		game: &mut Game,
 		player_index: ids::PlayerIndex,
 	) -> SlayResult<TaskProgressResult> {
-		let player = game.player_param(player_index, &self.victim_param)?;
+		let _player = game.player_param(player_index, &self.victim_param)?;
 		let card_option = game.card_param(player_index, &self.card_param)?;
 		if card_option.is_none() {
 			return Ok(TaskProgressResult::TaskComplete);

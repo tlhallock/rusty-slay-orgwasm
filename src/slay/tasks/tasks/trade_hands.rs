@@ -23,7 +23,7 @@ impl TradeHands {
 impl PlayerTask for TradeHands {
 	fn make_progress(
 		&mut self,
-		context: &mut GameBookKeeping,
+		_context: &mut GameBookKeeping,
 		game: &mut Game,
 		player_index: ids::PlayerIndex,
 	) -> SlayResult<TaskProgressResult> {

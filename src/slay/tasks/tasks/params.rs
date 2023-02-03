@@ -65,7 +65,7 @@ impl ChoosePlayerParameterTask {
 	}
 	pub fn include_self(
 		param_name: TaskParamName,
-		instructions: &'static str,
+		_instructions: &'static str,
 	) -> Box<dyn PlayerTask> {
 		Box::new(Self {
 			param_name,
@@ -246,7 +246,7 @@ impl ChooseCardFromPlayerParameterTask {
 		victim_param: TaskParamName,
 		card_param: TaskParamName,
 		deck_path: PartialDeckPath,
-		instructions: &'static str,
+		_instructions: &'static str,
 	) -> Box<dyn PlayerTask> {
 		Box::new(Self {
 			victim_param,
@@ -260,7 +260,7 @@ impl ChooseCardFromPlayerParameterTask {
 		victim_param: TaskParamName,
 		card_param: TaskParamName,
 		deck_path: PartialDeckPath,
-		instructions: &'static str,
+		_instructions: &'static str,
 	) -> Box<dyn PlayerTask> {
 		Box::new(Self {
 			victim_param,

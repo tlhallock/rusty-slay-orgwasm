@@ -80,8 +80,8 @@ impl Notification {
 impl Summarizable for Notification {
 	fn summarize<W: std::io::Write>(
 		&self,
-		f: &mut std::io::BufWriter<W>,
-		indentation_level: u32,
+		_f: &mut std::io::BufWriter<W>,
+		_indentation_level: u32,
 	) -> Result<(), std::io::Error> {
 		todo!()
 	}

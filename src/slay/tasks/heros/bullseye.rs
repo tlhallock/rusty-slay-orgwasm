@@ -1,4 +1,4 @@
-use crate::slay::choices::CardPath;
+
 use crate::slay::choices::Choice;
 use crate::slay::choices::ChoiceDisplayType;
 use crate::slay::choices::Choices;
@@ -146,9 +146,9 @@ impl BullseyeReorder {
 impl PlayerTask for BullseyeReorder {
 	fn make_progress(
 		&mut self,
-		context: &mut GameBookKeeping,
+		_context: &mut GameBookKeeping,
 		game: &mut Game,
-		player_index: ids::PlayerIndex,
+		_player_index: ids::PlayerIndex,
 	) -> SlayResult<TaskProgressResult> {
 		game.deck_mut(DeckPath::Draw).swap_first_cards();
 		Ok(TaskProgressResult::TaskComplete)

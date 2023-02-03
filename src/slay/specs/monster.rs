@@ -46,7 +46,7 @@ pub fn player_satisfies_requirements(
 	}
 	// Just checkin...
 	for i in 0..requirements.len() {
-		if let MonsterRequirements::HeroType(hero_type) = requirements[i] {
+		if let MonsterRequirements::HeroType(_hero_type) = requirements[i] {
 			unreachable!()
 		}
 	}

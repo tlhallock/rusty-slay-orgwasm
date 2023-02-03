@@ -1,4 +1,4 @@
-use crate::slay::actions;
+
 use crate::slay::actions::list_actions;
 use crate::slay::errors::SlayError;
 use crate::slay::errors::SlayResult;

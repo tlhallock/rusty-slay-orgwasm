@@ -40,7 +40,7 @@ impl PlayerTask for SetCompleteTask {
 fn create_set_complete_choice(
 	id: ids::ChoiceId,
 	persist: Completion,
-	label: String,
+	_label: String,
 ) -> TasksChoice {
 	TasksChoice::new(
 		id,

@@ -22,7 +22,7 @@ impl PlayerTask for Reveal {
 	fn make_progress(
 		&mut self,
 		context: &mut GameBookKeeping,
-		game: &mut Game,
+		_game: &mut Game,
 		player_index: ids::PlayerIndex,
 	) -> SlayResult<TaskProgressResult> {
 		context.emit(&Notification::PlayerDrew(player_index, self.spec));

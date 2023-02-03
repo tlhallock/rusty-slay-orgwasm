@@ -1,10 +1,10 @@
 use crate::slay::errors::SlayResult;
 use crate::slay::game_context::GameBookKeeping;
 use crate::slay::ids;
-use crate::slay::specification::HeroType;
+
 use crate::slay::state::game::Game;
 use crate::slay::tasks::core::discard::Discard;
-use crate::slay::tasks::core::pull;
+
 use crate::slay::tasks::player_tasks::PlayerTask;
 use crate::slay::tasks::player_tasks::TaskProgressResult;
 
@@ -20,7 +20,7 @@ impl BearyWise {
 impl PlayerTask for BearyWise {
 	fn make_progress(
 		&mut self,
-		context: &mut GameBookKeeping,
+		_context: &mut GameBookKeeping,
 		game: &mut Game,
 		player_index: ids::PlayerIndex,
 	) -> SlayResult<TaskProgressResult> {
