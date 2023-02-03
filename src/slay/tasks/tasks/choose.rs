@@ -40,6 +40,6 @@ impl PlayerTask for ChooseTask {
 		Ok(TaskProgressResult::TaskComplete)
 	}
 	fn label(&self) -> String {
-		format!("Choose something")
+		"Choose something".to_string()
 	}
 }

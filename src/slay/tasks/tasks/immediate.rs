@@ -32,7 +32,7 @@ pub fn create_play_card_immediately_task(
 		SlayCardSpec::HeroCard(hero_card) => {
 			let hand_path = CardPath::TopCardIn(DeckPath::Hand(player_index), card.id);
 			let party_path = CardPath::TopCardIn(DeckPath::Party(player_index), card.id);
-			if let Some(_) = game.maybe_card(hand_path) {
+			if game.maybe_card(hand_path).is_some() {
 				Some(place_hero::create_place_hero_challenges(
 					context,
 					game,
@@ -40,7 +40,7 @@ pub fn create_play_card_immediately_task(
 					hand_path,
 					hero_card,
 				))
-			} else if let Some(_) = game.maybe_card(party_path) {
+			} else if game.maybe_card(party_path).is_some() {
 				Some(roll_for_ability::create_roll_for_ability_task(
 					context,
 					game,

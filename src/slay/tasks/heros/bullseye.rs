@@ -87,7 +87,7 @@ impl PlayerTask for BullseyeReorderChoice {
 		game: &mut Game,
 		player_index: ids::PlayerIndex,
 	) -> SlayResult<TaskProgressResult> {
-		game.move_card(DeckPath::Draw, DeckPath::Hand(player_index), self.to_keep);
+		game.move_card(DeckPath::Draw, DeckPath::Hand(player_index), self.to_keep)?;
 
 		if game.deck(DeckPath::Draw).num_top_cards() == 0 {
 			return Ok(TaskProgressResult::TaskComplete);

@@ -42,6 +42,6 @@ impl PlayerTask for TradeHands {
 	}
 
 	fn label(&self) -> String {
-		format!("Trading hands with somebody.")
+		String::from("Trading hands with somebody.")
 	}
 }

@@ -50,7 +50,7 @@ impl PlayerTask for PlaceHero {
 				));
 			}
 		}
-		if options.len() == 0 {
+		if options.is_empty() {
 			return Ok(TaskProgressResult::TaskComplete);
 		}
 		game.players[player_index].choose(Choices {
