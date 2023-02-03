@@ -39,17 +39,24 @@ impl PlayerTask for Hook {
 		game: &mut Game,
 		player_index: ids::PlayerIndex,
 	) -> SlayResult<TaskProgressResult> {
-		let cards = game.players[player_index]
+		// let cards = game.players[player_index]
+		// 	.hand
+		// 	.tops()
+		// 	.filter(|card| self.filter.can_play_immediately(card))
+		// 	.map(|card| card.to_owned())
+		// 	.collect::<Vec<_>>();
+
+		// let mut options = cards
+		// 	.into_iter()
+
+
+		let mut options = game.players[player_index]
 			.hand
 			.tops()
 			.filter(|card| self.filter.can_play_immediately(card))
-			.map(|card| card.to_owned())
-			.collect::<Vec<_>>();
-
-		let mut options = cards
-			.into_iter()
+			// .map(|card| card.to_owned())
 			.filter_map(|card| {
-				create_play_card_immediately_task(context, game, player_index, &card).map(|task| {
+				create_play_card_immediately_task(context, game, player_index, card).map(|task| {
 					TasksChoice::new(
 						context.id_generator.generate(),
 						Choice::PlayImmediately(card.card_type),

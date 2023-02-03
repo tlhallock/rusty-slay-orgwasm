@@ -49,9 +49,10 @@ impl PlayerTask for UnstealTo {
 				DeckPath::Party(player_index),
 				DeckPath::Party(victim_index),
 				card_id,
-			);
+			)?;
 		} else {
 			log::error!("Could not find tipsie tootie!!!!!!!!");
+			unreachable!();
 		}
 		Ok(TaskProgressResult::TaskComplete)
 	}

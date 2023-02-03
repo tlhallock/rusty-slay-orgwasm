@@ -42,7 +42,8 @@ impl DrawTask {
 	}
 	fn cannot_draw_at_all(&mut self, hand_size: usize) -> bool {
 		match self.amount {
-			DrawAmount::Fixed(amount) => amount <= 0,
+			// TODO: Double check this...
+			DrawAmount::Fixed(_) => false, // amount <= 0,
 			DrawAmount::Until(amount) => amount >= hand_size,
 		}
 	}
