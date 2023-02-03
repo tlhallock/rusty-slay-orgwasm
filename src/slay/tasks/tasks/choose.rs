@@ -30,12 +30,10 @@ impl PlayerTask for ChooseTask {
 		game: &mut Game,
 		player_index: ids::PlayerIndex,
 	) -> SlayResult<TaskProgressResult> {
-		self.choices.as_ref().map(|choices| {
-			context.emit(&Notification::PlayerIsChoosing(
+		if let Some(choices) = self.choices.as_ref() { context.emit(&Notification::PlayerIsChoosing(
 				player_index,
 				choices.choices_type.to_owned(),
-			))
-		});
+			)) }
 		game.players[player_index].choices_ = self.choices.take();
 		Ok(TaskProgressResult::TaskComplete)
 	}

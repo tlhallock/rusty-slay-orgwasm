@@ -48,7 +48,7 @@ impl PlayerTask for Hook {
 
 		let mut options = cards
 			.into_iter()
-			.map(|card| {
+			.filter_map(|card| {
 				create_play_card_immediately_task(context, game, player_index, &card).map(|task| {
 					TasksChoice::new(
 						context.id_generator.generate(),
@@ -61,7 +61,6 @@ impl PlayerTask for Hook {
 					)
 				})
 			})
-			.flatten()
 			.collect::<Vec<_>>();
 		let able = !options.is_empty();
 		context.emit(&Notification::CanPlayImmediately(player_index, able));

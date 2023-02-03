@@ -195,11 +195,9 @@ impl Choice {
 				format!("Give {} to player {}.", card.label(), player_index,)
 			}
 			Choice::QuitAction => String::from("No"),
-			Choice::ContinueDiscardingAndDestroying => format!("Discard and destroy again"),
-			Choice::RevealChallengeAndDestroy => format!(
-				// Are we sure it was pulled?
-				"Reveal that you pulled a challenge card, so you can destroy a hero card.",
-			),
+			Choice::ContinueDiscardingAndDestroying => "Discard and destroy again".to_string(),
+			// Are we sure it was just pulled?q
+			Choice::RevealChallengeAndDestroy => "Reveal that you pulled a challenge card, so you can destroy a hero card.".to_string(),
 			Choice::PlaceHeroImmediately(hero_card) => {
 				format!("Place {} in you party immediately.", hero_card.label(),)
 			}
@@ -216,7 +214,7 @@ impl Choice {
 		// Player {} chose to
 		match self {
 			Choice::UseActionPoints(action) => match action {
-				Action::Forfeit => format!("To do nothing, lol."),
+				Action::Forfeit => "To do nothing, lol.".to_string(),
 				Action::PlaceHeroInParty(hero_card) => format!(
 					"Player {} chose to place {} in their party.",
 					game.player_name(player_index),

@@ -20,7 +20,7 @@ pub fn view_notifications(props: &NotificationProps) -> Html {
 	let notifications = props.notifications.iter().map(|notification| {
 		html! {
 			<div>
-				{notification.get_description(&(*props.statics), props.player_index)}
+				{notification.get_description(&props.statics, props.player_index)}
 			</div>
 		}
 	});
@@ -33,7 +33,7 @@ pub fn view_notifications(props: &NotificationProps) -> Html {
 		.map(|(_, notification)| {
 			html! {
 				<div>
-					{notification.get_description(&(*props.statics), props.player_index)}
+					{notification.get_description(&props.statics, props.player_index)}
 				</div>
 			}
 		});

@@ -164,8 +164,8 @@ fn game_to_string(game: &Game) -> String {
 		.summarize(&mut writer, 0)
 		.expect("Error writing to file");
 	let bytes = writer.into_inner().expect("whoops");
-	let string = String::from_utf8(bytes).expect("error logging state");
-	string
+	
+	String::from_utf8(bytes).expect("error logging state")
 }
 
 pub fn game_loop() -> SlayResult<()> {

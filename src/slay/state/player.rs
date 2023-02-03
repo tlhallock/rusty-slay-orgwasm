@@ -93,7 +93,7 @@ impl HeroTypeCounter {
 		for count in self.counts.values() {
 			ret += count;
 		}
-		return ret as usize;
+		ret as usize
 	}
 }
 

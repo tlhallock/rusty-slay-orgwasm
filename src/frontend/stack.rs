@@ -63,18 +63,13 @@ pub fn view_spec(props: &SpecProps) -> Html {
 				{ props.spec.label() }
 				<br/>
 				{ for
-					if let Some(hero_type) = props.spec.hero_type() {
-						Some(html! {
+					props.spec.hero_type().map(|hero_type| html! {
 							<img
 								width={30}
 								src={hero_type.icon().to_owned()}
 								alt={hero_type.label()}
 							/>
 						})
-						// Some(hero_type.label().to_owned())
-					} else {
-						None
-					}
 				}
 			</div>
 		}
