@@ -4,3 +4,6 @@ output
 
 wasm-target
 venv
+.vscode/launch.json
+build/my-languages.so
+test.html
