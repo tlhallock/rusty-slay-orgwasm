@@ -197,7 +197,9 @@ impl Choice {
 			Choice::QuitAction => String::from("No"),
 			Choice::ContinueDiscardingAndDestroying => "Discard and destroy again".to_string(),
 			// Are we sure it was just pulled?q
-			Choice::RevealChallengeAndDestroy => "Reveal that you pulled a challenge card, so you can destroy a hero card.".to_string(),
+			Choice::RevealChallengeAndDestroy => {
+				"Reveal that you pulled a challenge card, so you can destroy a hero card.".to_string()
+			}
 			Choice::PlaceHeroImmediately(hero_card) => {
 				format!("Place {} in you party immediately.", hero_card.label(),)
 			}

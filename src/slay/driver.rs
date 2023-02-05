@@ -1,4 +1,3 @@
-
 use crate::slay::actions::list_actions;
 use crate::slay::errors::SlayError;
 use crate::slay::errors::SlayResult;
@@ -16,7 +15,8 @@ use crate::slay::tasks::player_tasks::TaskProgressResult;
 use std::collections::HashSet;
 use std::io::BufWriter;
 
-// use simple_logging;
+use log::LevelFilter;
+use simple_logging;
 
 pub fn player_has_won(player: &Player) -> bool {
 	let hero_types = &mut HashSet::new();
@@ -164,12 +164,12 @@ fn game_to_string(game: &Game) -> String {
 		.summarize(&mut writer, 0)
 		.expect("Error writing to file");
 	let bytes = writer.into_inner().expect("whoops");
-	
+
 	String::from_utf8(bytes).expect("error logging state")
 }
 
 pub fn game_loop() -> SlayResult<()> {
-	// simple_logging::log_to_file("output/log.txt", LevelFilter::Info).expect("Unable to log.");
+	simple_logging::log_to_file("output/log.txt", LevelFilter::Info).expect("Unable to log.");
 
 	let context = &mut GameBookKeeping::new();
 	let game = &mut Game::new();

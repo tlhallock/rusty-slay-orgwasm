@@ -1,4 +1,3 @@
-
 use crate::slay::choices::Choice;
 use crate::slay::choices::ChoiceDisplayType;
 use crate::slay::choices::Choices;

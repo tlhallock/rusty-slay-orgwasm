@@ -32,11 +32,12 @@ impl Notification {
 		viewer: ids::PlayerIndex,
 	) -> String {
 		match self {
-			Notification::PlayerChose(viewed, choice) => format!(
-				"{} chose {}",
-				statics.players_name_from_perspective(viewer, *viewed),
-				choice.get_notification(statics, *viewed),
-			),
+			Notification::PlayerChose(viewed, choice) => choice.get_notification(statics, *viewed),
+			// format!(
+			// 	"{} chose {}",
+			// 	statics.players_name_from_perspective(viewer, *viewed),
+			// 	choice.get_notification(statics, *viewed),
+			// ),
 			Notification::PlayerIsChoosing(viewed, choices_type) => format!(
 				"{} is choosing {:?}",
 				statics.players_name_from_perspective(viewer, *viewed),

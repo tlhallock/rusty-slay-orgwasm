@@ -1,14 +1,16 @@
 use crate::slay::choices::ChoiceDisplayType;
 use crate::slay::ids;
-use crate::slay::modifier_visitors::CardHasModifier;
-use crate::slay::modifiers::ItemModifier;
 use crate::slay::specification::CardSpec;
 use crate::slay::specification::HeroType;
 use crate::slay::specification::MonsterSpec;
 use crate::slay::specs::cards::card_type::SlayCardSpec;
 use crate::slay::specs::hero::HeroAbility;
+use crate::slay::specs::hero::HeroAbilityType;
+use crate::slay::specs::items::AnotherItemType;
 use crate::slay::state::game::Game;
 use crate::slay::state::summarizable::Summarizable;
+use crate::slay::status_effects::effect::HeroStatusEffect;
+use crate::slay::status_effects::effect_entry::HeroStatusEffectEntry;
 
 use std::fmt::Debug;
 use std::io::BufWriter;
@@ -107,6 +109,12 @@ impl Card {
 	}
 }
 
+pub struct ActiveHeroItem {
+	pub hero: HeroAbilityType,
+	pub item_id: ids::CardId,
+	pub effect: HeroStatusEffectEntry,
+}
+
 impl Stack {
 	pub fn new(top: Card) -> Self {
 		Self {
@@ -115,28 +123,51 @@ impl Stack {
 		}
 	}
 
-	pub(crate) fn card_has_modifier(&self, modifier: ItemModifier) -> bool {
-		let visitor = CardHasModifier::new(modifier);
-		// self.tour_buffs(&mut visitor);
-		visitor.has
+	pub fn hero_effects(&self) -> impl Iterator<Item = ActiveHeroItem> + '_ {
+		// guard_unwrap!(
+		// 	let SlayCardSpec::HeroCard(top_hero) = self.top.card_type
+		// );
+
+		self.modifiers.iter().map(|item_card| {
+			guard_unwrap!(
+				let SlayCardSpec::Item(item) = item_card.card_type
+			);
+			guard_unwrap!(
+				let SlayCardSpec::HeroCard(hero_card) = self.top.card_type
+			);
+			ActiveHeroItem {
+				hero: hero_card,
+				item_id: item_card.id,
+				effect: item.hero_effect_entry(),
+			}
+		})
 	}
+
+	// pub(crate) fn card_has_modifier(&self, modifier: HeroStatusEffect) -> bool {
+	// 	let visitor = CardHasModifier::new(modifier);
+	// 	// self.tour_buffs(&mut visitor);
+	// 	visitor.has
+	// }
 
 	pub fn contains(&self, card_id: ids::CardId) -> bool {
 		self.top.id == card_id || self.modifiers.iter().any(|c| c.id == card_id)
 	}
 
 	pub(crate) fn get_hero_type(&self) -> Option<HeroType> {
-		if let Some(hero_type) = self.top.get_spec().get_unmodified_hero_type() {
-			let mut ret = hero_type;
-			for modifier in self.modifiers.iter() {
-				if let Some(ItemModifier::Mask(hero_type)) = modifier.get_spec().card_modifier.as_ref() {
-					ret = *hero_type;
-				}
+		guard!(
+			let SlayCardSpec::HeroCard(hero_card) = self.top.card_type
+			else { return None; }
+		);
+		let mut return_value = hero_card.hero_type();
+		for item_card in self.modifiers.iter() {
+			guard_unwrap!(
+				let SlayCardSpec::Item(item) = item_card.card_type
+			);
+			if let AnotherItemType::MaskCard(hero_type) = item {
+				return_value = hero_type;
 			}
-			Some(ret)
-		} else {
-			None
 		}
+		Some(return_value)
 	}
 }
 
@@ -168,6 +199,13 @@ impl Summarizable for Stack {
 }
 
 impl Stack {
+	pub fn get_id_to_sacrifice_or_destroy(&self) -> ids::CardId {
+		self
+			.hero_effects()
+			.find(|item| item.effect.effect == HeroStatusEffect::SacrificeMeInstead)
+			.map(|item| item.item_id)
+			.unwrap_or(self.top.id)
+	}
 	pub fn to_perspective(
 		&self,
 		game: &Game,

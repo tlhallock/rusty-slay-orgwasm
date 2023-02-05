@@ -9,6 +9,7 @@ use crate::slay::tasks::tasks::params::ChooseCardFromPlayerParameterTask;
 use crate::slay::tasks::tasks::params::ChoosePlayerParameterTask;
 use crate::slay::tasks::tasks::params::ClearParamsTask;
 
+// Could be: AddTasks
 #[derive(Clone, Debug, Default)]
 pub struct StealTask {}
 

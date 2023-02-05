@@ -1,6 +1,6 @@
 use crate::slay::ids;
-use crate::slay::modifiers::ModifierOrigin;
 use crate::slay::specs::modifier::ModifierKinds;
+use crate::slay::status_effects::effect_entry::EffectOrigin;
 
 // TODO: rename to Roll....
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -13,7 +13,7 @@ pub enum ModificationPath {
 #[derive(Debug, Clone, PartialEq)]
 pub enum ModificationOrigin {
 	FromPlayer(ids::PlayerIndex, ModifierKinds),
-	FromBuff(ModifierOrigin),
+	FromBuff(EffectOrigin),
 }
 
 #[derive(Debug, Clone, PartialEq)]

@@ -30,7 +30,7 @@ pub fn create_roll_for_ability_task(
 				game,
 				player_index,
 				hero_card.to_consequences(),
-				RollReason::UseHeroAbility(card.card_type),
+				RollReason::UseHeroAbility(hero_card),
 			))) as Box<dyn PlayerTask>,
 		],
 	})

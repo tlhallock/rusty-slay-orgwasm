@@ -73,6 +73,7 @@ impl PlayerTask for DrawTask {
 		let stack = game.draw.deal();
 		let card_id = stack.top.id;
 		game.players[player_index].hand.add(stack);
+
 		// TODO: Check everything about drawing...
 		// PlayOnDraw and buffs....
 

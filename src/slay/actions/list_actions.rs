@@ -60,7 +60,7 @@ fn create_hand_action_choice(
 			card_path,
 			spell,
 		)),
-		SlayCardSpec::Challenge | SlayCardSpec::MonsterCard(_) | SlayCardSpec::PartyLeader(_) => {
+		SlayCardSpec::MonsterCard(_) | SlayCardSpec::PartyLeader(_) => {
 			unreachable!();
 		}
 		_ => None,

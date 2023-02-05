@@ -1,4 +1,4 @@
-
+use crate::slay::actions::cast_magic;
 use crate::slay::actions::place_item;
 use crate::slay::actions::roll_for_ability;
 use crate::slay::choices::CardPath;
@@ -52,7 +52,12 @@ pub fn create_play_card_immediately_task(
 				unreachable!()
 			}
 		}
-		SlayCardSpec::MagicCard(_) => todo!(),
+		SlayCardSpec::MagicCard(spell) => Some(cast_magic::create_cast_magic_task(
+			game,
+			player_index,
+			CardPath::TopCardIn(DeckPath::Hand(player_index), card.id),
+			spell,
+		)),
 		SlayCardSpec::Item(_) => {
 			place_item::create_place_item_challenge_offer(context, game, player_index, card)
 		}

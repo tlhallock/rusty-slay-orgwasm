@@ -4,13 +4,8 @@ use crate::slay::choices::ChoicesPerspective;
 use crate::slay::choices::DisplayPath;
 use crate::slay::errors;
 use crate::slay::ids;
-use crate::slay::modifier_visitors::CountActionPoints;
-use crate::slay::modifier_visitors::ModifierVisitor;
-use crate::slay::modifier_visitors::PlayerHasModifier;
-use crate::slay::modifiers::ModifierOrigin;
-use crate::slay::modifiers::PlayerBuffs;
-use crate::slay::modifiers::PlayerModifier;
 use crate::slay::specification::HeroType;
+use crate::slay::specs::cards::card_type::SlayCardSpec;
 use crate::slay::specs::visibility::Perspective;
 use crate::slay::specs::visibility::VisibilitySpec;
 use crate::slay::state::deck::Deck;
@@ -23,9 +18,10 @@ use crate::slay::state::game::GameStaticInformation;
 use crate::slay::state::stack::Card;
 use crate::slay::state::summarizable::Summarizable;
 use crate::slay::state::turn::Turn;
+use crate::slay::status_effects::effect::PlayerStatusEffect;
+use crate::slay::status_effects::effect_entry::PlayerStatusEffectEntry;
 use crate::slay::tasks::player_tasks::PlayerTask;
 use crate::slay::tasks::player_tasks::PlayerTasks;
-use crate::slay::tasks::tasks::choose::ChooseTask;
 
 use enum_iterator::all;
 use std::collections::HashMap;
@@ -35,7 +31,9 @@ use std::io::BufWriter;
 use std::io::Write;
 use std::iter::Iterator;
 
+use super::stack::ActiveHeroItem;
 use super::stack::CardPerspective;
+use super::status_effects::PlayerStatusEffects;
 
 pub struct HeroTypeCounter {
 	pub leader_type: Option<HeroType>,
@@ -102,7 +100,7 @@ pub struct Player {
 	pub player_index: ids::PlayerIndex,
 	pub name: String,
 
-	pub temporary_buffs: PlayerBuffs,
+	pub temporary_buffs: PlayerStatusEffects,
 	pub choices_: Option<Choices>,
 	pub tasks: PlayerTasks,
 
@@ -120,12 +118,14 @@ pub struct Player {
 
 impl Player {
 	pub fn choose(&mut self, choices: Choices) {
-		self.tasks.append(ChooseTask::create(choices));
+		self.choices_ = Some(choices);
+		// self.tasks.append(ChooseTask::create(choices));
 	}
 	pub fn set_choices(&mut self, choices: Option<Choices>) {
-		if let Some(choices) = choices {
-			self.tasks.append(ChooseTask::create(choices));
-		}
+		self.choices_ = choices;
+		// if let Some(choices) = choices {
+		// 	self.tasks.append(ChooseTask::create(choices));
+		// }
 	}
 
 	pub fn put_current_task_back(&mut self, task: Box<dyn PlayerTask>) -> errors::SlayResult<()> {
@@ -162,12 +162,6 @@ impl Player {
 			played_this_turn: Default::default(),
 			visible_hands: Default::default(),
 		}
-	}
-
-	pub fn has_modifier(&self, modifier: PlayerModifier) -> bool {
-		let mut visitor = PlayerHasModifier::new(modifier);
-		self.tour_buffs(&mut visitor);
-		visitor.has
 	}
 
 	pub fn turn_begin(&mut self) {
@@ -218,37 +212,120 @@ impl Player {
 		self.remaining_action_points
 	}
 	pub(crate) fn calculate_total_action_points(&self) -> u32 {
-		let mut counter = CountActionPoints::new();
-		self.tour_buffs(&mut counter);
-		counter.count
+		if self.has_player_effect(PlayerStatusEffect::ExtraActionPoint) {
+			4
+		} else {
+			3
+		}
 	}
 
-	pub(crate) fn tour_buffs(&self, visitor: &mut dyn ModifierVisitor) {
-		self.temporary_buffs.tour_buffs(visitor);
-		if let Some(buff) = self.leader.card_type.create_party_leader_buffs() {
-			visitor.visit_player_modifier(buff, ModifierOrigin::FromPartyLeader(self.leader.id));
+	//////////////////////////////////////////////////////////////////////////////
+	// status effects
+	//////////////////////////////////////////////////////////////////////////////
+
+	pub fn has_player_effect(&self, effect: PlayerStatusEffect) -> bool {
+		self.temporary_buffs.has_player_effect(effect);
+		guard_unwrap!(
+			let SlayCardSpec::PartyLeader(hero_type) = self.leader.card_type
+		);
+		if let Some(status_effect) = hero_type.get_leader_effect() {
+			if status_effect == effect {
+				return true;
+			}
 		}
 		for top in self.slain_monsters.tops() {
-			if let Some(monster) = top.card_type.get_card_spec_creation().monster {
-				for modifier in monster.create_spec().modifiers {
-					visitor.visit_player_modifier(modifier, ModifierOrigin::FromSlainMonster);
-				}
-			} else {
-				unreachable!()
+			guard_unwrap!(
+				let SlayCardSpec::MonsterCard(monster) = top.card_type
+			);
+			if effect == monster.status_effect() {
+				return true;
 			}
 		}
-		for stack in self.party.stacks() {
-			for modifier_card in stack.modifiers.iter() {
-				if let Some(modifier) = modifier_card
-					.card_type
-					.get_card_spec_creation()
-					.card_modifier
-				{
-					visitor.visit_card_modifier(modifier, stack.top.card_type)
-				}
-			}
-		}
+		false
 	}
+
+	pub(crate) fn player_effects(&self) -> impl Iterator<Item = PlayerStatusEffectEntry> + '_ {
+		guard_unwrap!(
+			let SlayCardSpec::PartyLeader(hero_type) = self.leader.card_type
+		);
+		self
+			.temporary_buffs
+			.player_effects()
+			.chain(self.slain_monsters.tops().map(|top| {
+				guard_unwrap!(
+					let SlayCardSpec::MonsterCard(monster) = top.card_type
+				);
+				monster.status_effect_entry()
+			}))
+			.chain(hero_type.get_leader_effect_entry().into_iter())
+
+		// let temps = self.temporary_buffs.player_effects();
+		// if let Some(status_effect) = hero_type.get_leader_effect_entry() {
+		// 	effects.push(status_effect);
+		// }
+		// for top in self.slain_monsters.tops() {
+		// 	guard_unwrap!(
+		// 		let SlayCardSpec::MonsterCard(monster) = top.card_type
+		// 	);
+		// 	effects.push(monster.status_effect_entry());
+		// }
+
+		// return temps;
+
+		// if let SlayCardSpec::PartyLeader(hero_type) = self.leader.card_type {
+
+		// } else {
+		// 	unreachable!();
+		// }
+		// for top in self.slain_monsters.tops() {
+		// 	if let SlayCardSpec::MonsterCard(monster) = top.card_type {
+		// 		for modifier in monster.create_spec().modifiers {
+		// 			visitor.visit_player_modifier(modifier, EffectOrigin::FromSlainMonster);
+		// 		}
+		// 	} else {
+		// 		unreachable!()
+		// 	}
+		// }
+	}
+
+	pub fn hero_effects(&self) -> impl Iterator<Item = ActiveHeroItem> + '_ {
+		self.party.stacks().flat_map(|stack| stack.hero_effects())
+
+		// let mut ret = iter::empty::<(ids::CardId, HeroStatusEffectEntry)>();
+		// for stack in self.party.stacks() {
+		// 	ret = ret.chain(stack.hero_effects());
+		// }
+		// ret
+	}
+
+	// remove this.
+	// pub(crate) fn tour_buffs(&self, visitor: &mut dyn ModifierVisitor) {
+	// self.temporary_buffs.tour_buffs(visitor);
+	// if let Some(buff) = self.leader.card_type.create_party_leader_buffs() {
+	// 	visitor.visit_player_modifier(buff, EffectOrigin::FromPartyLeader(self.leader.id));
+	// }
+	// for top in self.slain_monsters.tops() {
+	// 	if let Some(monster) = top.card_type.get_card_spec_creation().monster {
+	// 		for modifier in monster.create_spec().modifiers {
+	// 			visitor.visit_player_modifier(modifier, EffectOrigin::FromSlainMonster);
+	// 		}
+	// 	} else {
+	// 		unreachable!()
+	// 	}
+	// }
+	// // Is the following used?
+	// for stack in self.party.stacks() {
+	// 	for modifier_card in stack.modifiers.iter() {
+	// 		if let Some(modifier) = modifier_card
+	// 			.card_type
+	// 			.get_card_spec_creation()
+	// 			.card_modifier
+	// 		{
+	// 			visitor.visit_card_modifier(modifier, stack.top.card_type)
+	// 		}
+	// 	}
+	// }
+	// }
 
 	pub fn to_perspective(&self, game: &Game, perspective: &Perspective) -> PlayerPerspective {
 		PlayerPerspective {

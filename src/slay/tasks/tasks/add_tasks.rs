@@ -12,6 +12,12 @@ pub struct AddTasks {
 	pub tasks: Vec<Box<dyn PlayerTask>>,
 }
 
+impl AddTasks {
+	pub fn create(tasks: Vec<Box<dyn PlayerTask>>) -> Box<dyn PlayerTask> {
+		Box::new(Self { tasks })
+	}
+}
+
 impl PlayerTask for AddTasks {
 	fn make_progress(
 		&mut self,

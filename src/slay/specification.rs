@@ -4,8 +4,6 @@ use std::vec;
 use enum_iterator::Sequence;
 
 use crate::slay::ids;
-use crate::slay::modifiers::ItemModifier;
-use crate::slay::modifiers::PlayerModifier;
 use crate::slay::showdown::consequences::Condition;
 use crate::slay::showdown::consequences::RollConsequence;
 use crate::slay::showdown::consequences::RollConsequences;
@@ -15,6 +13,9 @@ use crate::slay::specs::magic::MagicSpell;
 use crate::slay::specs::monster::Monster;
 use crate::slay::state::deck::DeckPath;
 use crate::slay::tasks::tasks::monster_slain::MonsterSlainTask;
+
+use super::status_effects::effect::HeroStatusEffect;
+use super::status_effects::effect::PlayerStatusEffect;
 
 /*
 
@@ -59,7 +60,7 @@ pub struct CardSpec {
 	pub modifiers: Vec<i32>,
 	pub hero_ability: Option<HeroAbility>,
 	pub spell: Option<MagicSpell>,
-	pub card_modifier: Option<ItemModifier>,
+	pub card_modifier: Option<HeroStatusEffect>,
 
 	pub ignore: bool,
 }
@@ -249,7 +250,7 @@ impl MonsterRequirements {
 pub struct MonsterSpec {
 	pub consequences: RollConsequences,
 	pub requirements: Vec<MonsterRequirements>,
-	pub modifiers: Vec<PlayerModifier>,
+	pub modifiers: Vec<PlayerStatusEffect>,
 }
 
 impl MonsterSpec {
@@ -1044,7 +1045,7 @@ pub fn get_card_specs() -> [CardSpec; 95] {
       image_path: "cards/items/bard_mask.jpg".to_string(),
       description: "The equipped Hero card is considered a Bard instead of its original class.".to_string(),
       spell: Some(MagicSpell::CallToTheFallen),
-      card_modifier: Some(ItemModifier::Mask(HeroType::Bard)),
+      card_modifier: Some(HeroStatusEffect::Mask(HeroType::Bard)),
       ..Default::default()
     },
     CardSpec {
@@ -1053,7 +1054,7 @@ pub fn get_card_specs() -> [CardSpec; 95] {
       image_path: "cards/items/ranger_mask.jpg".to_string(),
       description: "The equipped Hero card is considered a Ranger instead of its original class.".to_string(),
       spell: Some(MagicSpell::CallToTheFallen),
-      card_modifier: Some(ItemModifier::Mask(HeroType::Ranger)),
+      card_modifier: Some(HeroStatusEffect::Mask(HeroType::Ranger)),
       ..Default::default()
     },
     CardSpec {
@@ -1062,7 +1063,7 @@ pub fn get_card_specs() -> [CardSpec; 95] {
       image_path: "cards/items/fighter_mask.jpg".to_string(),
       description: "The equipped Hero card is considered a Fighter instead of its original class.".to_string(),
       spell: Some(MagicSpell::CallToTheFallen),
-      card_modifier: Some(ItemModifier::Mask(HeroType::Fighter)),
+      card_modifier: Some(HeroStatusEffect::Mask(HeroType::Fighter)),
       ..Default::default()
     },
     CardSpec {
@@ -1071,7 +1072,7 @@ pub fn get_card_specs() -> [CardSpec; 95] {
       image_path: "cards/items/thief_mask.jpg".to_string(),
       description: "The equipped Hero card is considered a Thief instead of its original class.".to_string(),
       spell: Some(MagicSpell::CallToTheFallen),
-      card_modifier: Some(ItemModifier::Mask(HeroType::Thief)),
+      card_modifier: Some(HeroStatusEffect::Mask(HeroType::Thief)),
       ..Default::default()
     },
     CardSpec {
@@ -1080,7 +1081,7 @@ pub fn get_card_specs() -> [CardSpec; 95] {
       image_path: "cards/items/guardian_mask.jpg".to_string(),
       description: "The equipped Hero card is considered a Guardian instead of its original class.".to_string(),
       spell: Some(MagicSpell::CallToTheFallen),
-      card_modifier: Some(ItemModifier::Mask(HeroType::Gaurdian)),
+      card_modifier: Some(HeroStatusEffect::Mask(HeroType::Gaurdian)),
       ..Default::default()
     },
     CardSpec {
@@ -1089,7 +1090,7 @@ pub fn get_card_specs() -> [CardSpec; 95] {
       image_path: "cards/items/wizard_mask.jpg".to_string(),
       description: "The equipped Hero card is considered a Wizard instead of its original class.".to_string(),
       spell: Some(MagicSpell::CallToTheFallen),
-      card_modifier: Some(ItemModifier::Mask(HeroType::Wizard)),
+      card_modifier: Some(HeroStatusEffect::Mask(HeroType::Wizard)),
       ..Default::default()
     },
     CardSpec {
@@ -1098,7 +1099,7 @@ pub fn get_card_specs() -> [CardSpec; 95] {
       image_path: "cards/items/decoy_doll.jpg".to_string(),
       description: "If the equipped Hero card would be sacrificed or destroyed, move Decoy Doll to the discard pile instead.".to_string(),
       spell: Some(MagicSpell::CallToTheFallen),
-      card_modifier: Some(ItemModifier::SacrificeMeInstead),
+      card_modifier: Some(HeroStatusEffect::SacrificeMeInstead),
       ..Default::default()
     },
     CardSpec {
@@ -1107,7 +1108,7 @@ pub fn get_card_specs() -> [CardSpec; 95] {
       image_path: "cards/items/really_big_ring.jpg".to_string(),
       description: "Each time you roll to use the equipped Hero card's effect, +2 to your roll.".to_string(),
       spell: Some(MagicSpell::CallToTheFallen),
-      card_modifier: Some(ItemModifier::AddToRollForAbility(2)),
+      card_modifier: Some(HeroStatusEffect::AddToRollForAbility(2)),
       repeat: 2,
       ..Default::default()
     },
@@ -1117,7 +1118,7 @@ pub fn get_card_specs() -> [CardSpec; 95] {
       image_path: "cards/items/particularly_rusty_coin.jpg".to_string(),
       description: "If you unsuccessfully roll to use the equipped Hero card's effect, DRAW a card.".to_string(),
       spell: Some(MagicSpell::CallToTheFallen),
-      card_modifier: Some(ItemModifier::DrawOnUnsuccessfulRollForAbility(1)),
+      card_modifier: Some(HeroStatusEffect::DrawOnUnsuccessfulRollForAbility(1)),
       repeat: 2,
       ..Default::default()
     },
@@ -1127,7 +1128,7 @@ pub fn get_card_specs() -> [CardSpec; 95] {
       image_path: "cards/cursed_items/sealing_key.jpg".to_string(),
       description: "You cannot use the equipped Hero card's effect.".to_string(),
       spell: Some(MagicSpell::CallToTheFallen),
-      card_modifier: Some(ItemModifier::RemoveAbility),
+      card_modifier: Some(HeroStatusEffect::RemoveAbility),
       ..Default::default()
     },
     CardSpec {
@@ -1136,7 +1137,7 @@ pub fn get_card_specs() -> [CardSpec; 95] {
       image_path: "cards/cursed_items/suspiciously_shiny_coin.jpg".to_string(),
       description: "If you sucessfully roll to use the equipped Hero card's effect, DISCARD a card.".to_string(),
       spell: Some(MagicSpell::CallToTheFallen),
-      card_modifier: Some(ItemModifier::DiscardOnSuccessfulRollForAbility(1)),
+      card_modifier: Some(HeroStatusEffect::DiscardOnSuccessfulRollForAbility(1)),
       ..Default::default()
     },
     CardSpec {
@@ -1145,7 +1146,7 @@ pub fn get_card_specs() -> [CardSpec; 95] {
       image_path: "cards/cursed_items/curse_of_the_snakes_eyes.jpg".to_string(),
       description: "Each time you roll to use the equipped Hero card's effect, -2 to your roll.".to_string(),
       spell: Some(MagicSpell::CallToTheFallen),
-      card_modifier: Some(ItemModifier::AddToRollForAbility(-2)),
+      card_modifier: Some(HeroStatusEffect::AddToRollForAbility(-2)),
       repeat: 2,
       ..Default::default()
     },

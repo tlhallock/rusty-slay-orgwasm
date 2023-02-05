@@ -3,6 +3,7 @@ use crate::slay::choices::Choices;
 use crate::slay::choices::ChoicesType;
 use crate::slay::choices::TasksChoice;
 use crate::slay::deadlines;
+use crate::slay::errors::SlayError;
 use crate::slay::errors::SlayResult;
 use crate::slay::game_context::GameBookKeeping;
 use crate::slay::ids;
@@ -12,7 +13,40 @@ use crate::slay::state::game::Game;
 use crate::slay::tasks::player_tasks::PlayerTask;
 use crate::slay::tasks::player_tasks::TaskProgressResult;
 use crate::slay::tasks::task_params::TaskParamName;
-use crate::slay::tasks::tasks::move_card::MoveCardTask;
+
+#[derive(Debug, Clone)]
+pub struct SacrificeTask {
+	card_id: ids::CardId,
+}
+
+impl SacrificeTask {
+	pub fn create(card_id: ids::CardId) -> Box<dyn PlayerTask> {
+		Box::new(Self { card_id })
+	}
+}
+
+impl PlayerTask for SacrificeTask {
+	fn make_progress(
+		&mut self,
+		_context: &mut GameBookKeeping,
+		game: &mut Game,
+		player_index: ids::PlayerIndex,
+	) -> SlayResult<TaskProgressResult> {
+		let card_id = game.players[player_index]
+			.party
+			.stack(self.card_id)
+			.ok_or_else(|| SlayError::new("Unable to find card to sacrifice"))?
+			.get_id_to_sacrifice_or_destroy();
+		// make a notification?
+
+		game.move_card(DeckPath::Party(player_index), DeckPath::Discard, card_id)?;
+		Ok(TaskProgressResult::TaskComplete)
+	}
+
+	fn label(&self) -> String {
+		format!("Player is sacrificing a hero.")
+	}
+}
 
 #[derive(Debug, Clone)]
 pub enum SacrificeVictim {
@@ -21,12 +55,12 @@ pub enum SacrificeVictim {
 }
 
 #[derive(Debug, Clone)]
-pub struct Sacrifice {
+pub struct ChooseSacrifice {
 	num: u32,
 	victim: SacrificeVictim,
 }
 
-impl Sacrifice {
+impl ChooseSacrifice {
 	pub fn create(num: u32) -> Box<dyn PlayerTask> {
 		Box::new(Self::new(num))
 	}
@@ -58,7 +92,7 @@ impl Sacrifice {
 //   true
 // }
 
-impl PlayerTask for Sacrifice {
+impl PlayerTask for ChooseSacrifice {
 	fn make_progress(
 		&mut self,
 		context: &mut GameBookKeeping,
@@ -79,11 +113,7 @@ impl PlayerTask for Sacrifice {
 						context.id_generator.generate(),
 						Choice::Sacrifice(hero_card),
 						card.as_choice(),
-						vec![Box::new(MoveCardTask {
-							source: DeckPath::Party(victim_index),
-							destination: DeckPath::Discard,
-							card_id: card.id,
-						})],
+						vec![SacrificeTask::create(card.id)],
 					)
 				} else {
 					unreachable!();

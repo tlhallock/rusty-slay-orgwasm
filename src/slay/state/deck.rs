@@ -192,6 +192,9 @@ impl Deck {
 	// 		.collect()
 	// }
 
+	pub fn stack(&self, card_id: ids::CardId) -> Option<&Stack> {
+		self.stacks.iter().find(|stack| stack.top.id == card_id)
+	}
 	pub fn stacks(&self) -> impl Iterator<Item = &Stack> {
 		self.stacks.iter()
 	}

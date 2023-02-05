@@ -1,6 +1,6 @@
 use crate::slay::ids;
-use crate::slay::modifiers::ModifierDuration;
 use crate::slay::specification;
+use crate::slay::status_effects::temp_effect::EffectDuration;
 
 use std::fmt::Debug;
 
@@ -13,21 +13,21 @@ pub struct Turn {
 }
 
 impl Turn {
-	pub(crate) fn for_this_turn(&self) -> ModifierDuration {
-		ModifierDuration::ForThisTurn(self.turn_number)
+	pub(crate) fn for_this_turn(&self) -> EffectDuration {
+		EffectDuration::ForThisTurn(self.turn_number)
 	}
-	pub(crate) fn until_next_turn(&self) -> ModifierDuration {
-		ModifierDuration::UntilNextTurn(self.round_number + 1, self.player_index)
+	pub(crate) fn until_next_turn(&self) -> EffectDuration {
+		EffectDuration::UntilNextTurn(self.round_number + 1, self.player_index)
 	}
 
 	pub(crate) fn set_active_player(&mut self, player_index: ids::PlayerIndex) {
 		self.player_index = player_index;
 	}
 
-	pub fn still_active(&self, duration: &ModifierDuration) -> bool {
+	pub fn still_active(&self, duration: &EffectDuration) -> bool {
 		match duration {
-			ModifierDuration::ForThisTurn(turn_number) => *turn_number == self.turn_number,
-			ModifierDuration::UntilNextTurn(round_number, player_index) => {
+			EffectDuration::ForThisTurn(turn_number) => *turn_number == self.turn_number,
+			EffectDuration::UntilNextTurn(round_number, player_index) => {
 				self.round_number <= *round_number
 					|| (self.round_number == round_number + 1 && self.player_index < *player_index)
 			}

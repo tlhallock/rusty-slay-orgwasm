@@ -4,5 +4,6 @@ pub mod initialize;
 pub mod player;
 pub mod stack;
 pub mod stacks;
+pub mod status_effects;
 pub mod summarizable;
 pub mod turn;

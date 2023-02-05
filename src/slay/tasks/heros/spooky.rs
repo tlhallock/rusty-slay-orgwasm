@@ -2,7 +2,7 @@ use crate::slay::errors::SlayResult;
 use crate::slay::game_context::GameBookKeeping;
 use crate::slay::ids;
 use crate::slay::state::game::Game;
-use crate::slay::tasks::core::sacrifice::Sacrifice;
+use crate::slay::tasks::core::sacrifice::ChooseSacrifice;
 use crate::slay::tasks::player_tasks::PlayerTask;
 use crate::slay::tasks::player_tasks::TaskProgressResult;
 
@@ -28,7 +28,7 @@ impl PlayerTask for Spooky {
 			}
 			game.players[victim_index]
 				.tasks
-				.prepend(Sacrifice::create(1));
+				.prepend(ChooseSacrifice::create(1));
 		}
 		Ok(TaskProgressResult::TaskComplete)
 	}

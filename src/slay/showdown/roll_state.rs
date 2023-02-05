@@ -19,6 +19,8 @@ use crate::slay::showdown::roll_choices;
 use crate::slay::showdown::roll_modification::ModificationPath;
 use crate::slay::showdown::roll_modification::RollModification;
 use crate::slay::specs::cards::card_type::SlayCardSpec;
+use crate::slay::specs::hero::HeroAbilityType;
+use crate::slay::specs::monster::Monster;
 use crate::slay::state::game::Game;
 use crate::slay::state::game::GameStaticInformation;
 use crate::slay::tasks::tasks::set_complete;
@@ -27,8 +29,8 @@ use crate::slay::tasks::tasks::set_complete;
 
 #[derive(Debug, PartialEq, Clone, Copy)]
 pub enum RollReason {
-	UseHeroAbility(SlayCardSpec),
-	AttackMonster(SlayCardSpec),
+	UseHeroAbility(HeroAbilityType),
+	AttackMonster(Monster),
 	Challenged,
 	Challenging,
 }

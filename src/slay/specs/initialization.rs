@@ -1,4 +1,3 @@
-use crate::slay::modifiers::ItemModifier;
 use crate::slay::showdown::consequences::Condition;
 use crate::slay::specification::CardSpec;
 use crate::slay::specification::CardType;
@@ -11,6 +10,7 @@ use crate::slay::specs::items::Item;
 use crate::slay::specs::magic::MagicSpell;
 use crate::slay::specs::modifier::ModifierKinds;
 use crate::slay::specs::monster::Monster;
+use crate::slay::status_effects::effect::HeroStatusEffect;
 
 // TODO: Turn this into a test to ensure nothing changed in the refactor...
 impl SlayCardSpec {
@@ -893,7 +893,7 @@ impl SlayCardSpec {
                   label: "Bard Mask".to_string(),
                   image_path: "cards/items/bard_mask.jpg".to_string(),
                   description: "The equipped Hero card is considered a Bard instead of its original class.".to_string(),
-                  card_modifier: Some(ItemModifier::Mask(HeroType::Bard)),
+                  card_modifier: Some(HeroStatusEffect::Mask(HeroType::Bard)),
                   ..Default::default()
                 },
                 HeroType::Wizard => CardSpec {
@@ -901,7 +901,7 @@ impl SlayCardSpec {
                   label: "Wizard Mask".to_string(),
                   image_path: "cards/items/wizard_mask.jpg".to_string(),
                   description: "The equipped Hero card is considered a Wizard instead of its original class.".to_string(),
-                  card_modifier: Some(ItemModifier::Mask(HeroType::Wizard)),
+                  card_modifier: Some(HeroStatusEffect::Mask(HeroType::Wizard)),
                   ..Default::default()
                 },
                 HeroType::Fighter => CardSpec {
@@ -909,7 +909,7 @@ impl SlayCardSpec {
                   label: "Fighter Mask".to_string(),
                   image_path: "cards/items/fighter_mask.jpg".to_string(),
                   description: "The equipped Hero card is considered a Fighter instead of its original class.".to_string(),
-                  card_modifier: Some(ItemModifier::Mask(HeroType::Fighter)),
+                  card_modifier: Some(HeroStatusEffect::Mask(HeroType::Fighter)),
                   ..Default::default()
                 },
                 HeroType::Gaurdian => CardSpec {
@@ -917,7 +917,7 @@ impl SlayCardSpec {
                   label: "Guardian Mask".to_string(),
                   image_path: "cards/items/guardian_mask.jpg".to_string(),
                   description: "The equipped Hero card is considered a Guardian instead of its original class.".to_string(),
-                  card_modifier: Some(ItemModifier::Mask(HeroType::Gaurdian)),
+                  card_modifier: Some(HeroStatusEffect::Mask(HeroType::Gaurdian)),
                   ..Default::default()
                 },
                 HeroType::Ranger => CardSpec {
@@ -925,7 +925,7 @@ impl SlayCardSpec {
                   label: "Ranger Mask".to_string(),
                   image_path: "cards/items/ranger_mask.jpg".to_string(),
                   description: "The equipped Hero card is considered a Ranger instead of its original class.".to_string(),
-                  card_modifier: Some(ItemModifier::Mask(HeroType::Ranger)),
+                  card_modifier: Some(HeroStatusEffect::Mask(HeroType::Ranger)),
                   ..Default::default()
                 },
                 HeroType::Thief => CardSpec {
@@ -933,7 +933,7 @@ impl SlayCardSpec {
                   label: "Thief Mask".to_string(),
                   image_path: "cards/items/thief_mask.jpg".to_string(),
                   description: "The equipped Hero card is considered a Thief instead of its original class.".to_string(),
-                  card_modifier: Some(ItemModifier::Mask(HeroType::Thief)),
+                  card_modifier: Some(HeroStatusEffect::Mask(HeroType::Thief)),
                   ..Default::default()
                 },
                 HeroType::Beserker => CardSpec {
@@ -963,7 +963,7 @@ impl SlayCardSpec {
                   label: "Decoy Doll".to_string(),
                   image_path: "cards/items/decoy_doll.jpg".to_string(),
                   description: "If the equipped Hero card would be sacrificed or destroyed, move Decoy Doll to the discard pile instead.".to_string(),
-                  card_modifier: Some(ItemModifier::SacrificeMeInstead),
+                  card_modifier: Some(HeroStatusEffect::SacrificeMeInstead),
                   ..Default::default()
                 },
                 Item::ReallyBigRing => CardSpec {
@@ -971,7 +971,7 @@ impl SlayCardSpec {
                   label: "Really Big Ring".to_string(),
                   image_path: "cards/items/really_big_ring.jpg".to_string(),
                   description: "Each time you roll to use the equipped Hero card's effect, +2 to your roll.".to_string(),
-                  card_modifier: Some(ItemModifier::AddToRollForAbility(2)),
+                  card_modifier: Some(HeroStatusEffect::AddToRollForAbility(2)),
                   repeat: 2,
                   ..Default::default()
                 },
@@ -980,7 +980,7 @@ impl SlayCardSpec {
                   label: "Particularly Rusty Coin".to_string(),
                   image_path: "cards/items/particularly_rusty_coin.jpg".to_string(),
                   description: "If you unsuccessfully roll to use the equipped Hero card's effect, DRAW a card.".to_string(),
-                  card_modifier: Some(ItemModifier::DrawOnUnsuccessfulRollForAbility(1)),
+                  card_modifier: Some(HeroStatusEffect::DrawOnUnsuccessfulRollForAbility(1)),
                   repeat: 2,
                   ..Default::default()
                 },
@@ -989,7 +989,7 @@ impl SlayCardSpec {
                   label: "Sealing Key".to_string(),
                   image_path: "cards/cursed_items/sealing_key.jpg".to_string(),
                   description: "You cannot use the equipped Hero card's effect.".to_string(),
-                  card_modifier: Some(ItemModifier::RemoveAbility),
+                  card_modifier: Some(HeroStatusEffect::RemoveAbility),
                   ..Default::default()
                 },
                 Item::SuspiciouslyShinyCoin => CardSpec {
@@ -997,7 +997,7 @@ impl SlayCardSpec {
                   label: "Suspiciously Shiny Coin".to_string(),
                   image_path: "cards/cursed_items/suspiciously_shiny_coin.jpg".to_string(),
                   description: "If you sucessfully roll to use the equipped Hero card's effect, DISCARD a card.".to_string(),
-                  card_modifier: Some(ItemModifier::DiscardOnSuccessfulRollForAbility(1)),
+                  card_modifier: Some(HeroStatusEffect::DiscardOnSuccessfulRollForAbility(1)),
                   ..Default::default()
                 },
                 Item::CurseOfTheSnakesEyes => CardSpec {
@@ -1005,7 +1005,7 @@ impl SlayCardSpec {
                   label: "Curse of the Snake's Eyes".to_string(),
                   image_path: "cards/cursed_items/curse_of_the_snakes_eyes.jpg".to_string(),
                   description: "Each time you roll to use the equipped Hero card's effect, -2 to your roll.".to_string(),
-                  card_modifier: Some(ItemModifier::AddToRollForAbility(-2)),
+                  card_modifier: Some(HeroStatusEffect::AddToRollForAbility(-2)),
                   repeat: 2,
                   ..Default::default()
                 },

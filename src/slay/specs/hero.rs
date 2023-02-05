@@ -1,12 +1,12 @@
 use enum_iterator::Sequence;
 
 use crate::slay::abilities::heros::VictimDraws;
-use crate::slay::modifiers::ModifierOrigin;
-use crate::slay::modifiers::PlayerModifier;
 use crate::slay::showdown::consequences::Condition;
 use crate::slay::showdown::consequences::RollConsequence;
 use crate::slay::showdown::consequences::RollConsequences;
 use crate::slay::specification::HeroType;
+use crate::slay::status_effects::effect::PlayerStatusEffect;
+use crate::slay::status_effects::effect_entry::EffectOrigin;
 use crate::slay::tasks::core::destroy::DestroyCardTask;
 use crate::slay::tasks::core::destroy::DestroyModifiersDestination;
 use crate::slay::tasks::core::destroy::DestroyTask;
@@ -15,7 +15,7 @@ use crate::slay::tasks::core::discard::DiscardFromParam;
 use crate::slay::tasks::core::discard::PlayersWithHeroTypeDiscard;
 use crate::slay::tasks::core::draw::DrawTask;
 use crate::slay::tasks::core::pull::PullFromTask;
-use crate::slay::tasks::core::sacrifice::Sacrifice;
+use crate::slay::tasks::core::sacrifice::ChooseSacrifice;
 use crate::slay::tasks::core::steal::StealCardFromTask;
 use crate::slay::tasks::core::steal::StealTask;
 use crate::slay::tasks::heros::beary_wise::BearyWise;
@@ -270,26 +270,26 @@ impl HeroAbilityType {
 			],
 			HeroAbilityType::HolyCurselifter => vec![ReturnModifierTask::return_everyones()],
 			HeroAbilityType::IronResolve => vec![ReceiveModifier::for_this_turn(
-				PlayerModifier::NoCardsCanBeChallenged,
-				ModifierOrigin::FromHeroAbility,
+				PlayerStatusEffect::NoCardsCanBeChallenged,
+				EffectOrigin::FromHeroAbility,
 			)],
 			HeroAbilityType::CalmingVoice => vec![ReceiveModifier::until_next_turn(
-				PlayerModifier::NoCardsCanBeStolen,
-				ModifierOrigin::FromHeroAbility,
+				PlayerStatusEffect::NoCardsCanBeStolen,
+				EffectOrigin::FromHeroAbility,
 			)],
 			HeroAbilityType::VibrantGlow => vec![ReceiveModifier::for_this_turn(
-				PlayerModifier::AddToAllRolls(5),
-				ModifierOrigin::FromHeroAbility,
+				PlayerStatusEffect::AddToAllRolls(5),
+				EffectOrigin::FromHeroAbility,
 			)],
 			HeroAbilityType::MightyBlade => vec![ReceiveModifier::until_next_turn(
-				PlayerModifier::NoCardsCanBeDestroyed,
-				ModifierOrigin::FromHeroAbility,
+				PlayerStatusEffect::NoCardsCanBeDestroyed,
+				EffectOrigin::FromHeroAbility,
 			)],
 			HeroAbilityType::RadiantHorn => vec![SearchDiscard::for_modifiers()],
 			HeroAbilityType::GuidingLight => vec![SearchDiscard::for_hero()],
 			HeroAbilityType::WiseShield => vec![ReceiveModifier::for_this_turn(
-				PlayerModifier::AddToAllRolls(3),
-				ModifierOrigin::FromHeroAbility,
+				PlayerStatusEffect::AddToAllRolls(3),
+				EffectOrigin::FromHeroAbility,
 			)],
 			HeroAbilityType::QiBear => vec![QiBear::create()],
 			HeroAbilityType::PanChucks => vec![
@@ -341,12 +341,14 @@ impl HeroAbilityType {
 					TaskParamName::QuickDrawCard2,
 					PlayImmediatelyFilter::IsItem,
 				),
+				ClearParamsTask::create(),
 			],
 			HeroAbilityType::LookieRookie => vec![SearchDiscard::for_item()],
 			HeroAbilityType::Bullseye => vec![Bullseye::create()],
 			HeroAbilityType::SharpFox => vec![
 				ChoosePlayerParameterTask::exclude_self(TaskParamName::SharpFoxVictim),
 				ViewHand::create(TaskParamName::SharpFoxVictim),
+				ClearParamsTask::create(),
 			],
 			HeroAbilityType::FuzzyCheeks => vec![DrawTask::create(1), PlaceHero::create()],
 			HeroAbilityType::Peanut => vec![DrawTask::create(2)],
@@ -361,8 +363,8 @@ impl HeroAbilityType {
 					TaskParamName::TipsyTootieVictim,
 					TaskParamName::TipsyTootieCard,
 				),
-				ClearParamsTask::create(),
 				UnstealTo::create(),
+				ClearParamsTask::create(),
 				// Choose a player. STEAL a Hero card from that player's Party and
 				//  move this card to that player's Party.
 			], //////////////////////////////////
@@ -387,8 +389,8 @@ impl HeroAbilityType {
 			HeroAbilityType::Wiggles => vec![
 				ChoosePlayerParameterTask::exclude_self(TaskParamName::WigglesVictim),
 				ChooseCardFromPlayerParameterTask::from_party(
-					TaskParamName::PlayerToStealFrom,
-					TaskParamName::CardToSteal,
+					TaskParamName::WigglesVictim,
+					TaskParamName::WigglesCard,
 				),
 				StealCardFromTask::create(TaskParamName::WigglesVictim, TaskParamName::WigglesCard),
 				OfferPlayImmediately::create(TaskParamName::WigglesCard, PlayImmediatelyFilter::None),
@@ -413,7 +415,7 @@ impl HeroAbilityType {
 			HeroAbilityType::BunBun => vec![SearchDiscard::for_magic()],
 			HeroAbilityType::Hopper => vec![
 				ChoosePlayerParameterTask::exclude_self(TaskParamName::HopperVictim),
-				Sacrifice::from_param(TaskParamName::HopperVictim),
+				ChooseSacrifice::from_param(TaskParamName::HopperVictim),
 				ClearParamsTask::create(),
 			],
 			HeroAbilityType::Whiskers => vec![StealTask::create(), DestroyTask::create()],

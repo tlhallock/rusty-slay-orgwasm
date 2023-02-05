@@ -1,12 +1,12 @@
 use crate::slay::errors::SlayResult;
 use crate::slay::game_context::GameBookKeeping;
 use crate::slay::ids;
-use crate::slay::modifiers::ModifierDuration;
-use crate::slay::modifiers::ModifierOrigin;
-use crate::slay::modifiers::PlayerBuff;
-use crate::slay::modifiers::PlayerModifier;
 use crate::slay::state::game::Game;
 use crate::slay::state::turn::Turn;
+use crate::slay::status_effects::effect::PlayerStatusEffect;
+use crate::slay::status_effects::effect_entry::EffectOrigin;
+use crate::slay::status_effects::temp_effect::EffectDuration;
+use crate::slay::status_effects::temp_effect::TemporaryPlayerStatusEffect;
 use crate::slay::tasks::player_tasks::PlayerTask;
 use crate::slay::tasks::player_tasks::TaskProgressResult;
 
@@ -17,7 +17,7 @@ enum DurationSpec {
 }
 
 impl DurationSpec {
-	fn create_duration(&self, turn: &Turn) -> ModifierDuration {
+	fn create_duration(&self, turn: &Turn) -> EffectDuration {
 		match self {
 			DurationSpec::ForThisTurn => turn.for_this_turn(),
 			DurationSpec::UntilNextTurn => turn.until_next_turn(),
@@ -28,19 +28,22 @@ impl DurationSpec {
 #[derive(Debug, Clone)]
 pub struct ReceiveModifier {
 	duration: DurationSpec,
-	modifier: PlayerModifier,
-	origin: ModifierOrigin,
+	modifier: PlayerStatusEffect,
+	origin: EffectOrigin,
 }
 
 impl ReceiveModifier {
-	pub fn for_this_turn(modifier: PlayerModifier, origin: ModifierOrigin) -> Box<dyn PlayerTask> {
+	pub fn for_this_turn(modifier: PlayerStatusEffect, origin: EffectOrigin) -> Box<dyn PlayerTask> {
 		Box::new(Self {
 			modifier,
 			origin,
 			duration: DurationSpec::ForThisTurn,
 		})
 	}
-	pub fn until_next_turn(modifier: PlayerModifier, origin: ModifierOrigin) -> Box<dyn PlayerTask> {
+	pub fn until_next_turn(
+		modifier: PlayerStatusEffect,
+		origin: EffectOrigin,
+	) -> Box<dyn PlayerTask> {
 		Box::new(Self {
 			modifier,
 			origin,
@@ -59,7 +62,7 @@ impl PlayerTask for ReceiveModifier {
 		let duration = self.duration.create_duration(game.get_turn());
 		game.players[player_index]
 			.temporary_buffs
-			.add(PlayerBuff::new(
+			.add(TemporaryPlayerStatusEffect::new(
 				duration,
 				self.modifier.to_owned(),
 				self.origin.to_owned(),

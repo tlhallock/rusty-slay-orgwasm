@@ -30,7 +30,7 @@ pub fn create_attack_monster_choice(
 				game,
 				player_index,
 				monster.get_consequences(card_path.get_card_id()),
-				RollReason::AttackMonster(game.card(card_path).card_type),
+				RollReason::AttackMonster(monster),
 			))) as Box<dyn PlayerTask>,
 		],
 	)

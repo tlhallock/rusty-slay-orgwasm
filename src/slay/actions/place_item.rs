@@ -4,7 +4,6 @@ use crate::slay::choices::ChoiceDisplayType;
 use crate::slay::choices::TasksChoice;
 use crate::slay::game_context::GameBookKeeping;
 use crate::slay::ids;
-use crate::slay::modifiers::PlayerModifier;
 use crate::slay::notification::Notification;
 use crate::slay::showdown::consequences::Condition;
 use crate::slay::showdown::consequences::RollConsequence;
@@ -15,6 +14,7 @@ use crate::slay::specs::items::AnotherItemType;
 use crate::slay::state::deck::DeckPath;
 use crate::slay::state::game::Game;
 use crate::slay::state::stack::Card;
+use crate::slay::status_effects::effect::PlayerStatusEffect;
 use crate::slay::tasks::player_tasks::PlayerTask;
 use crate::slay::tasks::task_params::TaskParamName;
 use crate::slay::tasks::tasks::add_tasks::AddTasks;
@@ -47,7 +47,7 @@ pub fn create_place_item_challenge_offer(
 		return None;
 	}
 	let place_item = create_place_item_task(players_with_stacks);
-	if game.players[player_index].has_modifier(PlayerModifier::ItemsCannotBeChallenged) {
+	if game.players[player_index].has_player_effect(PlayerStatusEffect::ItemsCannotBeChallenged) {
 		return Some(place_item);
 	}
 	Some(Box::new(OfferChallengesTask::new(OfferChallengesState::new(

@@ -14,6 +14,7 @@ use crate::frontend::stack::CardSpecView;
 use crate::frontend::stack::ExtraSpecProps;
 use crate::slay::showdown::roll_state::RollPerspective;
 use crate::slay::showdown::roll_state::RollReason;
+use crate::slay::specs::cards::card_type::SlayCardSpec;
 
 #[derive(Properties, PartialEq)]
 pub struct SimplerRollModalProps {
@@ -60,7 +61,7 @@ pub fn view_roll_context(props: &RollModalProps) -> Html {
 					)
 				}
 					<CardSpecView
-						spec={spec.to_owned()}
+						spec={SlayCardSpec::HeroCard(*spec)}
 						common={props.common.to_owned()}
 						extra_specs={ExtraSpecProps::default()}
 					/>
@@ -93,7 +94,7 @@ pub fn view_roll_context(props: &RollModalProps) -> Html {
 						)
 					}
 					<CardSpecView
-						spec={spec.to_owned()}
+						spec={SlayCardSpec::MonsterCard(*spec)}
 						common={props.common.to_owned()}
 						extra_specs={ExtraSpecProps::default()}
 					/>

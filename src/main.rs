@@ -3,6 +3,9 @@ pub mod common;
 pub mod frontend;
 pub mod slay;
 
+#[macro_use]
+extern crate guard;
+
 pub fn main() {
 	// There should be a way to tell if an action is not needed, as in, don't roll for something that you can't do
 	// We need state on the player to determine if they have made a play this turn already
@@ -37,6 +40,6 @@ pub fn main() {
 
 	*/
 
-	// slay::driver::game_loop().expect("oops");
-	frontend::view::render();
+	slay::driver::game_loop().expect("oops");
+	// frontend::view::render();
 }

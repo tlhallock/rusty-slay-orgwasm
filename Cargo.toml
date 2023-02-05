@@ -28,7 +28,8 @@ enum-iterator = "1.2.0"
 thiserror = "1.0.38"
 
 # Has to be disabled to run in browser...
-# simple-logging = "2.0.2"
+simple-logging = "2.0.2"
+guard = "0.5.1"
 
 #[lib]
 #crate-type = ["cdylib", "rlib"]

@@ -49,7 +49,6 @@ impl PlayerTask for Hook {
 		// let mut options = cards
 		// 	.into_iter()
 
-
 		let mut options = game.players[player_index]
 			.hand
 			.tops()

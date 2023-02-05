@@ -3,10 +3,10 @@ use enum_iterator::Sequence;
 use crate::slay::errors::SlayResult;
 use crate::slay::game_context::GameBookKeeping;
 use crate::slay::ids;
-use crate::slay::modifiers::ModifierOrigin;
-use crate::slay::modifiers::PlayerModifier;
 use crate::slay::state::game::Game;
 use crate::slay::state::stack::Stack;
+use crate::slay::status_effects::effect::PlayerStatusEffect;
+use crate::slay::status_effects::effect_entry::EffectOrigin;
 use crate::slay::tasks::core::destroy::DestroyTask;
 use crate::slay::tasks::core::discard::Discard;
 use crate::slay::tasks::core::draw::DrawTask;
@@ -75,8 +75,8 @@ impl MagicSpell {
 				let duration = game.get_turn().for_this_turn();
 				game.players[player_index].temporary_buffs.add_buff(
 					duration,
-					PlayerModifier::AddToAllRolls(2),
-					ModifierOrigin::FromMagicCard(*self),
+					PlayerStatusEffect::AddToAllRolls(2),
+					EffectOrigin::FromMagicCard(*self),
 				);
 				Ok(TaskProgressResult::TaskComplete)
 			}

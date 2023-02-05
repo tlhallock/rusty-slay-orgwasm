@@ -12,13 +12,13 @@ use crate::frontend::stack::ExtraSpecProps;
 use crate::slay::choices::ChoiceDisplayType;
 use crate::slay::choices::ChoicePerspective;
 use crate::slay::ids;
-use crate::slay::modifiers::ModifierOrigin;
 use crate::slay::showdown::completion::Completion;
 use crate::slay::showdown::roll_modification::ModificationOrigin;
 use crate::slay::showdown::roll_modification::RollModification;
 use crate::slay::showdown::roll_modification::RollModificationChoiceType;
 use crate::slay::specs::cards::card_type::SlayCardSpec;
 use crate::slay::specs::modifier::ModifierKinds;
+use crate::slay::status_effects::effect_entry::EffectOrigin;
 
 #[derive(Properties, PartialEq)]
 pub struct CompletionsProps {
@@ -97,7 +97,7 @@ pub fn view_player_roll_modification(props: &PlayerModificationViewProps) -> Htm
 #[derive(Properties, PartialEq)]
 pub struct BuffModificationViewProps {
 	pub common: Rc<CommonProps>,
-	pub origin: ModifierOrigin,
+	pub origin: EffectOrigin,
 	pub amount: i32,
 }
 #[function_component(BuffModificationView)]

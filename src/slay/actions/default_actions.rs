@@ -26,7 +26,7 @@ pub fn create_draw_choice(id: ids::ChoiceId) -> TasksChoice {
 pub fn create_replace_hand_choice(id: ids::ChoiceId) -> TasksChoice {
 	TasksChoice::new(
 		id,
-		Choice::UseActionPoints(Action::Draw),
+		Choice::UseActionPoints(Action::ReplaceHand),
 		ChoiceDisplayType::HighlightPath(DisplayPath::DeckAt(DeckPath::Discard)),
 		vec![
 			Box::new(RemoveActionPointsTask::new(3)),
@@ -43,7 +43,7 @@ pub fn create_forfeit_choice(
 	let current_amount_remaining = game.players[player_index].get_remaining_action_points();
 	TasksChoice::new(
 		id,
-		Choice::UseActionPoints(Action::Draw),
+		Choice::UseActionPoints(Action::Forfeit),
 		ChoiceDisplayType::Forfeit,
 		vec![Box::new(RemoveActionPointsTask::new(current_amount_remaining)) as Box<dyn PlayerTask>],
 	)

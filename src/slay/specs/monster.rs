@@ -1,7 +1,6 @@
 use enum_iterator::Sequence;
 
 use crate::slay::ids;
-use crate::slay::modifiers::PlayerModifier;
 use crate::slay::showdown::consequences::Condition;
 use crate::slay::showdown::consequences::RollConsequence;
 use crate::slay::showdown::consequences::RollConsequences;
@@ -9,9 +8,12 @@ use crate::slay::specification::HeroType;
 use crate::slay::specification::MonsterRequirements;
 use crate::slay::specification::MonsterSpec;
 use crate::slay::state::player::HeroTypeCounter;
+use crate::slay::status_effects::effect::PlayerStatusEffect;
+use crate::slay::status_effects::effect_entry::EffectOrigin;
+use crate::slay::status_effects::effect_entry::PlayerStatusEffectEntry;
 use crate::slay::tasks::core::discard::Discard;
 use crate::slay::tasks::core::draw::DrawTask;
-use crate::slay::tasks::core::sacrifice::Sacrifice;
+use crate::slay::tasks::core::sacrifice::ChooseSacrifice;
 
 use super::cards::card_type::SlayCardSpec;
 
@@ -82,6 +84,33 @@ impl Monster {
 		self.create_spec().get_consequences(card_id)
 	}
 
+	pub fn status_effect(&self) -> PlayerStatusEffect {
+		match self {
+			Monster::AnuranCauldron => PlayerStatusEffect::AddToAllRolls(1),
+			Monster::TitanWyvern => PlayerStatusEffect::AddToRollForChallenge(1),
+			Monster::DarkDragonKing => PlayerStatusEffect::AddToRollForAnyAbility(1),
+			Monster::AbyssQueen => PlayerStatusEffect::AddOnModify,
+			Monster::RexMajor => PlayerStatusEffect::RevealModifiersAndDrawAgain,
+			Monster::CorruptedSabretooth => PlayerStatusEffect::StealInsteadOfSacrifice,
+			Monster::CrownedSerpent => PlayerStatusEffect::DrawOnModify,
+			Monster::WarwornOwlbear => PlayerStatusEffect::ItemsCannotBeChallenged,
+			Monster::Dracos => PlayerStatusEffect::DrawOnDestroy,
+			Monster::Malammoth => PlayerStatusEffect::PlayItemOnDraw,
+			Monster::Bloodwing => PlayerStatusEffect::DiscardOnChallenge,
+			Monster::ArcticAries => PlayerStatusEffect::DrawOnSuccessfulAbility,
+			Monster::MegaSlime => PlayerStatusEffect::ExtraActionPoint,
+			Monster::Orthus => PlayerStatusEffect::PlayMagicOnDraw,
+			Monster::Terratuga => PlayerStatusEffect::UndestroyableHeros,
+		}
+	}
+
+	pub fn status_effect_entry(&self) -> PlayerStatusEffectEntry {
+		PlayerStatusEffectEntry {
+			modifier: self.status_effect(),
+			origin: EffectOrigin::FromSlainMonster,
+		}
+	}
+
 	pub fn create_spec(&self) -> MonsterSpec {
 		match self {
 			Monster::AnuranCauldron => MonsterSpec {
@@ -92,11 +121,11 @@ impl Monster {
 					},
 					loss: Some(RollConsequence {
 						condition: Condition::le(6),
-						tasks: vec![Sacrifice::create(1)],
+						tasks: vec![ChooseSacrifice::create(1)],
 					}),
 				},
 				requirements: vec![MonsterRequirements::Hero; 3],
-				modifiers: vec![PlayerModifier::AddToAllRolls(1)],
+				modifiers: vec![PlayerStatusEffect::AddToAllRolls(1)],
 			},
 			Monster::TitanWyvern => MonsterSpec {
 				consequences: RollConsequences {
@@ -113,7 +142,7 @@ impl Monster {
 					MonsterRequirements::HeroType(HeroType::Fighter),
 					MonsterRequirements::Hero,
 				],
-				modifiers: vec![PlayerModifier::AddToRollForChallenge(1)],
+				modifiers: vec![PlayerStatusEffect::AddToRollForChallenge(1)],
 			},
 			Monster::DarkDragonKing => MonsterSpec {
 				consequences: RollConsequences {
@@ -130,7 +159,7 @@ impl Monster {
 					MonsterRequirements::HeroType(HeroType::Bard),
 					MonsterRequirements::Hero,
 				],
-				modifiers: vec![PlayerModifier::AddToRollForAnyAbility(1)],
+				modifiers: vec![PlayerStatusEffect::AddToRollForAnyAbility(1)],
 			},
 			Monster::AbyssQueen => MonsterSpec {
 				consequences: RollConsequences {
@@ -140,11 +169,11 @@ impl Monster {
 					},
 					loss: Some(RollConsequence {
 						condition: Condition::le(5),
-						tasks: vec![Sacrifice::create(1)],
+						tasks: vec![ChooseSacrifice::create(1)],
 					}),
 				},
 				requirements: vec![MonsterRequirements::Hero; 2],
-				modifiers: vec![PlayerModifier::AddOnModify],
+				modifiers: vec![PlayerStatusEffect::AddOnModify],
 			},
 			Monster::RexMajor => MonsterSpec {
 				consequences: RollConsequences {
@@ -161,7 +190,7 @@ impl Monster {
 					MonsterRequirements::HeroType(HeroType::Gaurdian),
 					MonsterRequirements::Hero,
 				],
-				modifiers: vec![PlayerModifier::RevealModifiersAndDrawAgain],
+				modifiers: vec![PlayerStatusEffect::RevealModifiersAndDrawAgain],
 			},
 			Monster::CorruptedSabretooth => MonsterSpec {
 				consequences: RollConsequences {
@@ -174,11 +203,11 @@ impl Monster {
 					},
 					loss: Some(RollConsequence {
 						condition: Condition::le(6),
-						tasks: vec![Sacrifice::create(1)],
+						tasks: vec![ChooseSacrifice::create(1)],
 					}),
 				},
 				requirements: vec![MonsterRequirements::Hero; 3],
-				modifiers: vec![PlayerModifier::StealInsteadOfSacrifice],
+				modifiers: vec![PlayerStatusEffect::StealInsteadOfSacrifice],
 			},
 			Monster::CrownedSerpent => MonsterSpec {
 				consequences: RollConsequences {
@@ -188,11 +217,11 @@ impl Monster {
 					},
 					loss: Some(RollConsequence {
 						condition: Condition::le(7),
-						tasks: vec![Sacrifice::create(1)],
+						tasks: vec![ChooseSacrifice::create(1)],
 					}),
 				},
 				requirements: vec![MonsterRequirements::Hero; 2],
-				modifiers: vec![PlayerModifier::DrawOnModify],
+				modifiers: vec![PlayerStatusEffect::DrawOnModify],
 			},
 			Monster::WarwornOwlbear => MonsterSpec {
 				consequences: RollConsequences {
@@ -209,7 +238,7 @@ impl Monster {
 					MonsterRequirements::HeroType(HeroType::Thief),
 					MonsterRequirements::Hero,
 				],
-				modifiers: vec![PlayerModifier::ItemsCannotBeChallenged],
+				modifiers: vec![PlayerStatusEffect::ItemsCannotBeChallenged],
 			},
 			Monster::Dracos => MonsterSpec {
 				consequences: RollConsequences {
@@ -219,11 +248,11 @@ impl Monster {
 					},
 					loss: Some(RollConsequence {
 						condition: Condition::ge(8),
-						tasks: vec![Sacrifice::create(1)],
+						tasks: vec![ChooseSacrifice::create(1)],
 					}),
 				},
 				requirements: vec![MonsterRequirements::Hero],
-				modifiers: vec![PlayerModifier::DrawOnDestroy],
+				modifiers: vec![PlayerStatusEffect::DrawOnDestroy],
 			},
 			Monster::Malammoth => MonsterSpec {
 				consequences: RollConsequences {
@@ -240,7 +269,7 @@ impl Monster {
 					MonsterRequirements::Hero,
 					MonsterRequirements::HeroType(HeroType::Ranger),
 				],
-				modifiers: vec![PlayerModifier::PlayItemOnDraw],
+				modifiers: vec![PlayerStatusEffect::PlayItemOnDraw],
 			},
 			Monster::Bloodwing => MonsterSpec {
 				consequences: RollConsequences {
@@ -250,11 +279,11 @@ impl Monster {
 					},
 					loss: Some(RollConsequence {
 						condition: Condition::le(6),
-						tasks: vec![Sacrifice::create(1)],
+						tasks: vec![ChooseSacrifice::create(1)],
 					}),
 				},
 				requirements: vec![MonsterRequirements::Hero; 2],
-				modifiers: vec![PlayerModifier::DiscardOnChallenge],
+				modifiers: vec![PlayerStatusEffect::DiscardOnChallenge],
 			},
 			Monster::ArcticAries => MonsterSpec {
 				consequences: RollConsequences {
@@ -264,11 +293,11 @@ impl Monster {
 					},
 					loss: Some(RollConsequence {
 						condition: Condition::le(6),
-						tasks: vec![Sacrifice::create(1)],
+						tasks: vec![ChooseSacrifice::create(1)],
 					}),
 				},
 				requirements: vec![MonsterRequirements::Hero],
-				modifiers: vec![PlayerModifier::DrawOnSuccessfulAbility],
+				modifiers: vec![PlayerStatusEffect::DrawOnSuccessfulAbility],
 			},
 			Monster::MegaSlime => MonsterSpec {
 				consequences: RollConsequences {
@@ -278,11 +307,11 @@ impl Monster {
 					},
 					loss: Some(RollConsequence {
 						condition: Condition::le(7),
-						tasks: vec![Sacrifice::create(2)],
+						tasks: vec![ChooseSacrifice::create(2)],
 					}),
 				},
 				requirements: vec![MonsterRequirements::Hero; 4],
-				modifiers: vec![PlayerModifier::ExtraActionPoint],
+				modifiers: vec![PlayerStatusEffect::ExtraActionPoint],
 			},
 			Monster::Orthus => MonsterSpec {
 				consequences: RollConsequences {
@@ -292,14 +321,14 @@ impl Monster {
 					},
 					loss: Some(RollConsequence {
 						condition: Condition::le(4),
-						tasks: vec![Sacrifice::create(1)],
+						tasks: vec![ChooseSacrifice::create(1)],
 					}),
 				},
 				requirements: vec![
 					MonsterRequirements::Hero,
 					MonsterRequirements::HeroType(HeroType::Wizard),
 				],
-				modifiers: vec![PlayerModifier::PlayMagicOnDraw],
+				modifiers: vec![PlayerStatusEffect::PlayMagicOnDraw],
 			},
 			Monster::Terratuga => MonsterSpec {
 				consequences: RollConsequences {
@@ -313,7 +342,7 @@ impl Monster {
 					}),
 				},
 				requirements: vec![MonsterRequirements::Hero],
-				modifiers: vec![PlayerModifier::UndestroyableHeros],
+				modifiers: vec![PlayerStatusEffect::UndestroyableHeros],
 			},
 		}
 	}

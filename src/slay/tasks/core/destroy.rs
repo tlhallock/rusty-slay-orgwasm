@@ -1,3 +1,4 @@
+use crate::slay::errors::SlayError;
 use crate::slay::errors::SlayResult;
 use crate::slay::game_context::GameBookKeeping;
 use crate::slay::ids;
@@ -90,15 +91,19 @@ impl PlayerTask for DestroyCardTask {
 		stealer_index: ids::PlayerIndex,
 	) -> SlayResult<TaskProgressResult> {
 		let victim_player_index = game.player_param(stealer_index, &self.victim_param)?;
-		let card_id = game.card_param(stealer_index, &self.card_param)?;
-		if card_id.is_none() {
-			return Ok(TaskProgressResult::TaskComplete);
-		}
-		let card_to_steal = card_id.unwrap();
+		guard!(
+			let Some(hero_card_id) = game.card_param(stealer_index, &self.card_param)?
+			else { return Ok(TaskProgressResult::TaskComplete); }
+		);
+		let card_to_destroy = game.players[victim_player_index]
+			.party
+			.stack(hero_card_id)
+			.ok_or_else(|| SlayError::new("Unable to find card to destroy"))?
+			.get_id_to_sacrifice_or_destroy();
 
 		let mut stack = game.players[victim_player_index]
 			.party
-			.take_card(card_to_steal)?;
+			.take_card(card_to_destroy)?;
 		game
 			.deck_mut(self.get_destination(stealer_index))
 			.extend(stack.modifiers.drain(..).map(Stack::new));

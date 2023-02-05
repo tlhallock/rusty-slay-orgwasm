@@ -1,6 +1,6 @@
-
-
 use super::users::{PlayerInformation, UserId};
+use chrono::DateTime;
+use chrono::Utc;
 
 pub struct GameOptions {}
 
@@ -21,9 +21,9 @@ pub enum SlotStatus {
 }
 
 pub struct Slot {
-	selection: SlotSelection,
+	pub selection: SlotSelection,
 	user: Option<PlayerInformation>,
-	last_heartbeat: String,
+	last_heartbeat: DateTime<Utc>,
 	ready: bool,
 }
 
@@ -39,13 +39,16 @@ impl Slot {
 			SlotStatus::Ready
 		}
 	}
+	pub fn receive_heartbeat(&mut self) {
+		self.last_heartbeat = chrono::offset::Utc::now();
+	}
 }
 
 pub struct Lobby {
-	creator: UserId,
-	created: String, // TODO:
-	options: GameOptions,
-	slots: Vec<Slot>,
+	pub creator: UserId,
+	pub created: DateTime<Utc>, // TODO:
+	pub options: GameOptions,
+	pub slots: Vec<Slot>,
 }
 
 impl Lobby {
