@@ -113,7 +113,7 @@ pub fn play_card_immediately(
 	game: &mut Game,
 	player_index: ids::PlayerIndex,
 	card: &Card,
-	mut extra_task: Option<Box<dyn PlayerTask>>,
+	extra_task: Option<Box<dyn PlayerTask>>,
 ) {
 	if let Some(choices) =
 		create_play_immediately_choices(context, game, player_index, card, extra_task)
