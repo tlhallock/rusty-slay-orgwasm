@@ -40,13 +40,13 @@ impl PlayerTask for PlaceHero {
 					context.id_generator.generate(),
 					Choice::PlaceHeroImmediately(hero_card),
 					ChoiceDisplayType::hand_card(player_index, card.id),
-					vec![place_hero::create_place_hero_challenges(
+					place_hero::create_place_hero_challenges(
 						context,
 						game,
 						player_index,
 						CardPath::TopCardIn(DeckPath::Hand(player_index), card.id),
 						hero_card,
-					)],
+					),
 				));
 			}
 		}

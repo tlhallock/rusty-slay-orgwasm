@@ -16,7 +16,7 @@ use std::collections::HashSet;
 use std::io::BufWriter;
 
 use log::LevelFilter;
-use simple_logging;
+// use simple_logging;
 
 pub fn player_has_won(player: &Player) -> bool {
 	let hero_types = &mut HashSet::new();
@@ -169,7 +169,7 @@ fn game_to_string(game: &Game) -> String {
 }
 
 pub fn game_loop() -> SlayResult<()> {
-	simple_logging::log_to_file("output/log.txt", LevelFilter::Info).expect("Unable to log.");
+	// simple_logging::log_to_file("output/log.txt", LevelFilter::Info).expect("Unable to log.");
 
 	let context = &mut GameBookKeeping::new();
 	let game = &mut Game::new();

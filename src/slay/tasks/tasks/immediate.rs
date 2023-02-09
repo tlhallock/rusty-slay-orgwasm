@@ -27,7 +27,7 @@ pub fn create_play_card_immediately_task(
 	game: &Game,
 	player_index: ids::PlayerIndex,
 	card: &Card,
-) -> Option<Box<dyn PlayerTask>> {
+) -> Option<Vec<Box<dyn PlayerTask>>> {
 	match card.card_type {
 		SlayCardSpec::HeroCard(hero_card) => {
 			let hand_path = CardPath::TopCardIn(DeckPath::Hand(player_index), card.id);
@@ -41,25 +41,21 @@ pub fn create_play_card_immediately_task(
 					hero_card,
 				))
 			} else if game.maybe_card(party_path).is_some() {
-				Some(roll_for_ability::create_roll_for_ability_task(
-					context,
-					game,
-					player_index,
-					card,
-					hero_card,
-				))
+				roll_for_ability::create_roll_for_ability_task(context, game, player_index, card, hero_card)
+					.map(|x| vec![x])
 			} else {
 				unreachable!()
 			}
 		}
-		SlayCardSpec::MagicCard(spell) => Some(cast_magic::create_cast_magic_task(
+		SlayCardSpec::MagicCard(spell) => Some(vec![cast_magic::create_cast_magic_task(
 			game,
 			player_index,
 			CardPath::TopCardIn(DeckPath::Hand(player_index), card.id),
 			spell,
-		)),
+		)]),
 		SlayCardSpec::Item(_) => {
 			place_item::create_place_item_challenge_offer(context, game, player_index, card)
+				.map(|x| vec![x])
 		}
 		SlayCardSpec::ModifierCard(_)
 		| SlayCardSpec::PartyLeader(_)
@@ -68,25 +64,29 @@ pub fn create_play_card_immediately_task(
 	}
 }
 
-// This should be a task...
-pub fn play_card_immediately(
+pub fn create_play_immediately_choices(
 	context: &mut GameBookKeeping,
 	game: &mut Game,
 	player_index: ids::PlayerIndex,
 	card: &Card,
 	mut extra_task: Option<Box<dyn PlayerTask>>,
-) {
+) -> Option<Choices> {
 	let mut play_immediately_tasks = Vec::new();
-	if let Some(task) = create_play_card_immediately_task(context, game, player_index, card) {
-		play_immediately_tasks.push(task);
+	if let Some(tasks) = create_play_card_immediately_task(context, game, player_index, card) {
+		play_immediately_tasks.extend(tasks);
 	}
 
 	if let Some(task) = extra_task.take() {
 		play_immediately_tasks.push(task);
 	}
 
+	// TODO: This still gives them an option of Yes/No when there are no choices...
+	if play_immediately_tasks.is_empty() {
+		return None;
+	}
+
 	let default_choice = context.id_generator.generate();
-	game.players[player_index].choose(Choices {
+	Some(Choices {
 		choices_type: ChoicesType::PlayImmediately(card.card_type),
 		timeline: deadlines::get_refactor_me_deadline(),
 		default_choice: Some(default_choice),
@@ -104,7 +104,22 @@ pub fn play_card_immediately(
 				vec![],
 			),
 		],
-	});
+	})
+}
+
+// This should be a task...
+pub fn play_card_immediately(
+	context: &mut GameBookKeeping,
+	game: &mut Game,
+	player_index: ids::PlayerIndex,
+	card: &Card,
+	mut extra_task: Option<Box<dyn PlayerTask>>,
+) {
+	if let Some(choices) =
+		create_play_immediately_choices(context, game, player_index, card, extra_task)
+	{
+		game.players[player_index].choose(choices);
+	}
 }
 
 #[derive(Clone, Debug)]

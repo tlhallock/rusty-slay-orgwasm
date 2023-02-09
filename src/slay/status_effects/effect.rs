@@ -2,11 +2,13 @@ use crate::slay::specification::HeroType;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum PlayerStatusEffect {
-	PlayMagicOnDraw,
-	PlayItemOnDraw,
+	// Orthus: Each time you DRAW a Magic card, you may play it immediately.
+	PlayMagicOnDraw, // done
+	// Malammoth: Each time you DRAW an Item card, you may play it immediately.
+	PlayItemOnDraw, // done
 
-	ItemsCannotBeChallenged,
-	NoCardsCanBeChallenged,
+	ItemsCannotBeChallenged, // done
+	NoCardsCanBeChallenged,  // done
 	NoCardsCanBeStolen,
 	NoCardsCanBeDestroyed,
 
@@ -29,7 +31,6 @@ pub enum PlayerStatusEffect {
 	AddToRollForChallenge(i32),
 }
 
-// Rename this to card modifier, or hero modifier
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum HeroStatusEffect {
 	Mask(HeroType),

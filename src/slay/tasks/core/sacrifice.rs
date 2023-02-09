@@ -44,7 +44,7 @@ impl PlayerTask for SacrificeTask {
 	}
 
 	fn label(&self) -> String {
-		format!("Player is sacrificing a hero.")
+		"Player is sacrificing a hero.".to_string()
 	}
 }
 

@@ -15,6 +15,7 @@ use crate::slay::state::game::Game;
 use crate::slay::tasks::core::draw::DrawTask;
 use crate::slay::tasks::player_tasks::PlayerTask;
 use crate::slay::tasks::player_tasks::TaskProgressResult;
+use crate::slay::tasks::tasks::add_tasks::AddTasks;
 use crate::slay::tasks::tasks::immediate::create_play_card_immediately_task;
 use crate::slay::tasks::tasks::immediate::PlayImmediatelyFilter;
 
@@ -55,17 +56,20 @@ impl PlayerTask for Hook {
 			.filter(|card| self.filter.can_play_immediately(card))
 			// .map(|card| card.to_owned())
 			.filter_map(|card| {
-				create_play_card_immediately_task(context, game, player_index, card).map(|task| {
-					TasksChoice::new(
-						context.id_generator.generate(),
-						Choice::PlayImmediately(card.card_type),
-						ChoiceDisplayType::HighlightPath(DisplayPath::CardAt(CardPath::TopCardIn(
-							DeckPath::Hand(player_index),
-							card.id,
-						))),
-						vec![task, DrawTask::create(1)],
-					)
-				})
+				create_play_card_immediately_task(context, game, player_index, card).map(
+					// |TasksChoice { id, choice, display, .. }| {
+					|tasks| {
+						TasksChoice::new(
+							context.id_generator.generate(),
+							Choice::PlayImmediately(card.card_type),
+							ChoiceDisplayType::HighlightPath(DisplayPath::CardAt(CardPath::TopCardIn(
+								DeckPath::Hand(player_index),
+								card.id,
+							))),
+							vec![AddTasks::create(tasks), DrawTask::create(1)],
+						)
+					},
+				)
 			})
 			.collect::<Vec<_>>();
 		let able = !options.is_empty();

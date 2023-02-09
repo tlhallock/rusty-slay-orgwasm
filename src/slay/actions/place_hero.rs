@@ -1,3 +1,5 @@
+use std::iter;
+
 use crate::slay::choices::Action;
 use crate::slay::choices::CardPath;
 use crate::slay::choices::Choice;
@@ -12,9 +14,11 @@ use crate::slay::showdown::roll::ChallengeReason;
 use crate::slay::specs::hero::HeroAbilityType;
 use crate::slay::state::game::Game;
 use crate::slay::tasks::player_tasks::PlayerTask;
+use crate::slay::tasks::tasks::add_tasks::AddTasks;
 use crate::slay::tasks::tasks::offer_challenges::OfferChallengesTask;
 use crate::slay::tasks::tasks::remove_action_points::RemoveActionPointsTask;
 
+use super::cast_magic::cannot_be_challenged;
 use super::roll_for_ability;
 
 pub fn create_place_hero_challenges(
@@ -23,22 +27,27 @@ pub fn create_place_hero_challenges(
 	player_index: ids::PlayerIndex,
 	card_path: CardPath,
 	hero_card: HeroAbilityType,
-) -> Box<dyn PlayerTask> {
-	Box::new(OfferChallengesTask::new(OfferChallengesState::new(
+) -> Vec<Box<dyn PlayerTask>> {
+	let roll = roll_for_ability::create_roll_for_ability_task(
+		context,
+		game,
+		player_index,
+		game.card(card_path),
+		hero_card,
+	);
+	let tasks = iter::once(Some(card_path.get_place_task()))
+		.chain(iter::once(roll))
+		.flatten()
+		.collect();
+	if cannot_be_challenged(game, player_index) {
+		return tasks;
+	}
+	vec![Box::new(OfferChallengesTask::new(OfferChallengesState::new(
 		player_index,
 		RollConsequences {
 			success: RollConsequence {
 				condition: Condition::challenge_denied(),
-				tasks: vec![
-					card_path.get_place_task(),
-					roll_for_ability::create_roll_for_ability_task(
-						context,
-						game,
-						player_index,
-						game.card(card_path),
-						hero_card,
-					),
-				],
+				tasks,
 			},
 			loss: Some(RollConsequence {
 				condition: Condition::challenge_sustained(),
@@ -46,7 +55,7 @@ pub fn create_place_hero_challenges(
 			}),
 		},
 		ChallengeReason::PlaceHeroCard(game.card(card_path).card_type),
-	))) as Box<dyn PlayerTask>
+	))) as Box<dyn PlayerTask>]
 }
 
 pub fn create_place_hero_choice(
@@ -62,7 +71,13 @@ pub fn create_place_hero_choice(
 		card_path.display().to_highlight(),
 		vec![
 			Box::new(RemoveActionPointsTask::new(1)),
-			create_place_hero_challenges(context, game, player_index, card_path, hero_card),
+			AddTasks::create(create_place_hero_challenges(
+				context,
+				game,
+				player_index,
+				card_path,
+				hero_card,
+			)),
 		],
 	)
 }

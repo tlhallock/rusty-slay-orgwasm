@@ -35,6 +35,19 @@ impl Condition {
 			Comparison::LE => roll_sum <= self.threshold,
 		}
 	}
+
+	pub(crate) fn negate(&self) -> Condition {
+		match self.cmp {
+			Comparison::GE => Condition {
+				cmp: Comparison::LE,
+				threshold: self.threshold - 1,
+			},
+			Comparison::LE => Condition {
+				cmp: Comparison::GE,
+				threshold: self.threshold + 1,
+			},
+		}
+	}
 }
 
 impl Condition {

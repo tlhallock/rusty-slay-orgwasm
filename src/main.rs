@@ -40,6 +40,6 @@ pub fn main() {
 
 	*/
 
-	slay::driver::game_loop().expect("oops");
-	// frontend::view::render();
+	// slay::driver::game_loop().expect("oops");
+	frontend::view::render();
 }

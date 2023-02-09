@@ -28,12 +28,12 @@ fn add_play_immediately_choice(
 	if let Some(card_id) = card_option {
 		let card_path = CardPath::TopCardIn(DeckPath::Hand(player_index), card_id);
 		let card = game.card(card_path);
-		if let Some(task) = create_play_card_immediately_task(context, game, player_index, card) {
+		if let Some(tasks) = create_play_card_immediately_task(context, game, player_index, card) {
 			options.push(TasksChoice::new(
 				context.id_generator.generate(),
 				Choice::PlayImmediately(card.card_type),
 				ChoiceDisplayType::HighlightPath(DisplayPath::CardAt(card_path)),
-				vec![task],
+				tasks,
 			));
 		}
 	}

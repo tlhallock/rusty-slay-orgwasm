@@ -1,6 +1,7 @@
 use enum_iterator::Sequence;
 
 use crate::slay::abilities::heros::VictimDraws;
+use crate::slay::actions::roll_for_ability::RollForAbilityEffects;
 use crate::slay::showdown::consequences::Condition;
 use crate::slay::showdown::consequences::RollConsequence;
 use crate::slay::showdown::consequences::RollConsequences;
@@ -53,17 +54,17 @@ pub struct HeroAbility {
 	pub ability: HeroAbilityType,
 }
 
-impl HeroAbility {
-	pub fn to_consequences(&self) -> RollConsequences {
-		RollConsequences {
-			success: RollConsequence {
-				condition: self.condition.to_owned(),
-				tasks: self.ability.create_tasks(),
-			},
-			loss: None,
-		}
-	}
-}
+// impl HeroAbility {
+// 	pub fn to_consequences(&self) -> RollConsequences {
+// 		RollConsequences {
+// 			success: RollConsequence {
+// 				condition: self.condition.to_owned(),
+// 				tasks: self.ability.create_tasks(),
+// 			},
+// 			loss: None,
+// 		}
+// 	}
+// }
 
 // Some renaming is appropriate...
 // Call this HeroCard
@@ -187,15 +188,19 @@ impl HeroAbilityType {
 		ret
 	}
 
-	pub fn to_consequences(&self) -> RollConsequences {
-		if let Some(ability) = SlayCardSpec::HeroCard(*self)
-			.get_card_spec_creation()
-			.hero_ability
-		{
-			return ability.to_consequences();
-		}
-		{
-			unreachable!();
+	pub fn to_consequences(&self, effects: &RollForAbilityEffects) -> RollConsequences {
+		let mut success_tasks = self.create_tasks();
+		effects.push_success_tasks(&mut success_tasks);
+		let loss_tasks = effects.create_loss_tasks();
+		RollConsequences {
+			success: RollConsequence {
+				condition: self.condition(),
+				tasks: success_tasks,
+			},
+			loss: loss_tasks.map(|tasks| RollConsequence {
+				condition: self.condition().negate(),
+				tasks,
+			}),
 		}
 	}
 

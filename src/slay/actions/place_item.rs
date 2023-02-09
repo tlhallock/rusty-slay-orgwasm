@@ -24,6 +24,8 @@ use crate::slay::tasks::tasks::params::ChoosePlayerParameterTask;
 use crate::slay::tasks::tasks::params::ClearParamsTask;
 use crate::slay::tasks::tasks::remove_action_points::RemoveActionPointsTask;
 
+use super::cast_magic::cannot_be_challenged;
+
 pub fn create_place_item_task(players_with_stacks: Vec<ids::PlayerIndex>) -> Box<dyn PlayerTask> {
 	Box::new(AddTasks {
 		tasks: vec![
@@ -32,6 +34,11 @@ pub fn create_place_item_task(players_with_stacks: Vec<ids::PlayerIndex>) -> Box
 			ClearParamsTask::create(),
 		],
 	})
+}
+
+fn items_cannot_be_challenged(game: &Game, player_index: ids::PlayerIndex) -> bool {
+	game.player_has_effect(player_index, PlayerStatusEffect::ItemsCannotBeChallenged)
+		|| cannot_be_challenged(game, player_index)
 }
 
 pub fn create_place_item_challenge_offer(
@@ -47,7 +54,7 @@ pub fn create_place_item_challenge_offer(
 		return None;
 	}
 	let place_item = create_place_item_task(players_with_stacks);
-	if game.players[player_index].has_player_effect(PlayerStatusEffect::ItemsCannotBeChallenged) {
+	if items_cannot_be_challenged(game, player_index) {
 		return Some(place_item);
 	}
 	Some(Box::new(OfferChallengesTask::new(OfferChallengesState::new(

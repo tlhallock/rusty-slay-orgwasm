@@ -18,6 +18,7 @@ use crate::slay::state::player::PlayerPerspective;
 use crate::slay::state::stack::Card;
 use crate::slay::state::summarizable::Summarizable;
 use crate::slay::state::turn::Turn;
+use crate::slay::status_effects::effect::PlayerStatusEffect;
 use crate::slay::tasks::player_tasks::PlayerTask;
 use crate::slay::tasks::task_params::TaskParamName;
 
@@ -82,6 +83,14 @@ impl GamePerspective {
 }
 
 impl Game {
+	pub fn player_has_effect(
+		&self,
+		player_index: ids::PlayerIndex,
+		effect: PlayerStatusEffect,
+	) -> bool {
+		self.players[player_index].has_player_effect(effect)
+	}
+
 	pub fn clear_expired_modifiers(&mut self) {
 		self
 			.players

@@ -77,13 +77,13 @@ fn create_party_action_choice(
 		return None;
 	}
 	if let SlayCardSpec::HeroCard(hero_card) = game.card(card_path).card_type {
-		return Some(roll_for_ability::create_roll_for_ability_choice(
+		return roll_for_ability::create_roll_for_ability_choice(
 			context,
 			game,
 			player_index,
 			card_path,
 			hero_card,
-		));
+		);
 	}
 	if matches!(
 		game.card(card_path).card_type,

@@ -1,10 +1,43 @@
 use crate::slay::errors::SlayResult;
 use crate::slay::game_context::GameBookKeeping;
 use crate::slay::ids;
+use crate::slay::specs::cards::card_type::SlayCardSpec;
 use crate::slay::state::game::Game;
+use crate::slay::state::stack::Card;
+use crate::slay::status_effects::effect::PlayerStatusEffect;
 use crate::slay::tasks::player_tasks::PlayerTask;
 use crate::slay::tasks::player_tasks::TaskProgressResult;
 use crate::slay::tasks::task_params::TaskParamName;
+use crate::slay::tasks::tasks::choose::ChooseTask;
+use crate::slay::tasks::tasks::immediate;
+
+fn player_can_play_immediately(
+	game: &mut Game,
+	player_index: ids::PlayerIndex,
+	card: &Card,
+) -> bool {
+	(game.player_has_effect(player_index, PlayerStatusEffect::PlayMagicOnDraw)
+		&& matches!(card.card_type, SlayCardSpec::MagicCard(_)))
+		|| (game.player_has_effect(player_index, PlayerStatusEffect::PlayItemOnDraw)
+			&& matches!(card.card_type, SlayCardSpec::Item(_)))
+}
+
+fn player_has_drawn(
+	context: &mut GameBookKeeping,
+	game: &mut Game,
+	player_index: ids::PlayerIndex,
+	card: &Card,
+) {
+	if player_can_play_immediately(game, player_index, card) {
+		if let Some(choices) =
+			immediate::create_play_immediately_choices(context, game, player_index, card, None)
+		{
+			game.players[player_index]
+				.tasks
+				.prepend(ChooseTask::create(choices));
+		}
+	}
+}
 
 #[derive(Debug, Clone)]
 enum DrawAmount {
@@ -60,7 +93,7 @@ impl DrawTask {
 impl PlayerTask for DrawTask {
 	fn make_progress(
 		&mut self,
-		_context: &mut GameBookKeeping,
+		context: &mut GameBookKeeping,
 		game: &mut Game,
 		player_index: ids::PlayerIndex,
 	) -> SlayResult<TaskProgressResult> {
@@ -71,8 +104,10 @@ impl PlayerTask for DrawTask {
 		let is_last = self.decrement_and_check_if_is_last_draw(hand_size);
 		game.replentish_for(1);
 		let stack = game.draw.deal();
-		let card_id = stack.top.id;
+		let card = &stack.top.to_owned();
 		game.players[player_index].hand.add(stack);
+
+		player_has_drawn(context, game, player_index, card);
 
 		// TODO: Check everything about drawing...
 		// PlayOnDraw and buffs....
@@ -84,7 +119,7 @@ impl PlayerTask for DrawTask {
 		if let Some(param) = self.param {
 			game.players[player_index]
 				.tasks
-				.set_card_value(param, Some(card_id))?;
+				.set_card_value(param, Some(card.id))?;
 		}
 
 		if is_last {

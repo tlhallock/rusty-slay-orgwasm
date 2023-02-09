@@ -10,11 +10,16 @@ use crate::slay::showdown::offer::OfferChallengesState;
 use crate::slay::showdown::roll::ChallengeReason;
 use crate::slay::specs::magic::MagicSpell;
 use crate::slay::state::game::Game;
+use crate::slay::status_effects::effect::PlayerStatusEffect;
 use crate::slay::tasks::player_tasks::PlayerTask;
 use crate::slay::tasks::tasks::add_tasks::AddTasks;
 use crate::slay::tasks::tasks::magic::MagicTask;
 use crate::slay::tasks::tasks::offer_challenges::OfferChallengesTask;
 use crate::slay::tasks::tasks::remove_action_points::RemoveActionPointsTask;
+
+pub fn cannot_be_challenged(game: &Game, player_index: ids::PlayerIndex) -> bool {
+	game.player_has_effect(player_index, PlayerStatusEffect::NoCardsCanBeChallenged)
+}
 
 pub fn create_cast_magic_task(
 	game: &Game,
@@ -22,6 +27,10 @@ pub fn create_cast_magic_task(
 	card_path: CardPath,
 	spell: MagicSpell,
 ) -> Box<dyn PlayerTask> {
+	let cast_magic = Box::new(MagicTask::new(spell)) as Box<dyn PlayerTask>;
+	if cannot_be_challenged(game, player_index) {
+		return cast_magic;
+	}
 	AddTasks::create(vec![
 		card_path.get_discard_task(),
 		Box::new(OfferChallengesTask::new(OfferChallengesState::new(
@@ -29,7 +38,7 @@ pub fn create_cast_magic_task(
 			RollConsequences {
 				success: RollConsequence {
 					condition: Condition::challenge_denied(),
-					tasks: vec![Box::new(MagicTask::new(spell)) as Box<dyn PlayerTask>],
+					tasks: vec![cast_magic],
 				},
 				loss: None,
 			},
